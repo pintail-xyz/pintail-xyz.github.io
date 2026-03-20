@@ -1,0 +1,37 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "posts/**/*.qmd"
+    - "pages/**/*.qmd"
+
+website:
+  title: "pintail's notes"
+  site-url: https://pintail.xyz
+  description: "Ethereum data analysis and research"
+  favicon: favicon.svg
+
+  navbar:
+    logo: pintail_silhouette.svg
+    logo-alt: "Pintail duck silhouette"
+    right:
+      - icon: twitter
+        href: https://twitter.com/pintail_xyz
+        aria-label: Twitter
+      - icon: github
+        href: https://github.com/pintail-xyz
+        aria-label: GitHub
+
+  page-footer:
+    center: "© Pintail"
+
+  open-graph: true
+
+format:
+  html:
+    theme:
+      - yeti
+      - styles.scss
+    toc: true
+    toc-depth: 3

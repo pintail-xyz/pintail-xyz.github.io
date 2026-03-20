@@ -1,0 +1,10 @@
+---
+aliases:
+  - /posts/eip1559-a-question-of-fairness/
+title: "Ethereum Fee Market Reform: EIP-1559 as a Question of Fairness"
+date: 2020-08-26
+image: /assets/medium-thumbnail.svg
+description: "Examining EIP-1559's fee burn mechanism through the lens of fairness."
+---
+
+Article originally posted [on Medium](https://pintail.medium.com/ethereum-fee-market-reform-eip-1559-as-a-question-of-fairness-567c52dac017).

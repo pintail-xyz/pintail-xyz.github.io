@@ -1,0 +1,338 @@
+/*-- scss:defaults --*/
+
+// Pintail duck colour palette
+// Inspired by the Northern Pintail duck's plumage:
+//   - rich chocolate brown head
+//   - white breast with white neck stripe
+//   - grey/slate barred flanks
+//   - iridescent bronze-green wing speculum
+//   - grey-blue bill
+
+$primary:           #4E7B6A;   // muted teal-green (wing speculum iridescence)
+$link-color:        #3D6658;   // slightly darker green for accessibility
+$body-color:        #2A2A2A;   // near-black body text
+$headings-color:    #1C2B27;   // very dark teal for headings
+
+$font-family-sans-serif: "Source Sans Pro", "Helvetica Neue", Arial, sans-serif;
+$font-size-base:    1rem;
+$line-height-base:  1.65;
+
+// Reduce rounding for a cleaner minimal look
+$border-radius:     0.15rem;
+$border-radius-lg:  0.2rem;
+$border-radius-sm:  0.1rem;
+
+/*-- scss:rules --*/
+
+// ── Navbar ───────────────────────────────────────────────────────────────────
+.navbar {
+  background-color: #2C3E35 !important;
+  border-bottom: none;
+}
+
+.navbar-brand {
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: #ffffff !important;
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+.nav-footer {
+  background-color: #2C3E35;
+  color: rgba(255, 255, 255, 0.75);
+  border-top: none;
+  padding: 1rem 0;
+}
+
+.nav-footer a {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+// ── Typography ────────────────────────────────────────────────────────────────
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  margin-top: 1.75rem;
+}
+
+// Post title
+#title-block-header .title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+// Hide description from article title block (shown in listing only)
+#title-block-header .description {
+  display: none;
+}
+
+// Date and metadata
+.quarto-title-meta {
+  color: #6B7B76;
+  font-size: 0.875rem;
+}
+
+// ── Links ─────────────────────────────────────────────────────────────────────
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+// ── Code ─────────────────────────────────────────────────────────────────────
+// Inline code
+code {
+  color: #6B3A2A;   // chocolate brown (duck's head colour)
+  background-color: #F5F2EE;
+  padding: 0.1em 0.3em;
+  border-radius: 0.15rem;
+  font-size: 0.875em;
+}
+
+// Code blocks
+pre.sourceCode {
+  background-color: #F7F5F2;
+  border-left: 3px solid #4E7B6A;
+  border-radius: 0.15rem;
+}
+
+pre.sourceCode code {
+  color: inherit;
+  background-color: transparent;
+  padding: 0;
+}
+
+// Output / plain pre blocks
+pre:not(.sourceCode) {
+  background-color: #F0EEE8;
+  border: 1px solid #E0DDD6;
+  border-radius: 0.15rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.85em;
+  color: #3A3A3A;
+}
+
+// ── Collapsible code blocks (<details>) ───────────────────────────────────────
+details {
+  margin: 0.75rem 0;
+  border: 1px solid #D8D4CC;
+  border-radius: 0.15rem;
+}
+
+details summary {
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  background-color: #F0EEE8;
+  color: #4E7B6A;
+  font-size: 0.875em;
+  list-style: none;
+}
+
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+details summary::before {
+  content: "▶ ";
+  font-size: 0.7em;
+}
+
+details[open] summary::before {
+  content: "▼ ";
+}
+
+details summary code {
+  color: #4E7B6A;
+  background-color: transparent;
+  padding: 0;
+}
+
+details > *:not(summary) {
+  padding: 0 0.75rem;
+}
+
+details > pre {
+  margin: 0.5rem 0;
+  border-left: none;
+  border: none;
+  border-radius: 0;
+}
+
+// ── Tables ────────────────────────────────────────────────────────────────────
+table {
+  font-size: 0.9em;
+  border-collapse: collapse;
+  width: auto;
+  margin: 1rem auto;
+}
+
+thead th {
+  background-color: #2C3E35;
+  color: #ffffff;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #F5F3EF;
+}
+
+tbody td {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid #E8E4DC;
+}
+
+// ── Post listing ──────────────────────────────────────────────────────────────
+.quarto-listing-default {
+  .quarto-post {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    grid-template-areas:
+      "thumbnail title"
+      "thumbnail date"
+      "thumbnail desc";
+    border-bottom: 1px solid #E8E4DC;
+    padding: 1.25rem 0 1.5rem;
+    margin-bottom: 0;
+    column-gap: 1.25rem;
+    row-gap: 0.15rem;
+  }
+
+  .quarto-post .thumbnail {
+    grid-area: thumbnail;
+    align-self: center;
+
+    img {
+      width: 120px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.15rem;
+      display: block;
+    }
+  }
+
+  // Unwrap .body so its children participate directly in the parent grid
+  .quarto-post .body {
+    display: contents;
+  }
+
+  .listing-title {
+    grid-area: title;
+    margin: 0;
+    font-size: 1.1rem;
+    align-self: end;
+  }
+
+  .listing-title a {
+    color: $headings-color;
+    font-weight: 600;
+  }
+
+  .listing-title a:hover {
+    color: $primary;
+    text-decoration: none;
+  }
+
+  // Hide the empty subtitle div Quarto generates
+  .listing-subtitle {
+    display: none;
+  }
+
+  .metadata {
+    grid-area: date;
+  }
+
+  .listing-date {
+    color: #6B7B76;
+    font-size: 0.85em;
+  }
+
+  .listing-description {
+    grid-area: desc;
+    color: #4A4A4A;
+    margin-top: 0;
+    align-self: start;
+  }
+}
+
+// ── Images ────────────────────────────────────────────────────────────────────
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.15rem;
+}
+
+// ── Blockquotes ───────────────────────────────────────────────────────────────
+blockquote {
+  border-left: 3px solid #4E7B6A;
+  padding-left: 1rem;
+  color: #5A5A5A;
+  font-style: italic;
+  margin: 1.25rem 0;
+}
+
+// ── Note/callout style for blockquotes used as notes ─────────────────────────
+.callout-note {
+  border-left-color: #4E7B6A;
+}
+
+// ── TOC ───────────────────────────────────────────────────────────────────────
+#TOC {
+  border-left: 2px solid #E8E4DC;
+  padding-left: 1rem;
+  font-size: 0.875em;
+}
+
+#TOC a {
+  color: #5A6B65;
+}
+
+#TOC a:hover {
+  color: $primary;
+}
+
+#TOC .active {
+  color: $primary;
+  font-weight: 600;
+}
+
+// ── Home page hero ────────────────────────────────────────────────────────────
+.home-hero {
+  text-align: center;
+  padding: 1rem 0 0.75rem;
+}
+
+.pintail-hero-svg {
+  display: block;
+  width: 480px;
+  height: auto;
+  margin: 0 auto 0.9rem;
+  opacity: 0.82;
+}
+
+.home-tagline {
+  display: block;
+  color: #6B7B76;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  font-style: italic;
+}
+
+// ── Page-level layout ─────────────────────────────────────────────────────────
+.page-layout-article .quarto-title-block {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #E8E4DC;
+}

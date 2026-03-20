@@ -1,0 +1,10 @@
+---
+aliases:
+  - /posts/uniswap-good-deal/
+title: "Uniswap: A Good Deal for Liquidity Providers?"
+date: 2019-01-12
+image: /assets/medium-thumbnail.svg
+description: "An analysis of Uniswap's liquidity provider returns."
+---
+
+Article originally posted [on Medium](https://pintail.medium.com/uniswap-a-good-deal-for-liquidity-providers-104c0b6816f2).

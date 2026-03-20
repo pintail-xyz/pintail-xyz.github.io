@@ -1,0 +1,26 @@
+---
+title: "Pintail's Notes"
+listing:
+  contents: posts
+  sort: "date desc"
+  type: default
+  categories: false
+  fields: [image, date, title, description]
+  image-height: 80px
+  date-format: "D MMMM YYYY"
+page-layout: full
+title-block-banner: false
+toc: false
+anchor-sections: false
+---
+
+<style>
+/* Hide the H1 title on the listing page — the navbar brand already carries it */
+#quarto-content h1.title { display: none; }
+</style>
+
+::: {.home-hero}
+![](pintail.svg){.pintail-hero-svg}
+:::
+
+## Posts

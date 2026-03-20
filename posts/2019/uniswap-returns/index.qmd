@@ -1,0 +1,10 @@
+---
+aliases:
+  - /posts/uniswap-understanding-returns/
+title: "Understanding Uniswap Returns"
+date: 2019-02-14
+image: /assets/medium-thumbnail.svg
+description: "A deep dive into how Uniswap returns are calculated for liquidity providers."
+---
+
+Article originally posted [on Medium](https://pintail.medium.com/understanding-uniswap-returns-cc593f3499ef).
