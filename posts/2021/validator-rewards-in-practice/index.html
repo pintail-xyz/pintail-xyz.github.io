@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2021-06-24">
+<meta name="description" content="Comparing modelled beacon chain validator rewards against real mainnet data, analysing attestation efficiency and proposal performance.">
+
+<title>Validator Rewards in Practice – pintail’s notes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-d4d76bf8491c20bad77d141916dc28e1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-8b21b9066471f0167ac10ccf36324965.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Validator Rewards in Practice – pintail’s notes">
+<meta property="og:description" content="Comparing modelled beacon chain validator rewards against real mainnet data, analysing attestation efficiency and proposal performance.">
+<meta property="og:image" content="https://pintail.xyz/posts/2021/validator-rewards-in-practice/images/thumbnail.jpg">
+<meta property="og:site_name" content="pintail's notes">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../pintail_silhouette.svg" alt="Pintail duck silhouette" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">pintail’s notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/pintail_xyz"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/pintail-xyz"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#modelling-average-net-reward" id="toc-modelling-average-net-reward" class="nav-link active" data-scroll-target="#modelling-average-net-reward">Modelling Average Net Reward</a></li>
+  <li><a href="#actual-average-rewards" id="toc-actual-average-rewards" class="nav-link" data-scroll-target="#actual-average-rewards">Actual Average Rewards</a></li>
+  <li><a href="#validator-performance" id="toc-validator-performance" class="nav-link" data-scroll-target="#validator-performance">Validator Performance</a>
+  <ul class="collapse">
+  <li><a href="#attestation-efficiency" id="toc-attestation-efficiency" class="nav-link" data-scroll-target="#attestation-efficiency">Attestation Efficiency</a></li>
+  <li><a href="#proposal-efficiency" id="toc-proposal-efficiency" class="nav-link" data-scroll-target="#proposal-efficiency">Proposal Efficiency</a></li>
+  <li><a href="#validator-efficiency" id="toc-validator-efficiency" class="nav-link" data-scroll-target="#validator-efficiency">Validator Efficiency</a></li>
+  </ul></li>
+  <li><a href="#validator-comparisons" id="toc-validator-comparisons" class="nav-link" data-scroll-target="#validator-comparisons">Validator Comparisons</a></li>
+  <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions">Conclusions</a></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Validator Rewards in Practice</h1>
+</div>
+
+<div>
+  <div class="description">
+    Comparing modelled beacon chain validator rewards against real mainnet data, analysing attestation efficiency and proposal performance.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 24, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><img src="images/henrik-hansen-KoA0M5JOy9o-unsplash.jpg" class="img-fluid"></p>
+<p>In the <a href="https://pintail.xyz/posts/2021/beacon-chain-validator-rewards/">previous article</a> we looked at the rewards and penalties validators receive for participating in the beacon chain’s consensus process and assembled a model to estimate expected net rewards, based on network participation rate and validator uptime. This time we’re going to look at data from mainnet to see how it compares to the model. We’ll be using <a href="https://twitter.com/jgm">Jim McDonald</a>’s invaluable <a href="https://github.com/wealdtech/chaind">chaind</a> tool to index the beacon chain to do this. We’ll be focusing on data the first 32,000 epochs (around 4½ months) so that for now we can disregard the impact of the <a href="https://medium.com/prysmatic-labs/eth2-mainnet-incident-retrospective-f0338814340c">block production incident</a>, which occurred in late April 2021.</p>
+<section id="modelling-average-net-reward" class="level1">
+<h1>Modelling Average Net Reward</h1>
+<p>Let’s start by looking at aggregate data from the network. By aggregating all this data across more than 120,000 validators, we will get a view of the <em>average</em> rewards/penalties received by validators. This is allows us to pick up where we left off last time, since all the values calculated by our model in the previous article were <em>expected</em> (i.e.&nbsp;average) values, so we should get a good sense of how well the model fits the observed network performance. After that we can go a bit deeper into the individual reward/penalty components, and individual validators. This can give us an idea precisely which types of issue are leading to performance which falls short of the ideal.</p>
+<p>Recall our model for expected net rewards was given by: <span class="math display">
+R = 3BPU - 3B(1-U) + \frac{7}{8}BPU\frac{\ln(P)}{P-1} + \frac{1}{8}BPU
+</span> However, since we’re modelling the whole network in aggregate, and since the the model is linear with respect to <span class="math inline">U</span>, we can treat each individual validator’s uptime <span class="math inline">U</span> as equal to the overall network participation rate <span class="math inline">P</span> which gives us: <span class="math display">
+R = 3BP^2 - 3B(1-P) + \frac{7}{8}BP^2\frac{\ln(P)}{P-1} + \frac{1}{8}BP^2
+</span></p>
+<p>Our model therefore has only two parameters — the participation rate <span class="math inline">P</span>, and the the base reward <span class="math inline">B</span>, which is in turn a function of the the total active stake. For simplicity’s sake, let’s assume that the participation rate <span class="math inline">P</span> is constant for period being considered, and use the average observed value from the network. For each epoch, this is given by the sum of the <em>attesting balance</em> — the combined effective balance of all validators whose attestations were included — divided by the total <em>active balance</em> — the combined effective balance of all active validators.</p>
+<details>
+<summary>
+<code>imports, constants, db connection [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statistics</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> timedelta</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> psycopg2</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.dates <span class="im">as</span> mdates</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>FAR_FUTURE_EPOCH <span class="op">=</span> <span class="dv">2</span><span class="op">**</span><span class="dv">64</span> <span class="op">-</span> <span class="dv">1</span> <span class="co"># as defined in spec</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>END_EPOCH <span class="op">=</span> <span class="dv">32000</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># open/restart connection to chaind database</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    cursor.close()</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    connection.close()</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span>:</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">pass</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>connection <span class="op">=</span> psycopg2.<span class="ex">connect</span>(user<span class="op">=</span><span class="st">"chain"</span>, host<span class="op">=</span><span class="st">"127.0.0.1"</span>, database<span class="op">=</span><span class="st">"chain"</span>, password<span class="op">=</span><span class="st">"medalla"</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>cursor <span class="op">=</span> connection.cursor()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code>find average participation rate [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="ss">f"SELECT f_active_balance, f_attesting_balance FROM t_epoch_summaries "</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>               <span class="ss">f"WHERE f_epoch &lt; </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss"> ORDER BY f_epoch"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>active_balance, attesting_balance <span class="op">=</span> <span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>cursor.fetchall()))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>p_rate <span class="op">=</span> [attesting_balance[i] <span class="op">/</span> active_balance[i] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(active_balance))]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>average_p_rate <span class="op">=</span> <span class="bu">sum</span>(p_rate)<span class="op">/</span><span class="bu">len</span>(p_rate)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"average participation rate: </span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>average_p_rate<span class="sc">:.1f}</span><span class="ss">%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    average participation rate: 99.0%</code></pre>
+<p>As calculated above, the average participation rate across the first 32,000 epochs is 99%. Armed with this figure, we can model the expected reward, based on the amount of Ether staked by active validators each epoch.</p>
+</section>
+<section id="actual-average-rewards" class="level1">
+<h1>Actual Average Rewards</h1>
+<p>To make a comparison we also need to calculate what the <em>actual</em> average reward was. We can do this by looking at how the balances of the active validators changed, as recorded by chaind. There are a few of adjustments we need to make to the aggregate figures to accurately reflect mainnet rewards and penalties:</p>
+<ol type="1">
+<li>We exclude eth1 deposits erroneously made by some users to active validators;</li>
+<li>We exclude slashed validators, since slashing penalties are relatively large, but are only incurred when multiple instances of the same validator are run simultaneously or for provably malicious actions;</li>
+<li>We exclude validators who slash others, since the large rewards received by these validators also distort the overall picture of rewards.</li>
+</ol>
+<p>What proportion of validators are we excluding from our analysis by removing the slashed and slashers? We can calculate a quick and dirty upper-bound on this figure by looking at the number of validators we are excluding from the set (the number of slashed validators plus the validators who did the slashing) and dividing by minimimum number of active validators — i.e.&nbsp;number of the genesis validators.</p>
+<details>
+<summary>
+<code>calculate upper bound on percentage of excluded validators [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="st">"SELECT COUNT(*) FROM t_validators WHERE f_slashed"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>n_to_remove <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> cursor.fetchone()[<span class="dv">0</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"number of slashed/slasher validators: </span><span class="sc">{</span>n_to_remove<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="st">"SELECT COUNT(*) FROM t_validators WHERE f_activation_epoch = 0"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>n_genesis <span class="op">=</span> cursor.fetchone()[<span class="dv">0</span>]</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"minimum number of active validators: </span><span class="sc">{</span>n_genesis<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"upper-bound percentage of validators excluded from average: </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> n_to_remove <span class="op">/</span> n_genesis<span class="sc">:.1f}</span><span class="ss">%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    number of slashed/slasher validators: 268
+    minimum number of active validators: 21063
+    upper-bound percentage of validators excluded from average: 1.3%</code></pre>
+<p>As the calculation above shows, at worst we are excluding 1.3% of the validator set from our analysis. We expect therefore that our calculations of average net reward will not be significantly affected. [NB: The <a href="https://github.com/pintail-xyz/validator_rewards/blob/main/epoch_extras.py">code used</a> to calculate the average rewards and store the relevant data in the chaind database was run prior to running this notebook.]</p>
+<details>
+<summary>
+<code>calculate and plot modelled and average rewards [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> base_reward(active_balance, effective_balance<span class="op">=</span><span class="bu">int</span>(<span class="fl">32e9</span>)):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> effective_balance <span class="op">*</span> <span class="dv">64</span> <span class="op">//</span> math.isqrt(active_balance) <span class="op">//</span> <span class="dv">4</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="ss">f"SELECT * FROM t_epoch_extras WHERE f_epoch &lt; </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss"> ORDER BY f_epoch"</span>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>_, aggregate_reward, aggregate_reward_nonslashed, active_balance_nonslashed <span class="op">=</span> <span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>cursor.fetchall()))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>average_reward_nonslashed <span class="op">=</span> []</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>modelled_reward <span class="op">=</span> []</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> e <span class="kw">in</span> <span class="bu">range</span>(END_EPOCH):</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># look at the average reward received by a supposed 32 ETH validator</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (almost all validators have a 32 ETH effective balance)</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    average_reward_nonslashed.append(<span class="fl">32e9</span> <span class="op">*</span> aggregate_reward_nonslashed[e] <span class="op">/</span> active_balance_nonslashed[e])</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    p <span class="op">=</span> average_p_rate</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> base_reward(active_balance[e])</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    modelled_reward.append(<span class="dv">3</span><span class="op">*</span>b<span class="op">*</span>p<span class="op">**</span><span class="dv">2</span><span class="op">-</span><span class="dv">3</span><span class="op">*</span>b<span class="op">*</span>(<span class="dv">1</span><span class="op">-</span>p)<span class="op">+</span>(<span class="dv">7</span><span class="op">/</span><span class="dv">8</span>)<span class="op">*</span>b<span class="op">*</span>p<span class="op">**</span><span class="dv">2</span><span class="op">*</span>math.log(p)<span class="op">/</span>(p<span class="op">-</span><span class="dv">1</span>)<span class="op">+</span>(<span class="dv">1</span><span class="op">/</span><span class="dv">8</span>)<span class="op">*</span>b<span class="op">*</span>p<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>rewards <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">'average_reward_nonslashed'</span>: average_reward_nonslashed,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">'modelled_reward'</span>: modelled_reward</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>ax1<span class="op">=</span>fig.add_subplot(<span class="dv">111</span>, label<span class="op">=</span><span class="st">'1'</span>)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>ax2<span class="op">=</span>fig.add_subplot(<span class="dv">111</span>, label<span class="op">=</span><span class="st">'2'</span>, frame_on<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>ax1.plot(<span class="bu">range</span>(END_EPOCH), average_reward_nonslashed, label<span class="op">=</span><span class="st">'actual reward'</span>)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>ax1.plot(<span class="bu">range</span>(END_EPOCH), modelled_reward, label<span class="op">=</span><span class="st">'modelled reward'</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>ax1.legend()</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>ax2.plot([datetime(<span class="dv">2020</span>,<span class="dv">12</span>,<span class="dv">1</span>,<span class="dv">12</span>,<span class="dv">0</span>,<span class="dv">23</span>), datetime(<span class="dv">2021</span>,<span class="dv">4</span>,<span class="dv">22</span>,<span class="dv">17</span>,<span class="dv">13</span>,<span class="dv">59</span>)], [<span class="dv">0</span>,<span class="dv">0</span>], linestyle<span class="op">=</span><span class="st">'None'</span>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>ax2.set_title(<span class="st">'Modeled vs. average reward for an Ethereum validator'</span>)</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>ax1.set_xlabel(<span class="st">'epoch'</span>)</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Average per-epoch reward (gwei)'</span>)</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>ax2.xaxis.tick_top()</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>ax2.xaxis.set_major_formatter(mdates.DateFormatter(<span class="st">'%b-%Y'</span>))</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>ax2.xaxis.set_label_position(<span class="st">'top'</span>)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>ax2.yaxis.set_visible(<span class="va">False</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/validator-rewards-in-practice_6_0.png" class="img-fluid"></p>
+<p>As shown in the chart above, our simple model seems to be a fairly good fit for the data, but overall it seems to predict slightly higher rewards than were actually observed. Let’s calculate just how much this premium was:</p>
+<details>
+<summary>
+<code>calculate model premium [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>premium <span class="op">=</span> [modelled_reward[i] <span class="op">/</span> a <span class="op">-</span> <span class="dv">1</span> <span class="cf">for</span> i, a <span class="kw">in</span> <span class="bu">enumerate</span>(average_reward_nonslashed)]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>average_premium <span class="op">=</span> <span class="bu">sum</span>(premium) <span class="op">/</span> <span class="bu">len</span>(premium)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"on average, the model predicted </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> average_premium<span class="sc">:.2}</span><span class="ss">% "</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>      <span class="ss">f"higher rewards than were observed in practice"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    on average, the model predicted 1.7% higher rewards than were observed in practice</code></pre>
+<p>So, with a 1.7% overestimate on average, our model captured the vast majority of the variability in average per-epoch rewards. The slight overestimate however seems to be fairly consistent across the dataset. To understand where this discrepancy comes from, let’s take a look at an individual validator performance.</p>
+</section>
+<section id="validator-performance" class="level1">
+<h1>Validator Performance</h1>
+<p>As explained in the previous article, the actual rewards available to any given validator depend to some degree on luck. In particular the number of proposer duties assigned to each validator can vary significantly. To a lesser extent, validators can also lose out when skipped slots lead to their attestations being delayed — through no fault of the attesting validator.</p>
+<p>If we want to compare validators’ performance then, we need to look at what each validator makes of the opportunities it is given. One way of doing this is looking at what level of reward would have been available to the validator, had it performed its duties perfectly (after accounting for deficiencies in the performance of the rest of the network). This is the <em>maximum cumulative reward</em> across the period. We will then compare this with the <em>actual net reward</em> that validator earned over the period. This is the sum of all earned rewards less any penalties incurred for imperfect attestation.</p>
+<p>The ratio of <em>actual</em> to <em>maximum</em> rewards is then defined as <em>validator efficiency</em>. In other words, this is the proportion of the available rewards were captured by a given validator. We can then use validator efficiency as a metric to compare between validators, and produce a ranking which places the optimally functioning validators at the top.</p>
+<p>Validator rewards come in two parts — rewards for block proposal, which are occasional and occur randomly, and rewards for attestation, which are available every epoch (6.4 minutes). Let’s start by looking at performance on attestations.</p>
+<section id="attestation-efficiency" class="level2">
+<h2 class="anchored" data-anchor-id="attestation-efficiency">Attestation Efficiency</h2>
+<p>In our model, we assumed that validators performed their attestation duties either perfectly or not at all. However, as the data above showed, this led us to a small over-estimate of actual rewards. The reason for this is that it is possible for a validator to fulfil its attestation duties, but without receiving the full reward. To understand how this can happen, we need to look a little more closely at what validators are actually rewarded <em>for</em>. As mentioned in the previous article, attestations can be rewarded with up to one <code>base_reward</code> for each of four things: 1. <strong>Correct source vote</strong>. An attestation contains a vote for the checkpoint block serving as the “source” for the CasperFFG finality overlay. In practice an attestation can only be included if the source vote is correct, so the source vote reward could equivalently be considered as an “inclusion reward”. 2. <strong>Correct target vote</strong>. A vote for the checkpoint block serving as the “target” for the CapserFFG finality overlay. 3. <strong>Correct head vote</strong>. A vote for the current block at the head of the chain. 4. <strong>Inclusion delay</strong>. A final <code>base_reward</code> is split between the attester and block proposer. The attester receives a maximum of <span class="math inline">\frac{7}{8}</span> <code>base_reward</code>, scaled inversely by the number of slots of delay to inclusion. The block proposer receives <span class="math inline">\frac{1}{8}</span> <code>base_reward</code> for each attestation they include.</p>
+<p><em>NB for full details of the meaning and function of “source”, “target” and “head” votes, see the <a href="https://arxiv.org/pdf/2003.03052.pdf">Gasper paper</a>.</em></p>
+<p>The proportion of validators receiving reward (1) is already described fully by the participation rate. If validators don’t submit the correct source vote, their attestations won’t be included at all, and in effect this means the validator does not participate. Rewards (2) and (3) are slightly different — validators vote for the block that appears to them to be the ‘correct’ target or head block, but some validators may have an incomplete or delayed view of the blockchain, leading them to vote for a block which is different to the one ultimately finalised for that slot. In such cases, validators which voted for the ‘correct’ block receive a partial <code>base_reward</code>, scaled by the proportion of the active stake which voted the same way. Validators who vote for an ‘incorrect’ block will penalised one whole <code>base_reward</code>.</p>
+<p>We’ve talked about (4), the inclusion delay reward, before — but our model assumed that ‘online’ validators would only have their attestations delayed if the earliest inclusion slot had no block. In practice, attestations may be delayed by other factors too — network latency could mean that the block proposer does not receive the attestation in time for inclusion into the earliest block, for example.</p>
+<p>For a sense of what this data tells us, let’s have a look in detail at the performance of a single validator. We’ll start by focusing on a validator from the genesis validator set, <a href="https://beaconcha.in/validator/1111">validator 1111</a>. As usual, we’ll be working from the <a href="https://github.com/wealdtech/chaind">chaind</a> database, but some additional per-validator performance statistics have been compiled using a separate <a href="https://github.com/pintail-xyz/validator_rewards/blob/main/validator_epoch_extras.py">Python script</a> and <a href="https://github.com/pintail-xyz/validator_rewards/blob/main/chaind_extras.py">supporting module</a>.</p>
+<details>
+<summary>
+<code>get attestation efficiency for validator 1111 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"SELECT * FROM t_validator_epoch_extras WHERE f_validator_index = 1111 AND f_epoch = </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>_, _, _, reward, max_reward, missed, target, head, delay, _, _ <span class="op">=</span> cursor.fetchone()</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"max reward: </span><span class="sc">{</span>max_reward<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"actual reward: </span><span class="sc">{</span>reward<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"attestation efficiency = </span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>reward<span class="op">/</span>max_reward<span class="sc">:.1f}</span><span class="ss">%"</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>shortfall <span class="op">=</span> max_reward <span class="op">-</span> reward</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"shortfall </span><span class="sc">{</span>shortfall<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to missed attestations: </span><span class="sc">{</span>missed<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>missed<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to incorrect head:      </span><span class="sc">{</span>head<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>head<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to incorrect target:    </span><span class="sc">{</span>target<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>target<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to excess delay:        </span><span class="sc">{</span>delay<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>delay<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)</span><span class="ch">\n\n</span><span class="ss">"</span>)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> plt.figure()</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> fig.add_axes([<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>])</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>ax.axis(<span class="st">'equal'</span>)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>ax.pie(</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    [missed, head, target, delay],</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>[<span class="st">'missed attestation'</span>, <span class="st">'incorrect head'</span>, <span class="st">'incorrect target'</span>, <span class="st">'excess delay'</span>],</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    autopct<span class="op">=</span><span class="st">'</span><span class="sc">%1.1f%%</span><span class="st">'</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>ax.set_title(</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f'Causes of attestation shortfall for validator 1111 during the first </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss"> beacon chain epochs'</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    max reward: 1.3370 ETH
+    actual reward: 1.3116 ETH
+    attestation efficiency = 98.1%
+    shortfall 0.0254 ETH
+    ...due to missed attestations: 0.0147 ETH (57.8%)
+    ...due to incorrect head:      0.0082 ETH (32.3%)
+    ...due to incorrect target:    0.0023 ETH (9.1%)
+    ...due to excess delay:        0.0002 ETH (0.8%)
+    
+</code></pre>
+<p><img src="images/validator-rewards-in-practice_10_1.png" class="img-fluid"></p>
+<p>So, for the first 32000 epochs, validator 1111 had an attestation efficiency of 98%, meaning that it received 98% of the maximum possible attestation rewards available to it. By taking account of both the opportunity cost and penalties for missed or incorrect attestations, we can break down the shortfall into its component causes. 57.8% of the shortfall was due to missed attestations. 32.3% of the shortfall was for attestations which were included but had an incorrect head vote. 9.1% of the shortfall was for attestations which were included but had an incorrect target vote. 0.8% of the shortfall was due to attestations that were included with some “excess delay”. Here, excess delay is any delay beyond the earliest that it could have been included — that is, allowing for skipped slots.</p>
+<p>It is these components — incorrect head, incorrect target and excess delay — which were not included in our previous model, and explain the slight discrepancy in the modelled validator reward.</p>
+</section>
+<section id="proposal-efficiency" class="level2">
+<h2 class="anchored" data-anchor-id="proposal-efficiency">Proposal Efficiency</h2>
+<p>The other activity for which validators receive rewards is block proposal. However, in this case it is a little trickier to evaluate validator performance. This is because the reward for block proposal depends on the number of attestations which included in that block. If a validator fails to propose a block when required, we can’t say how much that block would have been worth if the validator instead had been successful. Even if a validator does successfully propose a block, it may be that the block does not contain as many attestations as were in fact available to be included (again due to network latency or other factors which may or may not be the ‘fault’ of the block proposer).</p>
+<p>Therefore, in our quest for an overall measure of validator efficiency, we will have to make some assumptions about proposal rewards. For blocks which are successfully proposed, we will calculate the actual proposer reward that was received and assume that this was the maximum possible reward. For skipped slots/missing blocks, we will use the following estimate for the notional block proposer reward, <span class="math inline">R_b</span>, which would have been received: <span class="math display">
+R_b = \frac{1}{256}B_ES_A
+</span> where <span class="math inline">B_E</span> is the base reward per Ether and <span class="math inline">S_A</span> is the attesting stake for that epoch. The figure of <span class="math inline">\frac{1}{256}</span> is based on the fact that the proposer receives <span class="math inline">\frac{1}{8}</span> of a base reward for each included attestation, and the proposer reward is shared between the 32 proposers in each epoch.</p>
+<p>Again, let’s look at a valiator 1111 to see what this means in practice.</p>
+<details>
+<summary>
+<code>get proposal efficiency for validator 1111 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"SELECT SUM(f_proposer_duties), SUM(f_proposals_included) FROM t_validator_epoch_summaries "</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"WHERE f_validator_index = 1111 AND f_epoch &lt;= </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>proposer_duties, proposals_included <span class="op">=</span> cursor.fetchone()</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"SELECT f_block_reward, f_missed_block_reward FROM t_validator_epoch_extras "</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"WHERE f_validator_index = 1111 AND f_epoch = </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>proposer_reward, missed_proposer_reward <span class="op">=</span> cursor.fetchone()</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"validator 1111 was allocated </span><span class="sc">{</span>proposer_duties<span class="sc">}</span><span class="ss"> proposer duties and fulfilled </span><span class="sc">{</span>proposals_included<span class="sc">}</span><span class="ss"> "</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"(</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>proposals_included<span class="op">/</span>proposer_duties<span class="sc">:.0f}</span><span class="ss">%)"</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>max_proposer_reward <span class="op">=</span> proposer_reward <span class="op">+</span> missed_proposer_reward</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"max proposer reward = </span><span class="sc">{</span>max_proposer_reward<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"received proposer reward = </span><span class="sc">{</span>proposer_reward<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>proposer_reward<span class="op">/</span>max_proposer_reward<span class="sc">:.0f}</span><span class="ss">%)"</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    validator 1111 was allocated 19 proposer duties and fulfilled 17 (89%)
+    max proposer reward = 0.0531 ETH
+    received proposer reward = 0.0464 ETH (88%)</code></pre>
+<p>So, in this case we see that although the validator successfully performed 89% of their block proposal duties, the proposal efficiency was slightly lower, at 88%. This is because the value of the missed proposals was slightly higher than average as these proposal duties came later in the analysis period (epochs 17334 and 17520), and the size of the validator set, and hence the value of block proposals, has generally increased throughout the period.</p>
+</section>
+<section id="validator-efficiency" class="level2">
+<h2 class="anchored" data-anchor-id="validator-efficiency">Validator Efficiency</h2>
+<p>The advantage of looking at value in ETH of successful and missed block proposal opportunities is that we now have a measure of proposal ‘shortfall’ for proposal duties. This can be combined attestation efficiency to calculate an overall <em>validator efficiency</em> score. This is expressed as a percentage of the maximum overall reward the validator could have earned. We can redraw the pie chart from above to show the proportion of the reward shortfall due to missed proposals, based on our estimate of the expected reward for those blocks.</p>
+<details>
+<summary>
+<code>get validator efficiency for validator 1111 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"SELECT * FROM t_validator_epoch_extras WHERE f_validator_index = 1111 AND f_epoch = </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>_, _, _, att_reward, max_att_reward, missed, target, head, delay, prop_reward, missed_props <span class="op">=</span> cursor.fetchone()</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>max_reward <span class="op">=</span> max_att_reward <span class="op">+</span> prop_reward <span class="op">+</span> missed_props</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>actual_reward <span class="op">=</span> att_reward <span class="op">+</span> prop_reward</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"max reward: </span><span class="sc">{</span>max_reward<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"actual reward: </span><span class="sc">{</span>actual_reward<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"validator efficiency = </span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>actual_reward<span class="op">/</span>max_reward<span class="sc">:.1f}</span><span class="ss">%"</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>shortfall <span class="op">=</span> max_reward <span class="op">-</span> actual_reward</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"shortfall </span><span class="sc">{</span>shortfall<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH"</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to missed attestations: </span><span class="sc">{</span>missed<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>missed<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to incorrect head:      </span><span class="sc">{</span>head<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>head<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to incorrect target:    </span><span class="sc">{</span>target<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>target<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to excess delay:        </span><span class="sc">{</span>delay<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>delay<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"...due to missed proposals:    </span><span class="sc">{</span>missed_props<span class="op">/</span><span class="fl">1e9</span><span class="sc">:.4f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>missed_props<span class="op">/</span>shortfall<span class="sc">:.1f}</span><span class="ss">%)"</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> plt.figure()</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>ax <span class="op">=</span> fig.add_axes([<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>])</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>ax.axis(<span class="st">'equal'</span>)</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>ax.pie(</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    [missed, head, target, delay, missed_props],</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>[<span class="st">'missed attestation'</span>, <span class="st">'incorrect head'</span>, <span class="st">'incorrect target'</span>, <span class="st">'excess delay'</span>, <span class="st">'missed proposals'</span>],</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    autopct<span class="op">=</span><span class="st">'</span><span class="sc">%1.1f%%</span><span class="st">'</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>ax.set_title(</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f'Causes of reward shortfall for validator 1111 during the first </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss"> beacon chain epochs'</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    max reward: 1.3901 ETH
+    actual reward: 1.3580 ETH
+    validator efficiency = 97.7%
+    shortfall 0.0321 ETH
+    ...due to missed attestations: 0.0147 ETH (45.9%)
+    ...due to incorrect head:      0.0082 ETH (25.7%)
+    ...due to incorrect target:    0.0023 ETH (7.2%)
+    ...due to excess delay:        0.0002 ETH (0.7%)
+    ...due to missed proposals:    0.0066 ETH (20.6%)</code></pre>
+<p><img src="images/validator-rewards-in-practice_14_1.png" class="img-fluid"></p>
+</section>
+</section>
+<section id="validator-comparisons" class="level1">
+<h1>Validator Comparisons</h1>
+<p>So we have identified that our example validator achieved a validator efficiency of about 98%. This implies that this validator is very close to receiving the maximum rewards available from the protocol. But how typical is this? To make a comparison, let’s choose a large set of validators and take a look at the distribution of validator efficiency across the set.</p>
+<p>For the longest possible comparison period, we’ll choose the set of genesis validators who were still validating at epoch 32000 (i.e.&nbsp;they hadn’t been slashed or made a voluntary exit). For simplicity we’re also going to exclude the small number of validators who received slashing rewards, and those who received additional eth1 deposits. We can then calculate the valdator efficiency for each validator in the set and look at the distribution.</p>
+<details>
+<summary>
+<code>identify a reduced validator set which excludes slashed validators, slashers and redeposit validators [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>FUTURE_EPOCH <span class="op">=</span> <span class="dv">2</span><span class="op">**</span><span class="dv">64</span> <span class="op">-</span> <span class="dv">1</span> <span class="co"># from spec</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SELECT f_index, f_activation_epoch, f_exit_epoch, f_slashed, f_public_key "</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"FROM t_validators ORDER BY f_index"</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>validators <span class="op">=</span> [{</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'index'</span>: r[<span class="dv">0</span>],</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'activation_epoch'</span>: FUTURE_EPOCH <span class="cf">if</span> r[<span class="dv">1</span>] <span class="kw">is</span> <span class="va">None</span> <span class="cf">else</span> r[<span class="dv">1</span>],</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'exit_epoch'</span>: FUTURE_EPOCH <span class="cf">if</span> r[<span class="dv">2</span>] <span class="kw">is</span> <span class="va">None</span> <span class="cf">else</span> r[<span class="dv">2</span>],</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'slashed'</span>: r[<span class="dv">3</span>],</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'slasher'</span>: <span class="va">False</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'redeposit'</span>: <span class="va">False</span>,</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'pubkey'</span>: r[<span class="dv">4</span>].<span class="bu">hex</span>()</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>} <span class="cf">for</span> r <span class="kw">in</span> cursor.fetchall()]</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>pubkey_lookup <span class="op">=</span> {v[<span class="st">'pubkey'</span>]: v <span class="cf">for</span> v <span class="kw">in</span> validators}</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="co"># identify slashers</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="st">"SELECT f_inclusion_slot FROM t_proposer_slashings"</span>)</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>proposer_slashings <span class="op">=</span> [s[<span class="dv">0</span>] <span class="cf">for</span> s <span class="kw">in</span> cursor.fetchall()]</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="st">"SELECT f_inclusion_slot FROM t_attester_slashings"</span>)</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>slashings <span class="op">=</span> proposer_slashings <span class="op">+</span> [s[<span class="dv">0</span>] <span class="cf">for</span> s <span class="kw">in</span> cursor.fetchall()]</span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> slashings:</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>    cursor.execute(<span class="ss">f"SELECT f_validator_index FROM t_proposer_duties WHERE f_slot = </span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>    validators[cursor.fetchone()[<span class="dv">0</span>]][<span class="st">"slasher"</span>] <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="co"># check for any instances of validator deposits made to already active validators</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>cursor.execute(<span class="st">"SELECT f_inclusion_slot, f_validator_pubkey FROM t_deposits"</span>)</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> row <span class="kw">in</span> cursor.fetchall():</span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>    deposit_slot <span class="op">=</span> row[<span class="dv">0</span>]</span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>    pubkey <span class="op">=</span> row[<span class="dv">1</span>].<span class="bu">hex</span>()</span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pubkey <span class="kw">not</span> <span class="kw">in</span> pubkey_lookup:</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>        validator <span class="op">=</span> pubkey_lookup[pubkey]</span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> deposit_slot <span class="op">//</span> <span class="dv">32</span> <span class="op">&gt;</span> validator[<span class="st">"activation_epoch"</span>] <span class="kw">and</span> deposit_slot <span class="op">//</span> <span class="dv">32</span> <span class="op">&lt;</span> validator[<span class="st">"exit_epoch"</span>]:</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>        validator[<span class="st">"redeposit"</span>] <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>reduced_genesis_set <span class="op">=</span> [</span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>    v <span class="cf">for</span> v <span class="kw">in</span> validators <span class="cf">if</span> v[<span class="st">"activation_epoch"</span>] <span class="op">==</span> <span class="dv">0</span> <span class="kw">and</span> <span class="kw">not</span> (</span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">"slashed"</span>] <span class="kw">or</span> v[<span class="st">"slasher"</span>] <span class="kw">or</span> v[<span class="st">"redeposit"</span>] <span class="kw">or</span> v[<span class="st">"exit_epoch"</span>] <span class="op">&lt;</span> END_EPOCH</span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a>n_genesis <span class="op">=</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> v <span class="kw">in</span> validators <span class="cf">if</span> v[<span class="st">"activation_epoch"</span>] <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a>n_reduced <span class="op">=</span> <span class="bu">sum</span>(<span class="dv">1</span> <span class="cf">for</span> v <span class="kw">in</span> reduced_genesis_set <span class="cf">if</span> v[<span class="st">"activation_epoch"</span>] <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"validator count (genesis set): </span><span class="sc">{</span>n_genesis<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"validator count (reduced genesis set): </span><span class="sc">{</span>n_reduced<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span>n_genesis <span class="op">-</span> n_reduced<span class="sc">}</span><span class="ss"> excluded)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    validator count (genesis set): 21063
+    validator count (reduced genesis set): 20993 (70 excluded)</code></pre>
+<details>
+<summary>
+<code>calculate validator efficiencies for reduced genesis set [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> v <span class="kw">in</span> reduced_genesis_set:</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    cursor.execute(</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"SELECT * FROM t_validator_epoch_extras "</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"WHERE f_validator_index = </span><span class="sc">{</span>v[<span class="st">'index'</span>]<span class="sc">}</span><span class="ss"> AND f_epoch = </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    (</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        _, _, _, </span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'att_reward'</span>],</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'max_att_reward'</span>],</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'missed_att_shortfall'</span>],</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'incorrect_target_shortfall'</span>],</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'incorrect_head_shortfall'</span>],</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'excess_delay_shortfall'</span>],</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'proposer_reward'</span>],</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        v[<span class="st">'missed_proposer_reward'</span>]</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    ) <span class="op">=</span> cursor.fetchone()</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    max_reward <span class="op">=</span> v[<span class="st">'max_att_reward'</span>] <span class="op">+</span> v[<span class="st">'proposer_reward'</span>] <span class="op">+</span> v[<span class="st">'missed_proposer_reward'</span>]</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    v[<span class="st">'validator_efficiency'</span>] <span class="op">=</span> (v[<span class="st">'att_reward'</span>] <span class="op">+</span> v[<span class="st">'proposer_reward'</span>]) <span class="op">/</span> max_reward</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> [<span class="dv">100</span> <span class="op">*</span> v[<span class="st">'validator_efficiency'</span>] <span class="cf">for</span> v <span class="kw">in</span> reduced_genesis_set <span class="cf">if</span> v[<span class="st">'validator_efficiency'</span>]]</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>ax.hist(x, bins<span class="op">=</span>[e <span class="op">/</span> <span class="dv">10</span> <span class="cf">for</span> e <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">800</span>,<span class="dv">1000</span>)])</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span><span class="dv">80</span>, xmax<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="ss">f'Validator efficiency for reduced genesis set up to epoch </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Validator efficiency (%)'</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Validator count'</span>)</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>ax.set_xticks(<span class="bu">range</span>(<span class="dv">80</span>,<span class="dv">101</span>,<span class="dv">2</span>))</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>quartiles <span class="op">=</span> statistics.quantiles(x)</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>percentiles <span class="op">=</span> statistics.quantiles(x, n<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"validator efficiency statistics:</span><span class="ch">\n</span><span class="st">"</span>)</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"        minimum = </span><span class="sc">{</span><span class="bu">min</span>(x)<span class="sc">:.2f}</span><span class="ss">%"</span>)</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f" 1st percentile = </span><span class="sc">{</span>percentiles[<span class="dv">0</span>]<span class="sc">:.2f}</span><span class="ss">%"</span>)</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f" lower quartile = </span><span class="sc">{</span>quartiles[<span class="dv">0</span>]<span class="sc">:.2f}</span><span class="ss">%"</span>)</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"         median = </span><span class="sc">{</span>quartiles[<span class="dv">1</span>]<span class="sc">:.2f}</span><span class="ss">%"</span>)</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f" upper quartile = </span><span class="sc">{</span>quartiles[<span class="dv">2</span>]<span class="sc">:.2f}</span><span class="ss">%"</span>)</span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"99th percentile = </span><span class="sc">{</span>percentiles[<span class="dv">98</span>]<span class="sc">:.2f}</span><span class="ss">%"</span>)</span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"        maximum = </span><span class="sc">{</span><span class="bu">max</span>(x)<span class="sc">:.2f}</span><span class="ss">%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    validator efficiency statistics:
+    
+            minimum = -77.02%
+     1st percentile = 73.49%
+     lower quartile = 97.30%
+             median = 98.61%
+     upper quartile = 98.99%
+    99th percentile = 99.25%
+            maximum = 99.43%</code></pre>
+<p><img src="images/validator-rewards-in-practice_17_1.png" class="img-fluid"></p>
+<p>So in fact our example validator 1111 with an efficiency of 97.7% sits somewhere in the lower half of validators by this metric, considering that the median validator efficiency is over 98%.</p>
+<p>As shown in the histogram, the majority of validators cluster in the range 97% — 99%, with no validators achieving perfect (100%) efficiency. At the other end of the spectrum, a small number of validators actually have negative efficiency (i.e.&nbsp;their net reward over the period is negative). This includes the handful of validators which have never made a successful attestation, perhaps due to losing their validator keys or a misunderstanding of the technical steps required to validate successfully.</p>
+<p>The histogram seems to show a bimodal distribution with most of the validators not in the 97% — 99% range instead grouping in the range 92% — 97%. Let’s take a look at these two groups of validators to see if there’s a clear cause for the difference in performance.</p>
+<details>
+<summary>
+<code>show shortfall charts for the two validator groups [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>group1_shortfalls <span class="op">=</span> [<span class="fl">0.0</span>] <span class="op">*</span> <span class="dv">5</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>group2_shortfalls <span class="op">=</span> group1_shortfalls.copy()</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>group1_count <span class="op">=</span> group2_count <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> v <span class="kw">in</span> reduced_genesis_set:</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> v[<span class="st">'validator_efficiency'</span>] <span class="op">&gt;=</span> <span class="fl">0.92</span> <span class="kw">and</span> v[<span class="st">'validator_efficiency'</span>] <span class="op">&lt;</span> <span class="fl">0.97</span>:</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>        group1_shortfalls[<span class="dv">0</span>] <span class="op">+=</span> v[<span class="st">'missed_att_shortfall'</span>]</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        group1_shortfalls[<span class="dv">1</span>] <span class="op">+=</span> v[<span class="st">'incorrect_head_shortfall'</span>]</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        group1_shortfalls[<span class="dv">2</span>] <span class="op">+=</span> v[<span class="st">'incorrect_target_shortfall'</span>]</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>        group1_shortfalls[<span class="dv">3</span>] <span class="op">+=</span> v[<span class="st">'excess_delay_shortfall'</span>]</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>        group1_shortfalls[<span class="dv">4</span>] <span class="op">+=</span> v[<span class="st">'missed_proposer_reward'</span>]</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>        group1_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> v[<span class="st">'validator_efficiency'</span>] <span class="op">&gt;=</span> <span class="fl">0.97</span>:</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>        group2_shortfalls[<span class="dv">0</span>] <span class="op">+=</span> v[<span class="st">'missed_att_shortfall'</span>]</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>        group2_shortfalls[<span class="dv">1</span>] <span class="op">+=</span> v[<span class="st">'incorrect_head_shortfall'</span>]</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>        group2_shortfalls[<span class="dv">2</span>] <span class="op">+=</span> v[<span class="st">'incorrect_target_shortfall'</span>]</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>        group2_shortfalls[<span class="dv">3</span>] <span class="op">+=</span> v[<span class="st">'excess_delay_shortfall'</span>]</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>        group2_shortfalls[<span class="dv">4</span>] <span class="op">+=</span> v[<span class="st">'missed_proposer_reward'</span>]</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>        group2_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">'missed</span><span class="ch">\n</span><span class="st">attestation'</span>, <span class="st">'incorrect</span><span class="ch">\n</span><span class="st">head'</span>, <span class="st">'incorrect</span><span class="ch">\n</span><span class="st">target'</span>, <span class="st">'excess</span><span class="ch">\n</span><span class="st">delay'</span>, <span class="st">'missed</span><span class="ch">\n</span><span class="st">proposals'</span>]</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>width <span class="op">=</span> <span class="fl">0.35</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>x1 <span class="op">=</span> [x <span class="op">-</span> width<span class="op">/</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(labels))]</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>x2 <span class="op">=</span> [x <span class="op">+</span> width<span class="op">/</span><span class="dv">2</span> <span class="cf">for</span> x <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(labels))]</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>y1 <span class="op">=</span> [y <span class="op">/</span> group1_count <span class="op">/</span> <span class="fl">1e9</span> <span class="cf">for</span> y <span class="kw">in</span> group1_shortfalls]</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>y2 <span class="op">=</span> [y <span class="op">/</span> group2_count <span class="op">/</span> <span class="fl">1e9</span> <span class="cf">for</span> y <span class="kw">in</span> group2_shortfalls]</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>rects1 <span class="op">=</span> ax.bar(x1, y1, width, label<span class="op">=</span><span class="st">'group 1 (92% ≤ efficiency &lt; 97%)'</span>)</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>rects2 <span class="op">=</span> ax.bar(x2, y2, width, label<span class="op">=</span><span class="st">'group 2 (97% ≤ efficiency)'</span>)</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>ax.set_xticks(<span class="bu">range</span>(<span class="bu">len</span>(labels)))</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>ax.set_xticklabels(labels)</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Per-validator shortfall (ETH)'</span>)</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Comparing causes of validator shortfall between validator groups'</span>)</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/validator-rewards-in-practice_19_0.png" class="img-fluid"></p>
+<p>Comparing the two groups of validators, we see the lower-performing group (group 1) have a greater shortfall for each of the 5 causes. However, by a substantial margin it is the difference in the missed attestation shortfall which separates the two groups. This suggests that the cause is simply validator uptime. Although precisely why the validators would be split roughly 50-50 into two distinct distributions by validator uptime is unclear (perhaps a “hobbyist” versus “institution” divide?). To see what level of downtime corresponds to the missed attestation shortfall for group 1, let’s find a validator which was close to the average for the group.</p>
+<details>
+<summary>
+<code>find validator close to average missed attestation shortfall for group 1 and determine downtime [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>target <span class="op">=</span> <span class="bu">int</span>(group1_shortfalls[<span class="dv">0</span>] <span class="op">/</span> group1_count)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"SELECT f_validator_index FROM t_validator_epoch_extras "</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"WHERE f_epoch = </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss"> AND f_validator_index &lt; 21063 "</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"ORDER BY ABS(f_shortfall_missed - </span><span class="sc">{</span>target<span class="sc">}</span><span class="ss">) LIMIT 1"</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>val_index <span class="op">=</span> cursor.fetchone()[<span class="dv">0</span>]</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>cursor.execute(</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"SELECT COUNT(*) FROM t_validator_epoch_summaries "</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"WHERE f_validator_index = </span><span class="sc">{</span>val_index<span class="sc">}</span><span class="ss"> AND f_epoch &lt;= </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss"> AND NOT f_attestation_included"</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>n_missed <span class="op">=</span> cursor.fetchone()[<span class="dv">0</span>]</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>frac <span class="op">=</span> n_missed <span class="op">/</span> END_EPOCH</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>eff <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> validators[val_index][<span class="st">'validator_efficiency'</span>]</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"validator </span><span class="sc">{</span>val_index<span class="sc">}</span><span class="ss"> had a validator efficiency of </span><span class="sc">{</span>eff<span class="sc">:.1f}</span><span class="ss">% and missed </span><span class="sc">{</span>n_missed<span class="sc">}</span><span class="ss"> attestations"</span>)</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"this was </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> frac<span class="sc">:.1f}</span><span class="ss">% of the total (</span><span class="sc">{</span><span class="dv">24</span> <span class="op">*</span> <span class="dv">365</span> <span class="op">/</span> <span class="dv">12</span> <span class="op">*</span> frac<span class="sc">:.1f}</span><span class="ss"> hours of downtime per month)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    validator 18071 had a validator efficiency of 94.4% and missed 660 attestations
+    this was 2.1% of the total (15.1 hours of downtime per month)</code></pre>
+<p>This is encouraging! It appears that an average validator in the lower-performing group still captured over 94% of available rewards despite apparently being offline for an average of 15.1 hours per month.</p>
+<details>
+<summary>
+<code>write validator performance stats up to epoch 32000 to csv [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'validator_performance.csv'</span>, <span class="st">'w'</span>) <span class="im">as</span> f:</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    writer <span class="op">=</span> csv.writer(f)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    writer.writerow(</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">'validator'</span>, <span class="st">'efficiency'</span>, <span class="st">'attestation_reward'</span>, <span class="st">'max_attestation_reward'</span>, </span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>            <span class="st">'missed_attestation_shortfall'</span>, <span class="st">'target_shortfall'</span>, <span class="st">'head_shortfall'</span>, </span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>            <span class="st">'excess_delay_shortfall'</span>, <span class="st">'proposer_reward'</span>, <span class="st">'missed_proposer_reward'</span>,<span class="st">'max_reward'</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> v <span class="kw">in</span> validators:</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>        cursor.execute(</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"SELECT * FROM t_validator_epoch_extras "</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"WHERE f_validator_index = </span><span class="sc">{</span>v[<span class="st">'index'</span>]<span class="sc">}</span><span class="ss"> AND f_epoch = </span><span class="sc">{</span>END_EPOCH<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>        result <span class="op">=</span> cursor.fetchone()</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> result <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>        (</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>            _, _, _, </span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>            att_reward,</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>            max_att_reward,</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>            missed_att_shortfall,</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>            target_shortfall,</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>            head_shortfall,</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a>            excess_delay_shortfall,</span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>            proposer_reward,</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>            missed_proposer_reward</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>        ) <span class="op">=</span> result</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        max_reward <span class="op">=</span> max_att_reward <span class="op">+</span> proposer_reward <span class="op">+</span> missed_proposer_reward</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>        efficiency <span class="op">=</span> (att_reward <span class="op">+</span> proposer_reward) <span class="op">/</span> max_reward</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>        writer.writerow(</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>            [</span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>                v[<span class="st">'index'</span>], efficiency, att_reward, max_att_reward, missed_att_shortfall, target_shortfall,</span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>                head_shortfall, excess_delay_shortfall, proposer_reward, missed_proposer_reward, max_reward</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p>For the details of individual validator performance across the whole validator set, a <a href="https://github.com/pintail-xyz/validator_rewards/blob/main/validator_performance.csv">CSV file</a> is available. This shows the validator efficiency for each validator over the first 32,000 epochs, and the shortfall break-down (in gwei).</p>
+</section>
+<section id="conclusions" class="level1">
+<h1>Conclusions</h1>
+<p>In this article we saw that our previous model for validator rewards was reasonably close to the rewards earned in practice. However, when we delved into the details, we saw that a substantial proportion of the shortfall between what validators earned and what they <em>could have</em> earned was due to intricacies of the validator rewards scheme which were not included in the model.</p>
+<p>Next we used a metric for validator performance — validator efficiency — which allowed us to make a fair comparison between validators. Applying this metric over the first 32,000 beacon chain epochs, we saw that most validators captured the vast majority of the rewards available to them — even the lowest-performing quartile managed a validator efficiency over 97%. This implies that for most validators, the opportunity to improve their rewards is quite limited. But, where validators are receiving substantially less than the maximum, the most likely explanation seems to be validator downtime. So most validators receiving substantially less than the maximum rewards should focus first on improving their uptime.</p>
+</section>
+<section id="acknowledgements" class="level1">
+<h1>Acknowledgements</h1>
+<p>Many thanks to Jim McDonald for his patient support of my use of <a href="https://github.com/wealdtech/chaind">chaind</a> for this project. Thanks also to Lakshman Sankar and Barnabé Monnot for suggestions and feedback. Photo by <a href="https://unsplash.com/@henrik_hansen?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Henrik Hansen</a> on <a href="https://unsplash.com/?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/pintail\.xyz");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>© Pintail</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

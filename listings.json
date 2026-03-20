@@ -1,0 +1,21 @@
+[
+  {
+    "listing": "/index.html",
+    "items": [
+      "/posts/2022/since-the-merge/index.html",
+      "/posts/2022/post-merge-mev/index.html",
+      "/posts/2021/gas-market-analysis/index.html",
+      "/posts/2021/modelling-altair-impact/index.html",
+      "/posts/2021/validator-rewards-in-practice/index.html",
+      "/posts/2021/beacon-chain-validator-rewards/index.html",
+      "/posts/2020/medalla-5-tldr/index.html",
+      "/posts/2020/medalla-4-client-comparison/index.html",
+      "/posts/2020/medalla-3-network-stress/index.html",
+      "/posts/2020/medalla-2-validator-taxonomy/index.html",
+      "/posts/2020/medalla-1-data-prep/index.html",
+      "/posts/2020/eip1559-fairness/index.html",
+      "/posts/2019/uniswap-returns/index.html",
+      "/posts/2019/uniswap-good-deal/index.html"
+    ]
+  }
+]

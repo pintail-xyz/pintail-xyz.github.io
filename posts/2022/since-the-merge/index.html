@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2022-10-30">
+<meta name="description" content="Analysis of 6 weeks of post-merge on-chain data: validator returns, block building trends, and the rise of MEV-boost.">
+
+<title>Since the Merge: How Are Things Changing? – pintail’s notes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-d4d76bf8491c20bad77d141916dc28e1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-8b21b9066471f0167ac10ccf36324965.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="Since the Merge: How Are Things Changing? – pintail’s notes">
+<meta property="og:description" content="Analysis of 6 weeks of post-merge on-chain data: validator returns, block building trends, and the rise of MEV-boost.">
+<meta property="og:image" content="https://pintail.xyz/posts/2022/since-the-merge/images/thumbnail.jpg">
+<meta property="og:site_name" content="pintail's notes">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../pintail_silhouette.svg" alt="Pintail duck silhouette" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">pintail’s notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/pintail_xyz"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/pintail-xyz"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">TL;DR</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#dataset-pre-processing" id="toc-dataset-pre-processing" class="nav-link" data-scroll-target="#dataset-pre-processing">Dataset, Pre-processing</a>
+  <ul class="collapse">
+  <li><a href="#step-1-identify-validators" id="toc-step-1-identify-validators" class="nav-link" data-scroll-target="#step-1-identify-validators">Step 1: Identify Validators</a></li>
+  <li><a href="#step-2-identify-builders-and-builder-payees" id="toc-step-2-identify-builders-and-builder-payees" class="nav-link" data-scroll-target="#step-2-identify-builders-and-builder-payees">Step 2: Identify Builders and Builder-payees</a></li>
+  </ul></li>
+  <li><a href="#execution-layer-rewards-a.k.a.-mev" id="toc-execution-layer-rewards-a.k.a.-mev" class="nav-link" data-scroll-target="#execution-layer-rewards-a.k.a.-mev">Execution Layer Rewards (a.k.a. MEV)</a></li>
+  <li><a href="#validator-returns" id="toc-validator-returns" class="nav-link" data-scroll-target="#validator-returns">Validator Returns</a></li>
+  <li><a href="#execution-layer-vs-consensus-layer-rewards" id="toc-execution-layer-vs-consensus-layer-rewards" class="nav-link" data-scroll-target="#execution-layer-vs-consensus-layer-rewards">Execution Layer vs Consensus Layer rewards</a></li>
+  <li><a href="#validator-groups" id="toc-validator-groups" class="nav-link" data-scroll-target="#validator-groups">Validator Groups</a></li>
+  <li><a href="#block-builders" id="toc-block-builders" class="nav-link" data-scroll-target="#block-builders">Block builders</a>
+  <ul class="collapse">
+  <li><a href="#builder-market-share" id="toc-builder-market-share" class="nav-link" data-scroll-target="#builder-market-share">Builder Market Share</a></li>
+  <li><a href="#builder-performance-mean" id="toc-builder-performance-mean" class="nav-link" data-scroll-target="#builder-performance-mean">Builder Performance — Mean</a></li>
+  <li><a href="#builder-performance-median" id="toc-builder-performance-median" class="nav-link" data-scroll-target="#builder-performance-median">Builder Performance — Median</a></li>
+  <li><a href="#a-word-on-relays" id="toc-a-word-on-relays" class="nav-link" data-scroll-target="#a-word-on-relays">A Word on Relays</a></li>
+  </ul></li>
+  <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions">Conclusions</a></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Since the Merge: How Are Things Changing?</h1>
+</div>
+
+<div>
+  <div class="description">
+    Analysis of 6 weeks of post-merge on-chain data: validator returns, block building trends, and the rise of MEV-boost.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">October 30, 2022</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><img src="images/ashwini-chaudhary-monty-OvwXZvQculI-unsplash_scaled.jpg" class="img-fluid"> <em>Confluence of the Bhagirathi and Alaknanda Rivers to produce the Ganges at Devprayag, India</em></p>
+<section id="tldr" class="level1">
+<h1>TL;DR</h1>
+<ul>
+<li>Using 6 weeks of on-chain data since the merge, we can start to look at real validator reward levels, with the inclusion of execution layer rewards.</li>
+<li>Execution layer rewards are significantly lower than they were in the year before the merge. This is most likely the result of market conditions.</li>
+<li>Rewards are very uneven at this stage, with around half of validators still yet to propose a block.</li>
+<li>No advantage was observed for large staking pools, in terms of rate of return. There is not yet enough data to establish whether they may have an edge.</li>
+<li>During the analysis period, third party block builders took over the majority of block building from validators.</li>
+<li>Third party block builders consistently outperform validators who build their own blocks, and there is variation in performance between block builders.</li>
+</ul>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>In the <a href="../../../posts/2022/post-merge-mev/">previous article</a> we attempted to model post-merge validator returns based on pre-merge data. Ethereum’s merge finally occurred on 15 September 2022 (at a block height of 15537394 on the execution layer, and slot number 4700013 on the consensus layer). Now, with 6 weeks of post-merge data available we’re going to take a look at the distribution of rewards actually earned by proof-of-stake validators, and compare this with the consensus layer rewards, and our model from the previous article. We’ll also take a look at identifiable groups of validators and compare their performance to the network as a whole.</p>
+<p>We’ll also take a look at one of the most significant changes to occur in parallel with the merge, which is the outsourcing of block building by validators. This change came about because of the adoption of Flashbots’ MEV-boost middleware. Prior to the merge, miners were able to accept “bundles” of transactions exploiting MEV opportunities, and were trusted to include them without stealing the MEV they contained (the topic of MEV was covered <a href="../../../posts/2022/post-merge-mev/#but-whats-mev">in more detail</a> previously). This system worked because under proof-of-work, Ethereum blocks were built by only a small number of mining pools, these pools could be punished for misbehaving by simply cutting them off from receiving future profitable transaction bundles. The situation changed with the transition to proof-of-stake. Now, blocks can be built and proposed by a wide range of actors including solo validators. It is no longer feasible for all of them to have trusted relationships with all of them.</p>
+<p>The change that was made was to allow outsourced builders to produce entire blocks rather than just bundles of transactions — that way builders could produce a block header and get this signed by the proposer <em>without</em> first releasing the body of the block and risking the MEV being stolen. What had not been widely understood prior to <a href="https://home.treasury.gov/news/press-releases/jy0916">OFAC’s designation of the contracts associated with privacy layer Tornado Cash</a>, was that by outsourcing the entirety of block building, rather than just provision of transaction bundles, the issue of transaction censorship became a <a href="https://time.com/6223034/ethereum-merge-sanctions-flashbots/">more pressing concern</a>.</p>
+</section>
+<section id="dataset-pre-processing" class="level1">
+<h1>Dataset, Pre-processing</h1>
+<p>To obtain the data, we’re using Flashbots’ mev-inspect-py tool as before, but with some <a href="https://github.com/pintail-xyz/mev-inspect-py/tree/since-the-merge">minor modifications</a> to allow for handling of post-merge blocks. Our dataset starts at the <a href="https://etherscan.io/block/15537394">Merge block</a>, and goes up to block number 15837692 which was mined on 27 October 2022, for a full 6 weeks of data. To allow us to make sense of this data in the context of proof-of-stake Ethereum, we need to do a couple of pieces of pre-processing.</p>
+<section id="step-1-identify-validators" class="level2">
+<h2 class="anchored" data-anchor-id="step-1-identify-validators">Step 1: Identify Validators</h2>
+<p>Since we’re obtaining all our MEV data from the execution layer, this data initially contains no notion of proof-of-stake validators, with a validator index and public key. We therefore need to obtain this information from a consensus layer client. For this article we’re using the <a href="https://github.com/status-im/nimbus-eth2">Nimbus</a> consensus layer client to query the node for the <a href="https://ethereum.github.io/beacon-APIs/#/Beacon/getBlockV2">blocks directly</a>, to enable us to link an execution layer block height with its consensus layer slot number. We’ll also query for the validator indices of the <a href="https://ethereum.github.io/beacon-APIs/#/Validator/getProposerDuties">proposers of each epoch</a>, to identify which validator proposed (or failed to propose) a block in each slot.</p>
+</section>
+<section id="step-2-identify-builders-and-builder-payees" class="level2">
+<h2 class="anchored" data-anchor-id="step-2-identify-builders-and-builder-payees">Step 2: Identify Builders and Builder-payees</h2>
+<p>The final step is to identify cases where the validator has outsourced block building to a separate block builder. This is slightly less straightforward. On the execution layer, what used to be the “miner address” is now the “fee recipient”. If the proposer has used a block builder, then this fee recipient will be set as the builder’s address, but there is no record of the validator’s own execution layer address provided — we will need to make some assumptions to determine it.</p>
+<p>The proposing validator will need to be paid, and the most common way this is done is for the block produced by the builder to include a transaction which pays them the fees. In principle the proposing validator could be paid some other way (e.g.&nbsp;an ‘out of band’ or off-chain payment), but we will assume for this analysis that outsourced blocks include a fee payment to the proposer. We can identify such transactions from the mev-inspect-py database with the following SQL query:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql code-with-copy"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> block_number, transaction_hash, miner_address, transaction_to_address</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> miner_payments</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> transaction_from_address <span class="op">=</span> miner_address</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> block_number;</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>So, we are making the assumption that if there is an outgoing transaction from the “miner address”, in fact this address belongs to the block builder, and represents a fee payment being sent to the proposer. The results of running the above query have been saved in a <a href="https://github.com/pintail-xyz/since-the-merge/blob/main/fee_recipient_transactions.csv">CSV file</a>. The steps above have been written in a <a href="https://github.com/pintail-xyz/since-the-merge/blob/main/proposers.py">python script</a> and the output written to a <a href="https://github.com/pintail-xyz/since-the-merge/blob/main/proposers.csv">CSV file</a> which we will use for the remainder of this article.</p>
+</section>
+</section>
+<section id="execution-layer-rewards-a.k.a.-mev" class="level1">
+<h1>Execution Layer Rewards (a.k.a. MEV)</h1>
+<p>To start with let’s take a look at the distribution of execution layer rewards across blocks. This data makes a direct comparison with the <a href="../../../posts/2022/post-merge-mev/#historical-mev-levels">historical MEV levels</a> section of the previous article, updated with data from after the merge. We can see that compared with data from the full year before the merge, MEV levels are down between 30% (at the 10th centile) and 60% (at the 90th centile).</p>
+<p>The distribution looks to have a broadly similar shape, with the exception of the two peaks at the low end of the histogram, which were not present in the previous distribution. It’s possible that this is just noise, a result of having a much smaller dataset (6 weeks rather than 12 months). It will be interesting to see if this shape becomes clearer when more detail is available. However, from looking of the Empirically-derived Cumulative Density Function (ECDF), the overall shape seems very similar.</p>
+<details>
+<summary>
+<code># imports and definitions [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.dates <span class="im">as</span> mdates</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statistics <span class="im">import</span> median</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>CL_NODE_URL <span class="op">=</span> <span class="st">'http://localhost:5052'</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>SECONDS_PER_YEAR <span class="op">=</span> <span class="dv">31556952</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>BEACON_CHAIN_GENESIS_TIMESTAMP <span class="op">=</span> <span class="dv">1606824023</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Ecdf(pd.Series):</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, data):</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        s <span class="op">=</span> pd.Series(data)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>(s.value_counts().sort_index().cumsum()<span class="op">*</span><span class="fl">1.</span><span class="op">/</span><span class="bu">len</span>(s))</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> get_quantile(<span class="va">self</span>, q):</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.index[np.argmax(<span class="va">self</span>.array <span class="op">&gt;=</span> q)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code># read in data from CSV, replace missing values as appropriate [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'proposers.csv'</span>) <span class="im">as</span> f:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    reader <span class="op">=</span> csv.reader(f)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    headers <span class="op">=</span> <span class="bu">next</span>(reader)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> {h: [] <span class="cf">for</span> h <span class="kw">in</span> headers}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row <span class="kw">in</span> reader:</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(row) <span class="op">!=</span> <span class="bu">len</span>(headers):</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(row)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> index, item <span class="kw">in</span> <span class="bu">enumerate</span>(row):</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            data[headers[index]].append(item)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'slot'</span>] <span class="op">=</span> [<span class="bu">int</span>(item) <span class="cf">for</span> item <span class="kw">in</span> data[<span class="st">'slot'</span>]]</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'val_index'</span>] <span class="op">=</span> [<span class="bu">int</span>(item) <span class="cf">for</span> item <span class="kw">in</span> data[<span class="st">'val_index'</span>]]</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'block_number'</span>] <span class="op">=</span> [<span class="va">None</span> <span class="cf">if</span> item <span class="op">==</span> <span class="st">''</span> <span class="cf">else</span> <span class="bu">int</span>(item) <span class="cf">for</span> item <span class="kw">in</span> data[<span class="st">'block_number'</span>]]</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'net_fees'</span>] <span class="op">=</span> [<span class="dv">0</span> <span class="cf">if</span> item <span class="op">==</span> <span class="st">''</span> <span class="cf">else</span> <span class="bu">float</span>(item) <span class="cf">for</span> item <span class="kw">in</span> data[<span class="st">'net_fees'</span>]]</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>data[<span class="st">'coinbase_transfer'</span>] <span class="op">=</span> [<span class="dv">0</span> <span class="cf">if</span> item <span class="op">==</span> <span class="st">''</span> <span class="cf">else</span> <span class="bu">float</span>(item) <span class="cf">for</span> item <span class="kw">in</span> data[<span class="st">'coinbase_transfer'</span>]]</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>blocks_df <span class="op">=</span> pd.DataFrame(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code># plot ECDF, show quantiles for block value [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>blocks_df[<span class="st">'block_value'</span>] <span class="op">=</span> (blocks_df[<span class="st">'net_fees'</span>] <span class="op">+</span> blocks_df[<span class="st">'coinbase_transfer'</span>]) <span class="op">/</span> <span class="fl">1e18</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>blocks_ecdf <span class="op">=</span> Ecdf(blocks_df[<span class="st">'block_value'</span>])</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>bins <span class="op">=</span> [e<span class="op">/</span><span class="dv">100</span> <span class="cf">for</span> e <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">101</span>)]</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>blocks_df[<span class="st">'block_value'</span>].hist(ax<span class="op">=</span>ax1, bins<span class="op">=</span>bins, density<span class="op">=</span><span class="va">True</span>, grid<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>ax1.set_title(<span class="st">'Histogram of MEV per Block'</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>ax1.set_xlim(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Frequency density'</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>quantiles <span class="op">=</span> [<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.9</span>, <span class="fl">0.99</span>, <span class="fl">0.999</span>]</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>table <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'quantile'</span>: quantiles,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'centile&lt;br&gt;(%)'</span>: [<span class="dv">100</span> <span class="op">*</span> q <span class="cf">for</span> q <span class="kw">in</span> quantiles],</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">'revenue&lt;br&gt;(ETH per block)'</span>: [blocks_ecdf.get_quantile(q) <span class="cf">for</span> q <span class="kw">in</span> quantiles]</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>table.set_index(<span class="st">'quantile'</span>, inplace<span class="op">=</span><span class="va">True</span>, drop<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>table.plot(<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>, <span class="st">'quantile'</span>, kind<span class="op">=</span><span class="st">'scatter'</span>, ax<span class="op">=</span>ax2)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>blocks_ecdf.plot(ax<span class="op">=</span>ax2)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>ax2.set_xlim(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>ax2.set_ylim(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>ax2.set_xlabel(<span class="st">'Per-block MEV value (ETH)'</span>)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">'Cumulative frequency density'</span>)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>ax2.set_title(<span class="st">'Empirical Cumulative Density Function (ECDF) of MEV per Block'</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>q01 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.01</span>]</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'1st centile: </span><span class="sc">{</span>q01<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q01 <span class="op">+</span> <span class="fl">0.02</span>, <span class="fl">0.02</span>))</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>q1 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.1</span>]</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'10th centile: </span><span class="sc">{</span>q1<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q1 <span class="op">+</span> <span class="fl">0.02</span>, <span class="fl">0.075</span>))</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>q25 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.25</span>]</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'25th centile (lower quartile): </span><span class="sc">{</span>q25<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q25 <span class="op">+</span> <span class="fl">0.02</span>, <span class="fl">0.225</span>))</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>q5 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.5</span>]</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'50th centile (median): </span><span class="sc">{</span>q5<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q5 <span class="op">+</span> <span class="fl">0.02</span>, <span class="fl">0.475</span>))</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>q75 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.75</span>]</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'75th centile (upper quartile): </span><span class="sc">{</span>q75<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q75 <span class="op">+</span> <span class="fl">0.02</span>, <span class="fl">0.725</span>))</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>q9 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.9</span>]</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'90th centile: </span><span class="sc">{</span>q9<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q9 <span class="op">+</span> <span class="fl">0.02</span>, <span class="fl">0.875</span>))</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>q99 <span class="op">=</span> table[<span class="st">'revenue&lt;br&gt;(ETH per block)'</span>].loc[<span class="fl">0.99</span>]</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'99th centile: </span><span class="sc">{</span>q99<span class="sc">:.3f}</span><span class="ss"> ETH'</span>, (q99, <span class="fl">0.925</span>))</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>table[</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'centile&lt;br&gt;(%)'</span>, <span class="st">'revenue&lt;br&gt;(ETH per block)'</span>]</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>].style.set_table_styles(</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    [<span class="bu">dict</span>(selector<span class="op">=</span><span class="st">'th'</span>, props<span class="op">=</span>[(<span class="st">'text-align'</span>, <span class="st">'center'</span>)])]</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>).hide().<span class="bu">format</span>(</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'centile&lt;br&gt;(%)'</span>: <span class="st">'</span><span class="sc">{:.1f}</span><span class="st">'</span>, <span class="st">'revenue&lt;br&gt;(ETH per block)'</span>: <span class="st">'</span><span class="sc">{:.3f}</span><span class="st">'</span>}</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/since-the-merge_5_0.png" class="img-fluid"></p>
+<style type="text/css">
+#T_7f28e th {
+  text-align: center;
+}
+</style>
+<table id="T_7f28e">
+<thead>
+<tr>
+<th id="T_7f28e_level0_col0" class="col_heading level0 col0">
+centile<br>(%)
+</th>
+<th id="T_7f28e_level0_col1" class="col_heading level0 col1">
+revenue<br>(ETH per block)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td id="T_7f28e_row0_col0" class="data row0 col0">
+1.0
+</td>
+<td id="T_7f28e_row0_col1" class="data row0 col1">
+0.000
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row1_col0" class="data row1 col0">
+10.0
+</td>
+<td id="T_7f28e_row1_col1" class="data row1 col1">
+0.007
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row2_col0" class="data row2 col0">
+25.0
+</td>
+<td id="T_7f28e_row2_col1" class="data row2 col1">
+0.021
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row3_col0" class="data row3 col0">
+50.0
+</td>
+<td id="T_7f28e_row3_col1" class="data row3 col1">
+0.041
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row4_col0" class="data row4 col0">
+75.0
+</td>
+<td id="T_7f28e_row4_col1" class="data row4 col1">
+0.076
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row5_col0" class="data row5 col0">
+90.0
+</td>
+<td id="T_7f28e_row5_col1" class="data row5 col1">
+0.145
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row6_col0" class="data row6 col0">
+99.0
+</td>
+<td id="T_7f28e_row6_col1" class="data row6 col1">
+0.732
+</td>
+</tr>
+<tr>
+<td id="T_7f28e_row7_col0" class="data row7 col0">
+99.9
+</td>
+<td id="T_7f28e_row7_col1" class="data row7 col1">
+4.567
+</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="validator-returns" class="level1">
+<h1>Validator Returns</h1>
+<p>To get the overall validator returns, we need to aggregate the execution layer rewards by validator, and add them to the consensus layer rewards. The consensus layer rewards for each validator for the period are calculated by querying the <a href="https://ethereum.github.io/beacon-APIs/#/Beacon/getStateValidators">validator balances</a> at the start and end of the period under consideration, with the net reward given by the difference between the initial and final balance. These rewards and and the execution layer rewards are then aggregated per-validator and then turned into an Annual Percentage Return (APR) to enable us to compare these values irrespective of timescale.</p>
+<details>
+<summary>
+<code># load validator/balance data [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>start_slot <span class="op">=</span> blocks_df[<span class="st">'slot'</span>].<span class="bu">min</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>end_slot <span class="op">=</span> blocks_df[<span class="st">'slot'</span>].<span class="bu">max</span>()</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="bu">str</span>(start_slot) <span class="op">+</span> <span class="st">'_validators.json'</span>) <span class="im">as</span> f:</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        start_validators <span class="op">=</span> json.load(f)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span>:</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> requests.get(CL_NODE_URL <span class="op">+</span> <span class="ss">f'/eth/v1/beacon/states/</span><span class="sc">{</span>start_slot<span class="sc">}</span><span class="ss">/validators'</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    start_validators <span class="op">=</span> r.json()[<span class="st">'data'</span>]</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="bu">str</span>(start_slot) <span class="op">+</span> <span class="st">'_validators.json'</span>, <span class="st">'w'</span>) <span class="im">as</span> f:</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        json.dump(start_validators, f)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="bu">str</span>(end_slot) <span class="op">+</span> <span class="st">'_validators.json'</span>) <span class="im">as</span> f:</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        end_validators <span class="op">=</span> json.load(f)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span>:</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    r <span class="op">=</span> requests.get(CL_NODE_URL <span class="op">+</span> <span class="ss">f'/eth/v1/beacon/states/</span><span class="sc">{</span>end_slot<span class="sc">}</span><span class="ss">/validators'</span>)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    end_validators <span class="op">=</span> r.json()[<span class="st">'data'</span>]</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="bu">str</span>(end_slot) <span class="op">+</span> <span class="st">'_validators.json'</span>, <span class="st">'w'</span>) <span class="im">as</span> f:</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        json.dump(end_validators, f)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate per-validator el and cl rewareds</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>validator_rewards <span class="op">=</span> [</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'index'</span>: <span class="op">-</span><span class="dv">1</span>, <span class="st">'include'</span>: <span class="va">True</span>, <span class="st">'cl_rewards'</span>: <span class="dv">0</span>, <span class="st">'el_rewards'</span>: <span class="dv">0</span>, <span class="st">'num_proposals'</span>: <span class="dv">0</span>, <span class="st">'fee_recipient'</span>: <span class="st">''</span>, <span class="st">'builder_payee'</span>: <span class="st">''</span>}</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(end_validators))</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index, data <span class="kw">in</span> <span class="bu">enumerate</span>(end_validators):</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    val <span class="op">=</span> data[<span class="st">'validator'</span>]</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    validator_rewards[index][<span class="st">'index'</span>] <span class="op">=</span> index</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">int</span>(val[<span class="st">'activation_epoch'</span>]) <span class="op">&gt;</span> start_slot <span class="op">//</span> <span class="dv">32</span> <span class="kw">or</span> <span class="bu">int</span>(val[<span class="st">'exit_epoch'</span>]) <span class="op">&lt;</span> end_slot <span class="op">//</span> <span class="dv">32</span>:</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        <span class="co"># exclude validators which were not active for part/all of the period</span></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        validator_rewards[index][<span class="st">'include'</span>] <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        cl_rewards <span class="op">=</span> (<span class="bu">int</span>(data[<span class="st">'balance'</span>]) <span class="op">-</span> <span class="bu">int</span>(start_validators[index][<span class="st">'balance'</span>])) <span class="op">/</span> <span class="fl">1e9</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        validator_rewards[index][<span class="st">'cl_rewards'</span>] <span class="op">=</span> cl_rewards</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> cl_rewards <span class="op">&lt;</span> <span class="dv">0</span>:</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            <span class="co"># exclude dormant/abandoned validators</span></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>            validator_rewards[index][<span class="st">'include'</span>] <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index, row <span class="kw">in</span> blocks_df.iterrows():</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    val <span class="op">=</span> validator_rewards[row[<span class="st">'val_index'</span>]]</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    val[<span class="st">'el_rewards'</span>] <span class="op">+=</span> row[<span class="st">'block_value'</span>]</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    val[<span class="st">'num_proposals'</span>] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    val[<span class="st">'fee_recipient'</span>] <span class="op">=</span> row[<span class="st">'fee_recipient'</span>]</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    val[<span class="st">'builder_payee'</span>] <span class="op">=</span> row[<span class="st">'builder_payee'</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code># calculate ECDF for validator return / plot histogram and ECDF [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>validators_df <span class="op">=</span> pd.DataFrame([v <span class="cf">for</span> v <span class="kw">in</span> validator_rewards <span class="cf">if</span> v[<span class="st">'include'</span>]])</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>validators_df <span class="op">=</span> validators_df[validators_df[<span class="st">'include'</span>]]</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2) <span class="op">=</span> plt.subplots(<span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">10</span>))</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>validators_df[<span class="st">'combined_rewards'</span>] <span class="op">=</span> validators_df[<span class="st">'cl_rewards'</span>] <span class="op">+</span> validators_df[<span class="st">'el_rewards'</span>]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>years <span class="op">=</span> (end_slot <span class="op">-</span> start_slot <span class="op">+</span> <span class="dv">1</span>) <span class="op">*</span> <span class="dv">12</span> <span class="op">/</span> SECONDS_PER_YEAR</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>validators_df[<span class="st">'return'</span>] <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> validators_df[<span class="st">'combined_rewards'</span>] <span class="op">/</span> <span class="dv">32</span> <span class="op">/</span> years</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>bins <span class="op">=</span> [e<span class="op">/</span><span class="dv">10</span> <span class="cf">for</span> e <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">101</span>)]</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>validators_df[<span class="st">'return'</span>].hist(ax<span class="op">=</span>ax1, bins<span class="op">=</span>bins, density<span class="op">=</span><span class="va">True</span>, grid<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>ax1.set_title(<span class="st">'Histogram of Validator Rate of Return'</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>ax1.set_xlim(<span class="dv">0</span>, <span class="dv">10</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Frequency density'</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>rewards_ecdf <span class="op">=</span> Ecdf(validators_df[<span class="st">'combined_rewards'</span>])</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>return_ecdf <span class="op">=</span> Ecdf(validators_df[<span class="st">'return'</span>])</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>return_ecdf.plot(ax<span class="op">=</span>ax2)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>quantiles <span class="op">=</span> [<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>, <span class="fl">0.9</span>, <span class="fl">0.99</span>, <span class="fl">0.999</span>]</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>table <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">'quantile'</span>: quantiles,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">'centile&lt;br&gt;(%)'</span>: [<span class="dv">100</span> <span class="op">*</span> q <span class="cf">for</span> q <span class="kw">in</span> quantiles],</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">'total revenue&lt;br&gt;(ETH)'</span>: [rewards_ecdf.get_quantile(q) <span class="cf">for</span> q <span class="kw">in</span> quantiles],</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">'return&lt;br&gt;(% APR)'</span>: [return_ecdf.get_quantile(q) <span class="cf">for</span> q <span class="kw">in</span> quantiles]</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>table.set_index(<span class="st">'quantile'</span>, inplace<span class="op">=</span><span class="va">True</span>, drop<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>table.plot(<span class="st">'return&lt;br&gt;(% APR)'</span>, <span class="st">'quantile'</span>, kind<span class="op">=</span><span class="st">'scatter'</span>, ax<span class="op">=</span>ax2)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>q01 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.01</span>]</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'1st centile: </span><span class="sc">{</span>q01<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q01 <span class="op">-</span> <span class="fl">2.2</span>, <span class="fl">0.02</span>))</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>q1 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.1</span>]</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'10th centile: </span><span class="sc">{</span>q1<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q1 <span class="op">+</span> <span class="fl">0.1</span>, <span class="fl">0.075</span>))</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>q25 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.25</span>]</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'25th centile (lower quartile): </span><span class="sc">{</span>q25<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q25 <span class="op">+</span> <span class="fl">0.1</span>, <span class="fl">0.225</span>))</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>q5 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.5</span>]</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'50th centile (median): </span><span class="sc">{</span>q5<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q5 <span class="op">+</span> <span class="fl">0.1</span>, <span class="fl">0.475</span>))</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>q75 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.75</span>]</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'75th centile (upper quartile): </span><span class="sc">{</span>q75<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q75 <span class="op">-</span> <span class="fl">0.1</span>, <span class="fl">0.7</span>))</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>q9 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.9</span>]</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'90th centile: </span><span class="sc">{</span>q9<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q9 <span class="op">-</span> <span class="dv">2</span>, <span class="fl">0.925</span>))</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>q99 <span class="op">=</span> table[<span class="st">'return&lt;br&gt;(% APR)'</span>].loc[<span class="fl">0.99</span>]</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>ax2.annotate(<span class="ss">f'99th centile: </span><span class="sc">{</span>q99<span class="sc">:.2f}</span><span class="ss">% APR'</span>, (q99, <span class="fl">0.925</span>))</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>ax2.set_xlim(<span class="dv">0</span>, <span class="dv">10</span>)</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>ax2.set_ylim(<span class="dv">0</span>, <span class="dv">1</span>)</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>ax2.set_xlabel(<span class="st">'Rate of return (% APR)'</span>)</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">'Cumulative frequency density'</span>)</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>ax2.set_title(<span class="st">'Empirical Cumulative Density Function (ECDF) of Validator Rate of Return'</span>)</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>table[</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'centile&lt;br&gt;(%)'</span>, <span class="st">'return&lt;br&gt;(% APR)'</span>]</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>].style.set_table_styles(</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>    [<span class="bu">dict</span>(selector<span class="op">=</span><span class="st">'th'</span>, props<span class="op">=</span>[(<span class="st">'text-align'</span>, <span class="st">'center'</span>)])]</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>).hide().<span class="bu">format</span>(</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'centile&lt;br&gt;(%)'</span>: <span class="st">'</span><span class="sc">{:.1f}</span><span class="st">'</span>, <span class="st">'total revenue&lt;br&gt;(ETH)'</span>: <span class="st">'</span><span class="sc">{:.3f}</span><span class="st">'</span>, <span class="st">'return&lt;br&gt;(% APR)'</span>:<span class="st">'</span><span class="sc">{:.3f}</span><span class="st">'</span>}</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/since-the-merge_8_0.png" class="img-fluid"></p>
+<style type="text/css">
+#T_6a1b0 th {
+  text-align: center;
+}
+</style>
+<table id="T_6a1b0">
+<thead>
+<tr>
+<th id="T_6a1b0_level0_col0" class="col_heading level0 col0">
+centile<br>(%)
+</th>
+<th id="T_6a1b0_level0_col1" class="col_heading level0 col1">
+return<br>(% APR)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td id="T_6a1b0_row0_col0" class="data row0 col0">
+1.0
+</td>
+<td id="T_6a1b0_row0_col1" class="data row0 col1">
+3.348
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row1_col0" class="data row1 col0">
+10.0
+</td>
+<td id="T_6a1b0_row1_col1" class="data row1 col1">
+3.616
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row2_col0" class="data row2 col0">
+25.0
+</td>
+<td id="T_6a1b0_row2_col1" class="data row2 col1">
+3.644
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row3_col0" class="data row3 col0">
+50.0
+</td>
+<td id="T_6a1b0_row3_col1" class="data row3 col1">
+4.526
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row4_col0" class="data row4 col0">
+75.0
+</td>
+<td id="T_6a1b0_row4_col1" class="data row4 col1">
+6.419
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row5_col0" class="data row5 col0">
+90.0
+</td>
+<td id="T_6a1b0_row5_col1" class="data row5 col1">
+8.898
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row6_col0" class="data row6 col0">
+99.0
+</td>
+<td id="T_6a1b0_row6_col1" class="data row6 col1">
+22.219
+</td>
+</tr>
+<tr>
+<td id="T_6a1b0_row7_col0" class="data row7 col0">
+99.9
+</td>
+<td id="T_6a1b0_row7_col1" class="data row7 col1">
+99.892
+</td>
+</tr>
+</tbody>
+</table>
+<p>The above charts and table correspond to the <a href="../../../posts/2022/post-merge-mev/#modelling-full-validator-returns">full model</a> from the previous article. This time the distribution looks quite different! However in this case the difference is easy to explain — it is the result of the lumpiness of rewards for block proposal. In this dataset only about half of the validators had the opportunity to propose any blocks at all, so they have yet to receive any rewards on the execution layer. The fairly uniform nature of attestation rewards explains the very large spike on the histogram at about 3.6% APR, and the corresponding step on the ECDF.</p>
+<details>
+<summary>
+<code># plot number of proposals frequncy [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>vc <span class="op">=</span> validators_df[<span class="st">'num_proposals'</span>].value_counts(normalize<span class="op">=</span><span class="va">True</span>).sort_index()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>vc.plot(kind<span class="op">=</span><span class="st">'bar'</span>, ax<span class="op">=</span>ax, rot<span class="op">=</span><span class="dv">0</span>)<span class="op">;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Distribution of Block Proposals per Validator'</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Number of proposals'</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Proportion of validators'</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Proportion of validators which have not yet proposed any blocks </span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>vc[<span class="dv">0</span>]<span class="sc">:.1f}</span><span class="ss">%'</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>no_el_rewards <span class="op">=</span> <span class="bu">len</span>(validators_df[validators_df[<span class="st">'el_rewards'</span>] <span class="op">==</span> <span class="dv">0</span>]) <span class="op">/</span> <span class="bu">len</span>(validators_df)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Proportion of validators which have not yet proposed a non-empty block </span><span class="sc">{</span><span class="dv">100</span><span class="op">*</span>no_el_rewards<span class="sc">:.1f}</span><span class="ss">%'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    Proportion of validators which have not yet proposed any blocks 50.3%
+    Proportion of validators which have not yet proposed a non-empty block 50.6%</code></pre>
+<p><img src="images/since-the-merge_10_1.png" class="img-fluid"></p>
+<p>Again, with only 6 weeks of data, this is completely expected. Over the course of a longer timescale we would expect all validators to have multiple block proposal opportunities, smoothing out the jagged shapes in the charts above and leading to something much closer to our model from the previous article. In the higher end of the distribution at e.g.&nbsp;the 75th and 90th centiles — corresponding to validators which have already proposed multiple blocks — we get perhaps a better sense of how the post-merge data compares to the model. These are both down by about two percentage points, largely due to the lower overall MEV levels we saw in the previous section.</p>
+</section>
+<section id="execution-layer-vs-consensus-layer-rewards" class="level1">
+<h1>Execution Layer vs Consensus Layer rewards</h1>
+<p>As you may be able to tell by looking at the above charts, for the vast majority of validators, consensus layer rewards dominate, and are much less volatile. As shown in the figures below, based on our dataset about 28% of validator rewards come from the execution layer, but for the median validator (who has yet to propose a non-empty block), the execution layer rewards are for now precisely zero.</p>
+<details>
+<summary>
+<code># proportion of EL versus total rewards [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>validators_df[<span class="st">'el_reward_fraction'</span>] <span class="op">=</span> validators_df[<span class="st">'el_rewards'</span>] <span class="op">/</span> validators_df[<span class="st">'combined_rewards'</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>el_reward_fraction <span class="op">=</span> validators_df[<span class="st">'el_rewards'</span>].<span class="bu">sum</span>() <span class="op">/</span> validators_df[<span class="st">'combined_rewards'</span>].<span class="bu">sum</span>()</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Overall execution layer reward fraction: </span><span class="sc">{</span>el_reward_fraction<span class="sc">:.2f}</span><span class="ss">"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Median execution layer reward fraction: </span><span class="sc">{</span>validators_df[<span class="st">'el_reward_fraction'</span>]<span class="sc">.</span>median()<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    Overall execution layer reward fraction: 0.28
+    Median execution layer reward fraction: 0.00</code></pre>
+</section>
+<section id="validator-groups" class="level1">
+<h1>Validator Groups</h1>
+<p>Another aspect we previously modelled was the impact of grouping validators together. This question becomes more interesting now, as different groups of validators (for example run by exchanges or liquid staking providers) may choose differing strategies with respect to MEV extraction. The addition of fee recipient/builder payee data also makes it easier to identify groups of validators operated by a single entity.</p>
+<details>
+<summary>
+<code># scatter plot of group size versus rate of return [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>group_df <span class="op">=</span> validators_df.groupby(<span class="st">'builder_payee'</span>)[<span class="st">'return'</span>].agg([<span class="st">'mean'</span>,<span class="st">'count'</span>])</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>group_df.sort_values(<span class="st">'count'</span>, ascending<span class="op">=</span><span class="va">False</span>, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>group_df.plot.scatter(x<span class="op">=</span><span class="st">'count'</span>, y<span class="op">=</span><span class="st">'mean'</span>, s<span class="op">=</span><span class="fl">0.5</span>, ax<span class="op">=</span>ax)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>mean_return <span class="op">=</span> validators_df[<span class="st">'return'</span>].mean()</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>ax.axhline(mean_return, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="ss">f'Mean return (</span><span class="sc">{</span>mean_return<span class="sc">:.2f}</span><span class="ss">% APR)'</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>ax.set_xscale(<span class="st">'log'</span>)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmax<span class="op">=</span><span class="dv">100000</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(<span class="dv">0</span>, <span class="dv">25</span>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Validator Group Size'</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Aggregate return (% APR)'</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> group_df.loc[<span class="st">'0x388c818ca8b9251b393131c08a736a67ccb19297'</span>][[<span class="st">'count'</span>,<span class="st">'mean'</span>]]</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>ax.annotate(<span class="st">'Lido'</span>, (p[<span class="dv">0</span>], p[<span class="dv">1</span>] <span class="op">+</span> <span class="fl">0.25</span>))</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> group_df.loc[<span class="st">'0x4675c7e5baafbffbca748158becba61ef3b0a263'</span>][[<span class="st">'count'</span>,<span class="st">'mean'</span>]]</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>ax.annotate(<span class="st">'Coinbase'</span>, (p[<span class="dv">0</span>], p[<span class="dv">1</span>] <span class="op">+</span> <span class="fl">0.25</span>))</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> group_df.loc[<span class="st">'0xebec795c9c8bbd61ffc14a6662944748f299cacf'</span>][[<span class="st">'count'</span>,<span class="st">'mean'</span>]]</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>ax.annotate(<span class="st">'Kraken (?)'</span>, (p[<span class="dv">0</span>], p[<span class="dv">1</span>] <span class="op">+</span> <span class="fl">0.25</span>))</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>ax.legend()</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/since-the-merge_14_0.png" class="img-fluid"></p>
+<p>In the above scatter plot, each validator group is identified by the number of observed validators which are part of the group (x-axis). However, since these groupings are based on observing proposed blocks, the more than 215k validators who have yet to propose any blocks all appear as a single point — if plotted, this would be off to the right of the chart (with an average rate of return of 3.8% APR). These ‘missing’ validators also explain why the overall mean rate of return (dashed red line) appears to sit below most of the plotted points. Note that many of these validators in fact are operated by the large node operators (e.g.&nbsp;Lido, Coinbase, Kraken), but are not counted as part of their grouping until they become visible in the data by proposing blocks, which means the APRs for these entities are currently over-reported by this analysis.</p>
+<p>Again, it would be valuable to repeat this analysis after a longer period has elapsed as this may show up significant variations in performance between different node operators. For now it is too early to conclude whether there are any significant trends relating to validator group sizes or node operators. No clear trend is obvious from the scatter plot above.</p>
+</section>
+<section id="block-builders" class="level1">
+<h1>Block builders</h1>
+<p>For the rest of this article we’re going to look at the trends in block building. As we have already identified where block building has been outsourced, we just need to work out which builder address corresponds to which builder. Below some of the major builder addresses are labeled according to tags found on Etherscan. We’re going to use these tagged builder addresses to compare market share and performance for these block builders.</p>
+<details>
+<summary>
+<code># calculate daily builder counts, totals and mean block values [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_slot_datetime(slot):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> datetime.utcfromtimestamp(BEACON_CHAIN_GENESIS_TIMESTAMP <span class="op">+</span> <span class="dv">12</span> <span class="op">*</span> slot)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>builders <span class="op">=</span> { <span class="co"># top builders by blocks in this dataset (based on tags from Etherscan)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0xdafea492d9c6733ae3d56b7ed1adb60692c98bc5'</span>: <span class="st">'flashbots'</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0xb64a30399f7f6b0c154c2e7af0a3ec7b0a5b131a'</span>: <span class="st">'flashbots'</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0x690b9a9e9aa1c9db991c7721a92d351db4fac990'</span>: <span class="st">'builder0x69.io'</span>,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0xf2f5c73fa04406b1995e397b55c24ab1f3ea726c'</span>: <span class="st">'bloxroute max profit'</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0x199d5ed7f45f4ee35960cf22eade2076e95b253f'</span>: <span class="st">'bloxroute regulated'</span>,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0xf573d99385c05c23b24ed33de616ad16a43a0919'</span>: <span class="st">'bloxroute ethical'</span>,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0xb646d87963da1fb9d192ddba775f24f33e857128'</span>: <span class="st">'0xb646'</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'0xaab27b150451726ec7738aa1d0a94505c8729bd1'</span>: <span class="st">'eden network'</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> {<span class="st">'self built'</span>: <span class="dv">0</span>, <span class="st">'other builder'</span>: <span class="dv">0</span>}</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> _, v <span class="kw">in</span> builders.items():</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>    keys[v] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>start_date <span class="op">=</span> get_slot_datetime(start_slot).date()</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>end_date <span class="op">=</span> get_slot_datetime(end_slot).date()</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>num_days <span class="op">=</span> (end_date <span class="op">-</span> start_date).days <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>daily_builder_counts, daily_builder_totals, daily_builder_mean, daily_builder_median <span class="op">=</span> [], [], [], []</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_days):</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    daily_builder_counts.append({<span class="st">'date'</span>: start_date <span class="op">+</span> timedelta(days<span class="op">=</span>i)})</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    daily_builder_totals.append({<span class="st">'date'</span>: start_date <span class="op">+</span> timedelta(days<span class="op">=</span>i)})</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    daily_builder_mean.append({<span class="st">'date'</span>: start_date <span class="op">+</span> timedelta(days<span class="op">=</span>i)})</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    daily_builder_median.append({<span class="st">'date'</span>: start_date <span class="op">+</span> timedelta(days<span class="op">=</span>i)})</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> keys:</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>        daily_builder_counts[<span class="op">-</span><span class="dv">1</span>][k] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>        daily_builder_totals[<span class="op">-</span><span class="dv">1</span>][k] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>        daily_builder_mean[<span class="op">-</span><span class="dv">1</span>][k] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>        daily_builder_median[<span class="op">-</span><span class="dv">1</span>][k] <span class="op">=</span> []</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a><span class="co"># count blocks produced by each builder each day, and sum total block values</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index, row <span class="kw">in</span> blocks_df.iterrows():</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>    day <span class="op">=</span> (get_slot_datetime(row[<span class="st">'slot'</span>]).date() <span class="op">-</span> start_date).days</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> row[<span class="st">'fee_recipient'</span>] <span class="kw">in</span> builders:</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>        builder <span class="op">=</span> builders[row[<span class="st">'fee_recipient'</span>]]</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> row[<span class="st">'fee_recipient'</span>] <span class="op">!=</span> row[<span class="st">'builder_payee'</span>]:</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>        builder <span class="op">=</span> <span class="st">'other builder'</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>        builder <span class="op">=</span> <span class="st">'self built'</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>    daily_builder_counts[day][builder] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>    daily_builder_totals[day][builder] <span class="op">+=</span> row[<span class="st">'block_value'</span>]</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>    daily_builder_median[day][builder].append(row[<span class="st">'block_value'</span>])</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate mean block value for each builder each day</span></span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> day, mean <span class="kw">in</span> <span class="bu">enumerate</span>(daily_builder_mean):</span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> mean:</span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> k <span class="op">==</span> <span class="st">'date'</span>:</span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> daily_builder_counts[day][k] <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>            mean[k] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a>            mean[k] <span class="op">=</span> daily_builder_totals[day][k] <span class="op">/</span> daily_builder_counts[day][k]</span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate median block value for each builder each day</span></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> day, values <span class="kw">in</span> <span class="bu">enumerate</span>(daily_builder_median):</span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> values:</span>
+<span id="cb12-61"><a href="#cb12-61" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> k <span class="op">==</span> <span class="st">'date'</span>:</span>
+<span id="cb12-62"><a href="#cb12-62" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb12-63"><a href="#cb12-63" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(daily_builder_median[day][k]) <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb12-64"><a href="#cb12-64" aria-hidden="true" tabindex="-1"></a>            values[k] <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb12-65"><a href="#cb12-65" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb12-66"><a href="#cb12-66" aria-hidden="true" tabindex="-1"></a>            values[k] <span class="op">=</span> median(values[k])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<section id="builder-market-share" class="level2">
+<h2 class="anchored" data-anchor-id="builder-market-share">Builder Market Share</h2>
+<p>In the below stacked plot, we can see a clear trend for reduction in proposers building their own blocks down from 81% on the first full day of data down to 39% on the last full day of the dataset. The builder operated by Flashbots initially grew quickly but is gradually being challenged by buidler0x69. BloXroute’s set of builders (‘max profit’, ‘regulated’ and ‘ethical’) have held a relatively stable market share over the past few weeks, with other players picking up a relatively small proportion of blocks. Again, as we’re looking at only a few weeks of data, it is much too early to know how this market will evolve, except to note that the proportion of validators building their own blocks has continued to drop off fairly consistently since the merge.</p>
+<details>
+<summary>
+<code># plot builder market share [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>daily_builder_counts_df <span class="op">=</span> pd.DataFrame(daily_builder_counts)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>daily_builder_counts_df.set_index(<span class="st">'date'</span>, inplace<span class="op">=</span><span class="va">True</span>, drop<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>daily_builder_counts_df.plot.area(ax<span class="op">=</span>ax)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    daily_builder_counts_df[<span class="st">'date'</span>][<span class="dv">1</span>],</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    daily_builder_counts_df[<span class="st">'date'</span>][<span class="op">-</span><span class="dv">2</span>]</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>blocks_per_day <span class="op">=</span> <span class="dv">60</span> <span class="op">*</span> <span class="dv">60</span> <span class="op">*</span> <span class="dv">24</span> <span class="op">/</span> <span class="dv">12</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(<span class="dv">0</span>, blocks_per_day)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>secax <span class="op">=</span> ax.secondary_yaxis(<span class="st">'right'</span>, functions<span class="op">=</span>(</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> k: <span class="dv">100</span> <span class="op">*</span> k <span class="op">/</span> blocks_per_day, <span class="kw">lambda</span> k: k <span class="op">*</span> blocks_per_day <span class="op">/</span> <span class="dv">100</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>secax.set_ylabel(<span class="st">'</span><span class="sc">% o</span><span class="st">f blocks per day'</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>fig.autofmt_xdate()</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>ax.fmt_xdata <span class="op">=</span> mdates.DateFormatter(<span class="st">'%Y-%m-</span><span class="sc">%d</span><span class="st">'</span>)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Blocks per day'</span>)</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Block Building Outsourcing Trend'</span>)</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>handles, labels <span class="op">=</span> ax.get_legend_handles_labels()</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>ax.legend(handles[::<span class="op">-</span><span class="dv">1</span>], labels[::<span class="op">-</span><span class="dv">1</span>], loc<span class="op">=</span><span class="st">'lower left'</span>)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"Self-built blocks (</span><span class="sc">{</span>daily_builder_counts_df[<span class="st">'date'</span>][<span class="dv">1</span>]<span class="sc">}</span><span class="ss">): "</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"</span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> daily_builder_counts_df[<span class="st">'self built'</span>][<span class="dv">1</span>] <span class="op">/</span> blocks_per_day<span class="sc">:.1f}</span><span class="ss">%"</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"Self-built blocks (</span><span class="sc">{</span>daily_builder_counts_df[<span class="st">'date'</span>][<span class="op">-</span><span class="dv">2</span>]<span class="sc">}</span><span class="ss">): "</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"</span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> daily_builder_counts_df[<span class="st">'self built'</span>][<span class="op">-</span><span class="dv">2</span>] <span class="op">/</span> blocks_per_day<span class="sc">:.1f}</span><span class="ss">%"</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/since-the-merge_18_0.png" class="img-fluid"></p>
+<pre><code>output:
+    Self-built blocks (2022-09-16): 81.3%
+    Self-built blocks (2022-10-26): 39.3%</code></pre>
+</section>
+<section id="builder-performance-mean" class="level2">
+<h2 class="anchored" data-anchor-id="builder-performance-mean">Builder Performance — Mean</h2>
+<p>There are a number of considerations validators will make in order to choose how they outsource block production, but one obvious consideration is builder performance. Which builders are most profitable? In the two charts below we’re considering two average measures for builder performance. Firstly the mean daily block value, calculated as the sum of all values (in Ether) of blocks proposed by the builder on a given day, divided by the number blocks. In common parlance this is often just referred to as the ‘average’.</p>
+<p>The problem with using the mean to compare performance of block builders is that the mean is very sensitive to outliers. As the distribution of block values has a long tail of rare but very high value blocks, the mean block value on days when such a block is built will be much higher. This therefore doesn’t give a good sense of overall performance, since all we tend to see is peak where — by random chance — a very valuable block was built by on of the builders, in the form of spikes in the graph. Perhaps the only meaningful conclusion we can draw from this chart is that all of the block builders significantly outperform self-building of blocks by validators.</p>
+<details>
+<summary>
+<code># plot mean block value by builder [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>daily_builder_mean_df <span class="op">=</span> pd.DataFrame(daily_builder_mean)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>daily_builder_mean_df.set_index(<span class="st">'date'</span>, inplace<span class="op">=</span><span class="va">True</span>, drop<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>daily_builder_mean_df.plot(ax<span class="op">=</span>ax)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Performance of Block Builders (mean daily block value)'</span>)</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Mean Daily Block Value (ETH)'</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    daily_builder_mean_df[<span class="st">'date'</span>][<span class="dv">0</span>],</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    daily_builder_mean_df[<span class="st">'date'</span>][<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/since-the-merge_20_0.png" class="img-fluid"></p>
+</section>
+<section id="builder-performance-median" class="level2">
+<h2 class="anchored" data-anchor-id="builder-performance-median">Builder Performance — Median</h2>
+<p>Often in such cases a far more useful average measure to use is the median. This is the value of the “middle” block of the day, if the blocks are in a list sorted by value. The median is not affected by occasional random outliers and therefore can often be a better way of comparing datasets which contain such outliers.</p>
+<p>In the below chart a bit more of a pattern seems to emerge in the latter half of the dataset, with builder0x69, Eden Network and Flashbots consistently in the lead for block building performance, producing consistently more valuable blocks than any of the BloXroute or other builders. All builders still consistently outperform self-buiding.</p>
+<details>
+<summary>
+<code># plot median block value by builder [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>daily_builder_median_df <span class="op">=</span> pd.DataFrame(daily_builder_median)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>daily_builder_median_df.set_index(<span class="st">'date'</span>, inplace<span class="op">=</span><span class="va">True</span>, drop<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">6</span>))</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>daily_builder_median_df.plot(ax<span class="op">=</span>ax)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Performance of Block Builders (median daily block value)'</span>)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Median Daily Block Value (ETH)'</span>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    daily_builder_median_df[<span class="st">'date'</span>][<span class="dv">0</span>],</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    daily_builder_median_df[<span class="st">'date'</span>][<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(<span class="dv">0</span>, <span class="fl">0.2</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/since-the-merge_22_0.png" class="img-fluid"></p>
+</section>
+<section id="a-word-on-relays" class="level2">
+<h2 class="anchored" data-anchor-id="a-word-on-relays">A Word on Relays</h2>
+<p>In this initial look at post-merge data, I have as usual focused on only on-chain data. As shown above this can still produce some insights, but it does miss an important part of post-merge Ethereum. This is because for the most part validators do not get blocks directly from builders. Rather, they are mediated through <em>relays</em>. Relays are trusted parties who intermediate between the block builder and validator who are in general not in a position to trust one another, but each may be willing to enter into a trusted relationship with a relay.</p>
+<p>Proposers trust relays to publish valid block bodies for which match the promised value to the proposer, once the proposer signs the block’s header. If relays fail to publish the block body, the proposer my lose all reward from proposing since the block will not be accepted by the network without its body. On the other hand, builders trust relays <em>not to</em> publish the block bodies before the header has been signed by the proposer, since doing so would leave the MEV they exploit vulnerable to being stolen by other actors.</p>
+<p>Proposers may consider blocks from multiple relays and multiple builders before choosing to sign the header of one block which will be added to the chain. So there is a kind of auction happening off-chain, which is not captured in any of the data analysed in this article. The role of relays and competition between block builder is complex and rapidly evolving, and it is not possible to do justice to it in this article, but the reader should be aware that this complexity exists.</p>
+</section>
+</section>
+<section id="conclusions" class="level1">
+<h1>Conclusions</h1>
+<p>The principal conclusion we can draw from the analysis presented above is that it is too early to make many definitive statements about post-merge validator rewards. A few points are worth drawing out however:</p>
+<ol type="1">
+<li>Execution layer rewards are lower than they have been during the year prior to the merge. This is most likely due to market conditions rather than being the result of the merge itself.</li>
+<li>Rates of return for individual validators at that this stage are extremely variable. This is because rewards are “lumpy”, and have become more so with the inclusion of execution layer rewards for validators. Around 50% of all validators have yet to propose any blocks, resulting in an APR below 4% for those validators in the meantime.</li>
+<li>No obvious advantage was found for the big validator pools, but again, it is too soon to have enough data to be certain that this is the case (and for example that validator pools are not engaging in malicious behaviour to maximise their returns).</li>
+<li>There has been a consistent trend for validators increasingly to outsource block building to third party block builders, with the proportion of validators building their own blocks dropping by more than half during the 6 weeks’ data analysed.</li>
+<li>Third party block builders consistently outperform validators who build their own blocks. Initial data also indicates some variation in performance between builders.</li>
+</ol>
+</section>
+<section id="acknowledgements" class="level1">
+<h1>Acknowledgements</h1>
+<p>Photo by <a href="https://unsplash.com/@suicide_chewbacca?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Ashwini Chaudhary(Monty)</a> on <a href="https://unsplash.com/s/photos/ganga-confluence?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/pintail\.xyz");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>© Pintail</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2021-12-22">
+<meta name="description" content="Evaluating EIP-1559 against its stated goals: did it reduce overpayment and improve transaction inclusion speed?">
+
+<title>Has EIP-1559 Fulfilled Its Objectives? – pintail’s notes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-d4d76bf8491c20bad77d141916dc28e1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-8b21b9066471f0167ac10ccf36324965.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="Has EIP-1559 Fulfilled Its Objectives? – pintail’s notes">
+<meta property="og:description" content="Evaluating EIP-1559 against its stated goals: did it reduce overpayment and improve transaction inclusion speed?">
+<meta property="og:image" content="https://pintail.xyz/posts/2021/gas-market-analysis/images/thumbnail.jpg">
+<meta property="og:site_name" content="pintail's notes">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../pintail_silhouette.svg" alt="Pintail duck silhouette" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">pintail’s notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/pintail_xyz"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/pintail-xyz"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">TL;DR</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#fee-market-transition" id="toc-fee-market-transition" class="nav-link" data-scroll-target="#fee-market-transition">Fee Market Transition</a></li>
+  <li><a href="#overpayment-of-fees" id="toc-overpayment-of-fees" class="nav-link" data-scroll-target="#overpayment-of-fees">Overpayment of Fees</a>
+  <ul class="collapse">
+  <li><a href="#can-it-make-sense-to-overpay" id="toc-can-it-make-sense-to-overpay" class="nav-link" data-scroll-target="#can-it-make-sense-to-overpay">Can it make sense to overpay?</a></li>
+  <li><a href="#what-about-underpayment" id="toc-what-about-underpayment" class="nav-link" data-scroll-target="#what-about-underpayment">What about underpayment?</a></li>
+  <li><a href="#excluding-outliers" id="toc-excluding-outliers" class="nav-link" data-scroll-target="#excluding-outliers">Excluding Outliers</a></li>
+  <li><a href="#timescales" id="toc-timescales" class="nav-link" data-scroll-target="#timescales">Timescales</a></li>
+  <li><a href="#median-gas-prices" id="toc-median-gas-prices" class="nav-link" data-scroll-target="#median-gas-prices">Median Gas Prices</a></li>
+  <li><a href="#median-normalised-interquartile-range" id="toc-median-normalised-interquartile-range" class="nav-link" data-scroll-target="#median-normalised-interquartile-range">Median-Normalised Interquartile Range</a></li>
+  <li><a href="#comparing-like-for-like" id="toc-comparing-like-for-like" class="nav-link" data-scroll-target="#comparing-like-for-like">Comparing like-for-like</a></li>
+  </ul></li>
+  <li><a href="#prompt-inclusion" id="toc-prompt-inclusion" class="nav-link" data-scroll-target="#prompt-inclusion">Prompt Inclusion</a>
+  <ul class="collapse">
+  <li><a href="#uniswap-v3-error-rate" id="toc-uniswap-v3-error-rate" class="nav-link" data-scroll-target="#uniswap-v3-error-rate">Uniswap v3 Error Rate</a></li>
+  <li><a href="#uniswap-v3-expiry-rate" id="toc-uniswap-v3-expiry-rate" class="nav-link" data-scroll-target="#uniswap-v3-expiry-rate">Uniswap v3 Expiry Rate</a></li>
+  <li><a href="#uniswap-v3-remaining-time-to-expiry" id="toc-uniswap-v3-remaining-time-to-expiry" class="nav-link" data-scroll-target="#uniswap-v3-remaining-time-to-expiry">Uniswap v3 Remaining Time to Expiry</a></li>
+  <li><a href="#uniswap-v2-approveswap-delay" id="toc-uniswap-v2-approveswap-delay" class="nav-link" data-scroll-target="#uniswap-v2-approveswap-delay">Uniswap v2 Approve/Swap Delay</a></li>
+  </ul></li>
+  <li><a href="#conclusions" id="toc-conclusions" class="nav-link" data-scroll-target="#conclusions">Conclusions</a></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Has EIP-1559 Fulfilled Its Objectives?</h1>
+</div>
+
+<div>
+  <div class="description">
+    Evaluating EIP-1559 against its stated goals: did it reduce overpayment and improve transaction inclusion speed?
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 22, 2021</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/jemaa_el-fnaa-5r935yRz8Kg-unsplash.jpg" class="img-fluid figure-img"></p>
+<figcaption>Jemaa el-Fnaa market square, Marrakesh. Photo by <a href="https://unsplash.com/@kazuo513?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Kazuo ota</a> on <a href="https://unsplash.com/s/photos/market?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a>.</figcaption>
+</figure>
+</div>
+<section id="tldr" class="level1">
+<h1>TL;DR</h1>
+<ul>
+<li>The change to the Ethereum fee market introduced by EIP-1559 promised better gas pricing and faster transaction inclusion.</li>
+<li>The transition from legacy to new “type 2” transactions is still underway, and while some dapps use pre-London libraries for their UIs, users cannot realise the full benefits of the update.</li>
+<li>Users of type 2 transactions reliably pay less than those using the legacy type.</li>
+<li>Variability in the fee market is down significantly over short time periods. This implies that the market is more efficient — users <em>are</em> less likely to overpay for transactions.</li>
+<li>Beyond anecdotes, evidence of faster transaction inclusion is hard to find. It may be that wallet providers had already effectively solved the “stuck” transaction problem, by using generous buffers on transaction price estimates.</li>
+<li>However, since deploying EIP-1559, all users can get the benefit of fast inclusion <em>without</em> the risk of overpaying.</li>
+</ul>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>Ethereum’s London hard fork on 5 August 2021 introduced a major change to the mechanics behind transaction fees — the widely-discussed Ethereum Improvement Proposal (EIP) 1559. This was the culmination of a long period of development, building on fee market reform ideas first shared by Vitalik Buterin <a href="https://blog.ethereum.org/2014/02/01/on-transaction-fees-and-the-fallacy-of-market-based-solutions/">back in 2014</a> and developed into something like the form eventually used for EIP-1559 in a <a href="https://ethresear.ch/t/first-and-second-price-auctions-and-improved-transaction-fee-markets/2410">July 2018 post</a>.</p>
+<p>Both the 2018 article and <a href="https://eips.ethereum.org/EIPS/eip-1559">the text of the EIP itself</a> emphasised the benefits that would accrue to <em>users</em> of Ethereum as a result of the change to a fee market which would provide an estimate for the market clearing price for gas (the unit for metering Ethereum’s computational resources, consumed in transaction processing). Two benefits were identified:</p>
+<ol type="1">
+<li>by moving from a “first price auction” model to a “posted price” for inclusion, users would be less likely to overpay for their transactions;</li>
+<li>users could expect prompt inclusion, avoiding the problem of stuck transactions (this had been a recurring problem due to the highly volatile nature of the fee market).</li>
+</ol>
+<p>While the 2018 article noted that the mechanism would lead to the protocol capturing some of the transaction revenue, the idea of destroying (<em>burning</em>) the captured revenue was mentioned as only one possibility of several — albeit fee burn was by far the simplest of these to implement. The eventual EIP made fee-burn the preferred option, and in <a href="https://pintail.medium.com/ethereum-fee-market-reform-eip-1559-as-a-question-of-fairness-567c52dac017">my August 2020 article</a> on the subject, I argued that this was also the fairest thing to do. Ultimately, Ethereum client devs were persuaded of EIP-1559’s merits, and were reassured when <a href="https://timroughgarden.org/papers/eip1559.pdf">a study</a> by Tim Roughgarden showed that incentives for miners and impediments to various game-theoretic attacks were just as strong under EIP-1559 as the previous system.</p>
+<p>Since then, much of the coverage of EIP-1559 has focused on the fee-burn aspect of the change, and its impact on net issuance of ether (and, whether implicitly or explicitly, the price of ether). A notable exception to this was an article from <a href="https://blog.coinbase.com/the-technical-benefits-of-eip-1559-c41bb85f5924">Coinbase</a> which demonstrated the savings they were making by adopting the new transaction type.</p>
+<p>In this article however, we’ll take a look at the two purported advantages of EIP-1559 as outlined above, and try to answer a couple of questions, to evaluate the change on the basis for which it was made:</p>
+<ol type="1">
+<li>has EIP-1559 reduced overpayment of transaction fees?</li>
+<li>are users getting their transactions included more quickly since the change?</li>
+</ol>
+</section>
+<section id="fee-market-transition" class="level1">
+<h1>Fee Market Transition</h1>
+<p>The transaction type introduced by EIP-1559 requires users to specify two parameters to determine the gas price they pay, per unit gas. These are the fee cap (<code>maxFeePerGas</code>) and and a priority fee (<code>maxPriorityFeePerGas</code>) also known as “miner tip”. The fee actually paid by the user is then the sum of the current basefee (<code>baseFeePerGas</code>) — effectively a protocol-determined <a href="https://barnabe.substack.com/p/congestion-control-and-eip1559">congestion price</a> (which is burned) — and the priority fee, which goes to the miner who includes the transaction. If the current block’s basefee is higher than the transaction’s fee cap, then the transaction cannot be included until the basefee comes down.</p>
+<p>Changing the format for transactions in this way could have been highly disruptive for users, since wallet UIs would need to change to allow users to submit transactions in the new style. To try and minimise this disruption, the EIP-1559 specification allowed earlier transaction types to be interpreted as EIP-1559 transactions. Users submitting legacy transactions would not enjoy the benefits of EIP-1559, but could still transact in a similar way to before. Internally, the way this was done was for legacy transactions to be interpreted as having <em>both</em> the fee cap and priority fee set as equal to the “gas price” provided by the user. What this meant was that the miner would receive all excess from these transactions, after subtracting the basefee, rather than being limited to a user-specified priority fee/tip, which would usually be much lower.</p>
+<p>The chart below shows this transition occurring. Before the London hard fork, indicated by the dashed red line, all transactions are of the legacy type (in blue). After London we see a fairly rapid transition during August to “type 2” transactions (in green). From September onwards, the transition is much more gradual, presumably due to a long tail of users tied to various legacy interfaces. There’s a third category of transaction shown on the chart in orange. These are “type 2” transactions which have their fee cap and priority fee set to the same value. That is, they are EIP-1559 style transactions which specify the relevant parameters, yet they are set <em>as though</em> it were a legacy transaction. It turns out that this is mostly a result of some dapps using an outdated version of <a href="https://github.com/ChainSafe/web3.js">web3.js</a> (h/t Tim Beiko).</p>
+<p>The other thing to note is the slight increase in daily gas used which occurs at the London hard fork. This is because the 15M gas <em>limit</em> has become a gas <em>target</em> — average per-block gas usage is at the 15M level, whereas previously it was always a small amount below this level (due to gas “packing” issues, empty blocks or other miner inefficiencies resulting in blocks being slightly under-full). Vitalik Buterin <a href="https://www.reddit.com/r/ethereum/comments/p4nloh/why_has_the_chain_capacity_increased_by_9_after/?utm_source=share&amp;utm_medium=web2x&amp;context=3">has written on this subject</a> in more detail.</p>
+<details>
+<summary>
+<code>imports, constants, definitions [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># imports, constants, definitions</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> csv</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> requests</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pickle</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> jsonrpcclient <span class="im">import</span> request</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib <span class="im">import</span> pyplot <span class="im">as</span> plt, ticker</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.ticker <span class="im">import</span> PercentFormatter</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> datetime <span class="im">import</span> datetime, timedelta</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> numpy <span class="im">import</span> median, quantile</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> web3 <span class="im">import</span> Web3</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>ERIGON_URL <span class="op">=</span> <span class="st">"http://192.168.1.104:8545/"</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co">#w3 = Web3(Web3.HTTPProvider(ERIGON_URL))</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>LONDON_BLOCKNUM <span class="op">=</span> <span class="dv">12965000</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>START_BLOCKNUM <span class="op">=</span> LONDON_BLOCKNUM <span class="op">-</span> <span class="dv">750000</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>END_BLOCKNUM <span class="op">=</span> LONDON_BLOCKNUM <span class="op">+</span> <span class="dv">750000</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>first_block_ts <span class="op">=</span> <span class="dv">1618095148</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>last_block_ts  <span class="op">=</span> <span class="dv">1638278548</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>start_date <span class="op">=</span> datetime.utcfromtimestamp(first_block_ts).date()</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>end_date <span class="op">=</span> datetime.utcfromtimestamp(last_block_ts).date()</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>num_days <span class="op">=</span> (end_date <span class="op">-</span> start_date).days <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>london_dt <span class="op">=</span> datetime(<span class="dv">2021</span>,<span class="dv">8</span>,<span class="dv">5</span>,<span class="dv">12</span>,<span class="dv">33</span>,<span class="dv">42</span>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> gas_quantiles(txs, numquantiles):</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    quantiles <span class="op">=</span> [<span class="va">None</span>] <span class="op">*</span> (numquantiles <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    cumulative_gas <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    total_gas <span class="op">=</span> <span class="bu">sum</span>(tx.gas_used <span class="cf">for</span> tx <span class="kw">in</span> txs)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> tx <span class="kw">in</span> <span class="bu">sorted</span>(txs, key<span class="op">=</span><span class="kw">lambda</span> k: k.gas_price):</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>        cumulative_gas <span class="op">+=</span> tx.gas_used</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, q <span class="kw">in</span> <span class="bu">enumerate</span>(quantiles):</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> q <span class="kw">is</span> <span class="va">None</span> <span class="kw">and</span> cumulative_gas <span class="op">&gt;=</span> total_gas <span class="op">*</span> (i <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> numquantiles:</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>                quantiles[i] <span class="op">=</span> tx.gas_price</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> quantiles</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Tx:   </span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, tx_type, gas_used, gas_price):</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.tx_type <span class="op">=</span> tx_type</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.gas_used <span class="op">=</span> gas_used</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.gas_price <span class="op">=</span> gas_price</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> Block:</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, blocknum):</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.blocknum <span class="op">=</span> blocknum</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>        batch_request <span class="op">=</span> [</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>            request(<span class="st">"eth_getBlockByNumber"</span>, [blocknum, <span class="va">True</span>]),</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>            request(<span class="st">"eth_getBlockReceipts"</span>, [blocknum])</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>        response <span class="op">=</span> requests.post(ERIGON_URL, json<span class="op">=</span>batch_request).json()</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.ts <span class="op">=</span> <span class="bu">int</span>(response[<span class="dv">0</span>][<span class="st">'result'</span>][<span class="st">'timestamp'</span>], base<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.dt <span class="op">=</span> datetime.utcfromtimestamp(<span class="va">self</span>.ts)</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>        tx_json <span class="op">=</span> response[<span class="dv">0</span>][<span class="st">'result'</span>][<span class="st">'transactions'</span>]</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>        receipts_json <span class="op">=</span> response[<span class="dv">1</span>][<span class="st">'result'</span>]</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">len</span>(tx_json) <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>            tmp <span class="op">=</span> <span class="bu">sorted</span>(</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>                <span class="bu">zip</span>(tx_json, receipts_json),</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>                key<span class="op">=</span><span class="kw">lambda</span> k: <span class="bu">int</span>(k[<span class="dv">1</span>][<span class="st">'effectiveGasPrice'</span>], base<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>            tx_json, receipts_json <span class="op">=</span> <span class="bu">zip</span>(<span class="op">*</span>tmp)</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.txs <span class="op">=</span> []</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> t, r <span class="kw">in</span> <span class="bu">zip</span>(tx_json, receipts_json):</span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>            gas_used <span class="op">=</span> <span class="bu">int</span>(r[<span class="st">'gasUsed'</span>], base<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>            tx_type <span class="op">=</span> <span class="bu">int</span>(r[<span class="st">'type'</span>], base<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> tx_type <span class="op">==</span> <span class="dv">2</span> <span class="kw">and</span> (t[<span class="st">'maxFeePerGas'</span>] <span class="op">==</span> t[<span class="st">'maxPriorityFeePerGas'</span>]):</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>                tx_type <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>            gas_price <span class="op">=</span> <span class="bu">int</span>(r[<span class="st">'effectiveGasPrice'</span>], base<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.txs <span class="op">+=</span> [Tx(tx_type, gas_used, gas_price)]</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> WindowSeries:</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, start_ts, period, numquantiles):</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.start_ts <span class="op">=</span> start_ts</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.period <span class="op">=</span> period</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.numquantiles <span class="op">=</span> numquantiles</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.numperiods <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.block_cache <span class="op">=</span> []</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.quantile_series_legacy <span class="op">=</span> []</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.quantile_series_type2 <span class="op">=</span> []</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> add_block(<span class="va">self</span>, block):</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>        period_start <span class="op">=</span> <span class="va">self</span>.start_ts <span class="op">+</span> <span class="va">self</span>.period <span class="op">*</span> <span class="va">self</span>.numperiods</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> block.ts <span class="op">&gt;=</span> period_start <span class="op">+</span> <span class="va">self</span>.period:</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.process_cache()</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.block_cache <span class="op">+=</span> [block]</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> process_cache(<span class="va">self</span>):</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>        total_legacy_gas <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>        total_type2_gas <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>        legacy_txs <span class="op">=</span> []</span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>        type2_txs <span class="op">=</span> []</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> block <span class="kw">in</span> <span class="va">self</span>.block_cache:</span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> tx <span class="kw">in</span> block.txs:</span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> tx.tx_type <span class="op">&gt;</span> <span class="dv">1</span>:</span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>                    total_type2_gas <span class="op">+=</span> tx.gas_used</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>                    type2_txs <span class="op">+=</span> [tx]</span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>                <span class="cf">else</span>:</span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a>                    total_legacy_gas <span class="op">+=</span> tx.gas_used</span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>                    legacy_txs <span class="op">+=</span> [tx]</span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.quantile_series_legacy <span class="op">+=</span> [gas_quantiles(legacy_txs, <span class="va">self</span>.numquantiles)]</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.quantile_series_type2 <span class="op">+=</span> [gas_quantiles(type2_txs, <span class="va">self</span>.numquantiles)]</span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.block_cache <span class="op">=</span> []</span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.numperiods <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>restored_data <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>:</span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="st">'gas-market-analysis.pkl'</span>, <span class="st">'rb'</span>) <span class="im">as</span> f:</span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>        window_series, legacy_gas_per_day, eip1559_gas_per_day, hybrid_gas_per_day <span class="op">=</span> pickle.load(f)</span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>    restored_data <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span>:</span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'cannot open pickle file'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code>run through blocks to get fee quantiles etc. [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run through blocks to get fee quantiles etc.</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> restored_data:</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    period_lengths <span class="op">=</span> [<span class="dv">120</span>, <span class="dv">300</span>, <span class="dv">600</span>, <span class="dv">1200</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    num_pre_london_periods <span class="op">=</span> [</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        math.ceil((london_ts <span class="op">-</span> first_block.ts) <span class="op">/</span> pl)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> pl <span class="kw">in</span> period_lengths</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    start_ts <span class="op">=</span> [</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        london_ts <span class="op">-</span> num_periods <span class="op">*</span> pl</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> num_periods, pl <span class="kw">in</span> <span class="bu">zip</span>(num_pre_london_periods, period_lengths)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    window_series <span class="op">=</span> [</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>        WindowSeries(ts, pl, <span class="dv">4</span>) <span class="cf">for</span> ts, pl <span class="kw">in</span> <span class="bu">zip</span>(start_ts, period_lengths)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    legacy_gas_per_day <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    eip1559_gas_per_day <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    hybrid_gas_per_day <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    run_start_time <span class="op">=</span> time.time()</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"started at </span><span class="sc">{</span>datetime<span class="sc">.</span>utcfromtimestamp(run_start_time)<span class="sc">:</span><span class="op">%</span>Y<span class="op">-%</span>m<span class="op">-%</span>d <span class="op">%</span>H<span class="sc">:</span><span class="op">%</span>M<span class="sc">:</span><span class="op">%</span>S<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    last_update <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> blocknum <span class="kw">in</span> <span class="bu">range</span>(START_BLOCKNUM, END_BLOCKNUM):</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>        block <span class="op">=</span> Block(blocknum)</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        daynum <span class="op">=</span> (block.dt.date() <span class="op">-</span> start_date).days</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> tx <span class="kw">in</span> block.txs:</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> tx.tx_type <span class="op">==</span> <span class="dv">0</span> <span class="kw">or</span> tx.tx_type <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>                legacy_gas_per_day[daynum] <span class="op">+=</span> tx.gas_used</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>            <span class="cf">elif</span> tx.tx_type <span class="op">==</span> <span class="dv">2</span>:</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>                eip1559_gas_per_day[daynum] <span class="op">+=</span> tx.gas_used</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>            <span class="cf">elif</span> tx.tx_type <span class="op">==</span> <span class="dv">3</span>:</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>                hybrid_gas_per_day[daynum] <span class="op">+=</span> tx.gas_used            </span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>                <span class="bu">print</span>(<span class="ss">f"unknown transaction type </span><span class="sc">{</span>tx<span class="sc">.</span>tx_type<span class="sc">}</span><span class="ss"> in block </span><span class="sc">{</span>blocknum<span class="sc">}</span><span class="ss">"</span>)       </span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> w <span class="kw">in</span> window_series:</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>            w.add_block(block)</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        current_time <span class="op">=</span> time.time()</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> current_time <span class="op">-</span> last_update <span class="op">&gt;</span> <span class="dv">10</span>:</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>            last_update <span class="op">=</span> current_time</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>            frac <span class="op">=</span> (blocknum <span class="op">-</span> START_BLOCKNUM) <span class="op">/</span> (END_BLOCKNUM <span class="op">-</span> START_BLOCKNUM)</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>            runtime_str <span class="op">=</span> <span class="bu">str</span>(timedelta(seconds<span class="op">=</span><span class="bu">int</span>(current_time <span class="op">-</span> run_start_time)))</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"block: </span><span class="sc">{</span>blocknum<span class="sc">}</span><span class="ss"> runtime: </span><span class="sc">{</span>runtime_str<span class="sc">}</span><span class="ss"> </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> frac<span class="sc">:.2f}</span><span class="ss">% complete"</span>, end<span class="op">=</span><span class="st">'</span><span class="ch">\r</span><span class="st">'</span>)</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span> <span class="op">+</span> <span class="bu">str</span>(timedelta(seconds <span class="op">=</span> time.time() <span class="op">-</span> run_start_time)))</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> <span class="bu">open</span>(<span class="st">'gas-market-analysis.pkl'</span>, <span class="st">'wb'</span>) <span class="im">as</span> f:</span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>        pickle.dump((window_series, legacy_gas_per_day, eip1559_gas_per_day, hybrid_gas_per_day), f)</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"cell not executed - data previously restored"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code>plot gas per day for different transaction types [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot gas per day for different transaction types</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">'Legacy tx (types 0 and 1)'</span>, <span class="st">'Legacy-equivalent tx (type 2)'</span>, <span class="st">'EIP-1559 tx (type 2)'</span>]</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> [g <span class="op">/</span> <span class="fl">1e9</span> <span class="cf">for</span> g <span class="kw">in</span> legacy_gas_per_day]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> [g <span class="op">/</span> <span class="fl">1e9</span> <span class="cf">for</span> g <span class="kw">in</span> hybrid_gas_per_day]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>c <span class="op">=</span> [g <span class="op">/</span> <span class="fl">1e9</span> <span class="cf">for</span> g <span class="kw">in</span> eip1559_gas_per_day]</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>dates <span class="op">=</span> [start_date <span class="op">+</span> timedelta(days<span class="op">=</span>i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_days)]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>ax.stackplot(dates, a, b, c, labels<span class="op">=</span>labels)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Gas use per day by transaction type'</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>dates[<span class="dv">1</span>], xmax<span class="op">=</span>dates[<span class="op">-</span><span class="dv">2</span>])</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Ggas per day'</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt.date(), color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">'London hard fork'</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># move London hard fork label to the end for consistency</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>handles, labels <span class="op">=</span> ax.get_legend_handles_labels()</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>handles, labels <span class="op">=</span> handles[<span class="dv">1</span>:] <span class="op">+</span> [handles[<span class="dv">0</span>]], labels[<span class="dv">1</span>:] <span class="op">+</span> [labels[<span class="dv">0</span>]]</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>ax.legend(handles, labels, loc<span class="op">=</span><span class="st">'center left'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_3_0.png" class="img-fluid"></p>
+</section>
+<section id="overpayment-of-fees" class="level1">
+<h1>Overpayment of Fees</h1>
+<p>To answer the question of whether users are overpaying for fees, we need to spend some time working out what that actually means. As Roughgarden remarked in his paper, a quick glance at Etherscan indicates that users are regularly paying far in excess of the “market clearing price” for gas, for any reasonable bounds on the market clearing price (since this quantity cannot be known exactly). The problem we have is that the very concept of a market clearing price for gas implies that gas is inherently <em>fungible</em>. This may be true for most “ordinary” transactions, with users bidding for inclusion within a reasonable timescale, and not caring about precise ordering, but there are cases where this assumption does not hold.</p>
+<section id="can-it-make-sense-to-overpay" class="level2">
+<h2 class="anchored" data-anchor-id="can-it-make-sense-to-overpay">Can it make sense to overpay?</h2>
+<p>In many situations, users are not bidding merely for inclusion of their transactions, but rather for inclusion <em>in front of</em> (or perhaps behind) other transactions — that is, the precise ordering of transactions matters to them. For these users, gas corresponding to the start of a block may be worth significantly more than gas later on. For example, transaction ordering becomes important when:</p>
+<ol type="1">
+<li>there is a significant on-chain arbitrage opportunity between decentralised exchanges, leading to a significant amount of value which can be extracted by the <strong>first</strong> user make the appropriate trade;</li>
+<li>a debt issued on a collateralised lending platform (e.g.&nbsp;MakerDAO, Compound or Aave) falls below its required collateralisation level, leading to the collateral being liquidated at below market price, to the <strong>first</strong> user to make the liquidiation transaction;</li>
+<li>a valuable Non-Fungible Token (NFT) is made available to the <strong>first</strong> user to make a “mint” transaction, who may expect to sell the NFT at a profit on the secondary market.</li>
+</ol>
+<p>In each of these cases, we have on-chain value available to be extracted <em>permissionlessly</em>. That is, <em>anyone</em> can exploit the opportunity, as long as they get their transaction in ahead of anyone else. Those users attempting to exploit these permissionless value extraction opportunities (and a range of other more complex examples) engage in a priority gas aaction (PGA). They are not bidding merely to have their transaction <em>included</em>, but rather bidding to have their transaction <em>included</em> <strong><em>first</em></strong>. Such cases form a subset of the class of value extraction opportunities known as miner extractable value (MEV), so-called because the agent responsible for determining transaction inclusion and ordering is best placed to extract the value (in proof of work blockchains this is the miner, in other contexts it may be the sequencer, proposer or validator). It follows that if all information about the maximum extractable value were public, ultimately this value would all be captured by the miner/sequencer/proposer/validator. As a side note, the topic of MEV is a <a href="https://research.paradigm.xyz/MEV">wide and fascinating one</a> attracting significant research attention.</p>
+</section>
+<section id="what-about-underpayment" class="level2">
+<h2 class="anchored" data-anchor-id="what-about-underpayment">What about underpayment?</h2>
+<p>There are also a range of ways that users may appear to underpay for transaction inclusion. Since miners can choose which transactions they include, they may include transactions which set a gas price well below the prevailing market rate, and indeed they often do so. Some of the reasons for this:</p>
+<ol type="1">
+<li><strong>Mining pools</strong> make payouts to their members by including these transactions in the blocks they produce. The gas price for these transactions is economically meaningless, since the transaction fees are paid back to the miner — some mining pools use a price of 0 Gwei, others an arbitrary 1 Gwei (of course, the miner <em>does</em> incur opportunity cost for including these transactions when they could including paying transactions from other users); miners may also include their own transactions at apparently zero cost;</li>
+<li><strong>“Out of band”</strong> payments may be used to compensate the miner; that is, they are paid for transaction inclusion by some other mechanism than the gas price. Examples of this include flashbots transactions, where a bundle of several transactions is included and the miner paid via direct transfer, rather than through the gas price. Theoretically, miners could be compensated out of band to accept non-Ether payment for processing Ethereum transactions, similarly to the “transaction accelerator” services which exist for bitcoin.</li>
+<li>Another situation which I would argue results in underpayment is a consequence of Ethereum’s <a href="https://ethereum.github.io/rig/ethdata/notebooks/explore_data.html#timestamp-difference-between-blocks"><strong>irregular block interval</strong></a>; when many blocks are produced in a short period of time, the transaction pool may be cleared of all high-value transactions leading the fee for inclusion to drop momentarily well below the average.</li>
+</ol>
+<p>Items (1) and (2) above are not in fact examples of underpayment, but similarly to the “overpayment” cases we looked at, they will interfere with our analysis of transaction fees, since these subsidised transactions <em>appear</em> to be underpaying we when look at their gas prices.</p>
+<p>Item (3) is more subtle and perhaps contentious, but I will argue that it is in fact not desirable that that some transactions are able to sneak into blocks at far below the prevailing market price due to the random fluctuations of Ethereum’s block production process. To work out what we mean by the “prevailing market price” we will need to stop and think about a sensible timescale which takes account of the fluctuating block interval.</p>
+</section>
+<section id="excluding-outliers" class="level2">
+<h2 class="anchored" data-anchor-id="excluding-outliers">Excluding Outliers</h2>
+<p>Considering the various reasons that transactions may <em>appear</em> to overpay or underpay for gas, if we are to make progress in our analysis of the gas market, we need to try and exclude these outliers. One option would be to attempt to identify and exclude all the irregular transactions (e.g.&nbsp;mining pools, flashbots). However identifying all irregular transactions, including those participating in a priority gas auction, is tricky. In this article therefore, we’ll use a simpler method for excluding the outliers from our analysis by focusing solely on the <em>interquartile range</em>. That is, we’ll completely ignore the 25% of transactions which pay the lowest gas price in a given time window, and also the 25% of transactions which pay the highest gas price.</p>
+<p>The intuition here is that, if the fee market is effectively establishing a fair price for transaction inclusion, then proportionally, the range of prices that ordinary users (the “middle 50%”) pay for inclusion should be compressed — i.e.&nbsp;the normalised interquartile range will be smaller. Users at the 3rd quartile (75th percentile) are paying more for their transactions than those at the 1st quartile (25th percentile). <em>Some</em> of this difference may be due to inefficiencies in the gas market (i.e.&nbsp;overpayment), so if after a change in the gas market mechanism the range decreases, then we can say that the mechanism improves market efficiency, and reduces overpayment.</p>
+</section>
+<section id="timescales" class="level2">
+<h2 class="anchored" data-anchor-id="timescales">Timescales</h2>
+<p>We also need to decide what granularity of time to use. Naively, we might think that we could look at each block as an independent gas market, and that any variation in price between transactions included in a single block would give an indication of the gas market’s efficiency. Unfortunately however this approach does not work. This is because, over short timescales, the variability in the <em>supply</em> of gas due to the irregular block interval is the cause of significant variability in the price of included transactions.</p>
+<p>To illustrate the variability in gas supply, see the below chart which looks at the number of blocks produced in a given time window. This has been done by modelling block production as a <a href="https://en.wikipedia.org/wiki/Poisson_distribution">poisson process</a>. It shows that if we look at only a short period of time (e.g.&nbsp;60 seconds i.e.&nbsp;1 minute), the number of blocks produced in that period varies widely. For longer periods (e.g.&nbsp;3600 seconds i.e.&nbsp;1 hour), the number of blocks produced is much more consistent, as shown by the much narrower peak.</p>
+<p>We can use this information to choose the size of an <em>analysis window</em> which will allow us to assess how effectively the market establishes a price for gas, by breaking up the data according to block timestamps into windows of <em>T</em> seconds. The window needs to be sufficiently wide to even out the variability of the gas supply, but not so long that changes in demand cause the average gas price to change dramatically.</p>
+<p>Another way of looking at this is by using a probability interval. This is also illustrated in the table below, which shows that for a 1-minute window size, 90% of windows will contain between 22% and 179% of the expected number of blocks. This implies that windows at the upper bound of the probability interval contain over 8 times as many blocks as those at the lower bound. By contrast for a 20 minutes window size, 90% of windows will contain between 83% and 118% of the expected number of blocks (so windows at the upper bound contain 42% more blocks than those at the lower bound).</p>
+<details>
+<summary>
+<code>investigate gas supply variability [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># investigate gas supply variability</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> poisson</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>block_frequency <span class="op">=</span> (END_BLOCKNUM <span class="op">-</span> START_BLOCKNUM) <span class="op">/</span> (last_block_ts <span class="op">-</span> first_block_ts)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Relative number of blocks per group — bounds for 90</span><span class="sc">% i</span><span class="st">nterval</span><span class="ch">\n</span><span class="st">"</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"period (s) | lower | upper"</span>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"--------------------------"</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> group_period <span class="kw">in</span> [<span class="dv">60</span>, <span class="dv">120</span>, <span class="dv">300</span>, <span class="dv">600</span>, <span class="dv">1200</span>]: <span class="co"># 1 min, 2 mins, 5 mins, 10 mins, 20 mins</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> []</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    pmf <span class="op">=</span> []</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    expected_blocks_per_period <span class="op">=</span> block_frequency <span class="op">*</span> group_period</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">int</span>(expected_blocks_per_period <span class="op">*</span> <span class="dv">2</span> <span class="op">+</span> <span class="dv">1</span>)):</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        x.append(i <span class="op">/</span> expected_blocks_per_period)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        pmf.append(poisson.pmf(i, expected_blocks_per_period))</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    norm <span class="op">=</span> <span class="bu">max</span>(pmf)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    ax.plot(x, [p <span class="op">/</span> norm <span class="cf">for</span> p <span class="kw">in</span> pmf], label<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>group_period<span class="sc">}</span><span class="ss"> seconds"</span>)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    interval <span class="op">=</span> poisson.interval(<span class="fl">0.9</span>, expected_blocks_per_period)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    lower <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> interval[<span class="dv">0</span>] <span class="op">/</span> expected_blocks_per_period</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    upper <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> interval[<span class="dv">1</span>] <span class="op">/</span> expected_blocks_per_period</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>group_period<span class="sc">:&gt;10}</span><span class="ss"> | </span><span class="sc">{</span>lower<span class="sc">:&gt;4.0f}</span><span class="ss">% | </span><span class="sc">{</span>upper<span class="sc">:&gt;4.0f}</span><span class="ss">%"</span>)</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Bi-normalised PMFs for blocks per group"</span>)</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"Normalised blocks/period"</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Normalised frequency"</span>)</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>ax.legend(title<span class="op">=</span><span class="st">"Window length"</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    Relative number of blocks per group — bounds for 90% interval
+    
+    period (s) | lower | upper
+    --------------------------
+            60 |   22% |  179%
+           120 |   45% |  157%
+           300 |   67% |  135%
+           600 |   76% |  126%
+          1200 |   83% |  118%</code></pre>
+<p><img src="images/gas-market-analysis_5_1.png" class="img-fluid"></p>
+<p>So, with all the above in mind, let’s take a look at the data itself. We’ll be looking at the 750,000 blocks before the London hard fork, and 750,000 after the London hard fork, for a total of 1.5m blocks spanning about 7.5 months from early April until late November.</p>
+</section>
+<section id="median-gas-prices" class="level2">
+<h2 class="anchored" data-anchor-id="median-gas-prices">Median Gas Prices</h2>
+<p>The first chart below shows the median gas price paid within each analysis window (a 5 minute window has been applied). Because gas demand has a cyclical 24-hour element to it, there’s also a 24-hour rolling mean applied to this data to smooth out the intra-day fluctuations. Again, the London hard fork is marked with a dashed red line.</p>
+<p>This chart shows a few things:</p>
+<ol type="1">
+<li>The London hard fork followed a period of relatively low gas prices in June and July.</li>
+<li>After the London hard fork, gas prices remained within the historically observed range, albeit mostly above the June/July lull. There is nothing in the data to suggest that EIP-1559 actually caused median gas prices to rise.</li>
+<li>Users of the new “type 2” transaction type introduced by EIP-1559 pay on average less than users of legacy transactions, but the difference is relatively small when compared to the fluctuations in gas price due to fluctuating demand.</li>
+</ol>
+<details>
+<summary>
+<code>investigate median gas price and normalised iqr [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># investigate median gas price and normalised iqr</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>ws <span class="op">=</span> window_series[<span class="dv">1</span>]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> [</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    datetime.utcfromtimestamp(ws.start_ts <span class="op">+</span> i <span class="op">*</span> ws.period) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(ws.numperiods)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>series_legacy <span class="op">=</span> [<span class="bu">list</span>(i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">zip</span>(<span class="op">*</span>ws.quantile_series_legacy)]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>series_type2 <span class="op">=</span> [<span class="bu">list</span>(i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">zip</span>(<span class="op">*</span>ws.quantile_series_type2)]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>df_legacy <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'1st quartile'</span>:series_legacy[<span class="dv">0</span>],</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'median'</span>:      series_legacy[<span class="dv">1</span>],</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3rd quartile'</span>:series_legacy[<span class="dv">2</span>]</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>}, index<span class="op">=</span>x)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>df_type2 <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">'1st quartile'</span>:series_type2[<span class="dv">0</span>],</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">'median'</span>:    series_type2[<span class="dv">1</span>],</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3rd quartile'</span>:series_type2[<span class="dv">2</span>]</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>}, index<span class="op">=</span>x)</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>r <span class="op">=</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span> <span class="op">*</span> <span class="dv">60</span> <span class="op">//</span> ws.period</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>df_legacy[<span class="st">'median'</span>].rolling(r).mean().divide(<span class="fl">1e9</span>).plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"Legacy transactions"</span>)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>df_type2[<span class="st">'median'</span>].rolling(r).mean().divide(<span class="fl">1e9</span>).plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">'Type 2 transactions'</span>)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Median gas prices (5-minute window, 24-hour rolling mean)"</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Gas price (gwei)"</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_7_0.png" class="img-fluid"></p>
+</section>
+<section id="median-normalised-interquartile-range" class="level2">
+<h2 class="anchored" data-anchor-id="median-normalised-interquartile-range">Median-Normalised Interquartile Range</h2>
+<p>Looking at the ‘raw’ median prices is useful in that it allows us to see that EIP-1559 has fundamentally not changed the average gas price level — at least not in any way that can be detected compared with the extreme volatility normally observed in the Ethereum gas market. However our exam question was about the level of <em>overpayment</em> which results under each fee market mechanism. As explained previously, this question is difficult to answer due to the presence of outliers in the data. However, we will assume that if the gas market is more efficient, then the interquartile range will be compressed.</p>
+<p>The interquartile range tends to grow when then the gas price increases. Therefore, to make it easier to make a sensible comparison over time, across a range of gas market conditions, we would like find some way to <em>normalise</em> this data. <a href="https://github.com/pintail-xyz/gas-market/blob/master/iqr-vs-median.ipynb">Plotting the data</a> suggests a weak linear relationship between median price and interquartile range. Therefore, to remove this effect, we simply divide the interquartile range by the average (median) fee level.</p>
+<p>This has been done in the below plot using the same 5-minute analysis window and 24-hour rolling mean as before. Here we see quite a clear effect. Type 2 transactions show a consistently lower normalised variability than legacy transactions, even comparing legacy transactions <em>before</em> the London hard fork with type 2 transactions from <em>after</em> the London hard fork. This is a good indication that EIP-1559 <em>is</em> achieving its stated aim of a more efficient gas market and therefore reducing overpayment.</p>
+<details>
+<summary>
+<code>plot median-normalised interquartile range [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot median-normalised interquartile range</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>norm_range_legacy <span class="op">=</span> (df_legacy[<span class="st">'3rd quartile'</span>] <span class="op">-</span> df_legacy[<span class="st">'1st quartile'</span>]) <span class="op">/</span> df_legacy[<span class="st">'median'</span>]</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>norm_range_type2 <span class="op">=</span> (df_type2[<span class="st">'3rd quartile'</span>] <span class="op">-</span> df_type2[<span class="st">'1st quartile'</span>]) <span class="op">/</span> df_type2[<span class="st">'median'</span>]</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>norm_range_legacy.rolling(r).mean().plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"Legacy transactions"</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>norm_range_type2.rolling(r).mean().plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">'Type 2 transactions'</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Median-normalised interquartile range (5-minute window, 24-hour rolling mean)"</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Normalised variability"</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_9_0.png" class="img-fluid"></p>
+</section>
+<section id="comparing-like-for-like" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-like-for-like">Comparing like-for-like</h2>
+<p>While the reduced variability in the prices of type 2 transactions gives us a decent indication that the EIP-1559 gas market is more efficient, it doesn’t give us a good sense of what this means in practical terms. How much can you save by switching to the new model? To explore this question, we’re going to take a look at data relating to a specific transaction type: deposits to <a href="https://tornado.cash/">Tornado Cash</a>. By focusing in on a specific transaction type, we can be confident that we are making a straight comparison and hopefully draw some conclusions about.</p>
+<p>As a quick primer for those unfamiliar, Tornado Cash is trustless mixer for ether and several ERC-20 tokens, allowing users to gain a level of privacy by temporarily pooling their funds with other users. Users deposit their ether/tokens into a pool, and then withdraw the same amount of tokens from the pool at a later date, to a different address. Zero-knowledge proofs are used to allow a user to withdraw from the pool by proving they have made a deposit (which has not yet been withdrawn) without revealing any information about <em>which</em> deposit they made.</p>
+<p>Tornado Cash transactions are a good choice for us here because Tornado Cash deposits will never be part of a priority gas auction. Indeed users of Tornado Cash will generally want to leave their funds in the pool for a period of time for increased privacy, since depositing and withdrawing in quick succession could link their deposit and withdrawal addresses, so they are unlikely to place a high premium on rapid inclusion. Furthermore the value to the user of a Tornado Cash deposit transaction depends very little on any other activity occurring on-chain. This may be contrasted with a decentralised exchange or NFT mint transaction which may be extremely time-sensitive.</p>
+<p>As we saw previously, gas demand and therefore price is extremely volatile. So unfortunately we can’t make any sensible comparison between transactions occurring before and after the London hard fork — any differences would be completely obscured by the wide swings in gas price which are the result of fluctuating demand. Given the relatively small number of transactions involved, even looking at 5-minute analysis windows is no good. However, when we look at legacy and type 2 transactions occurring in the <em>same block</em>, a pattern does emerge.</p>
+<p>A sample of Tornado Cash transactions have been extracted using <a href="https://trueblocks.io/">TrueBlocks</a>. The scatter plot below shows the average percentage difference in fees between legacy and type 2 Tornado Cash transactions. So points below the dashed red line indicate that the type 2 transactions in that block were cheaper than the legacy transactions. We see that in the early days after the London hard fork it does not appear that type 2 transactions provide any advantage. Indeed a handful of outlier points in mid September show a greater that 40% premium for type 2 transactions! What’s going on here?</p>
+<details>
+<summary>
+<code>load Tornado Cash data [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load Tornado Cash data</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'tornado_deposits.json'</span>) <span class="im">as</span> f:</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    t <span class="op">=</span> json.load(f)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>tc_txs <span class="op">=</span> <span class="bu">sorted</span>(t[<span class="st">'data'</span>], key<span class="op">=</span><span class="kw">lambda</span> k: (k[<span class="st">'blockNumber'</span>], k[<span class="st">'transactionIndex'</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code>investigate gas prices for Tornado Cash transactions [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># investigate gas prices for Tornado Cash transactions</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>dt_lookup <span class="op">=</span> {}</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>legacy_lookup <span class="op">=</span> {}</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>type2_lookup <span class="op">=</span> {}</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>first_day <span class="op">=</span> datetime.utcfromtimestamp(tc_txs[<span class="dv">0</span>][<span class="st">'timestamp'</span>]).date()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>last_day <span class="op">=</span> datetime.utcfromtimestamp(tc_txs[<span class="op">-</span><span class="dv">1</span>][<span class="st">'timestamp'</span>]).date()</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>num_days <span class="op">=</span> (last_day <span class="op">-</span> first_day).days <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>legacy_counts <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>equiv_counts <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>type2_counts <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> tx <span class="kw">in</span> tc_txs:</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    bn <span class="op">=</span> tx[<span class="st">'blockNumber'</span>]</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    daynum <span class="op">=</span> (datetime.utcfromtimestamp(tx[<span class="st">'timestamp'</span>]).date() <span class="op">-</span> first_day).days</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> bn <span class="op">&lt;</span> LONDON_BLOCKNUM:</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    price <span class="op">=</span> tx[<span class="st">'receipt'</span>][<span class="st">'effectiveGasPrice'</span>]</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> tx[<span class="st">'maxFeePerGas'</span>] <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>        legacy_counts[daynum] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> bn <span class="kw">in</span> legacy_lookup:</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>            legacy_lookup[bn] <span class="op">+=</span> [price]</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>            legacy_lookup[bn] <span class="op">=</span> [price]</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> bn <span class="kw">in</span> dt_lookup:</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>            dt_lookup[bn] <span class="op">=</span> datetime.utcfromtimestamp(tx[<span class="st">'timestamp'</span>])</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> tx[<span class="st">'maxPriorityFeePerGas'</span>] <span class="op">!=</span> tx[<span class="st">'maxFeePerGas'</span>]:</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>            type2_counts[daynum] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>            equiv_counts[daynum] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> bn <span class="kw">in</span> type2_lookup:</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>            type2_lookup[bn] <span class="op">+=</span> [price]</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>            type2_lookup[bn] <span class="op">=</span> [price]</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="kw">not</span> bn <span class="kw">in</span> dt_lookup:</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>            dt_lookup[bn] <span class="op">=</span> datetime.utcfromtimestamp(tx[<span class="st">'timestamp'</span>])</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> []</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> []</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>sumpercdiff <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>count <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> bn <span class="kw">in</span> legacy_lookup:</span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> bn <span class="kw">in</span> type2_lookup:</span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>        lg_price <span class="op">=</span> <span class="bu">sum</span>(legacy_lookup[bn]) <span class="op">/</span> <span class="bu">len</span>(legacy_lookup[bn])</span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>        t2_price <span class="op">=</span> <span class="bu">sum</span>(type2_lookup[bn]) <span class="op">/</span> <span class="bu">len</span>(type2_lookup[bn])</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>        percdiff <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> t2_price <span class="op">/</span> lg_price <span class="op">-</span> <span class="dv">100</span></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>        x <span class="op">+=</span> [dt_lookup[bn]]</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>        y <span class="op">+=</span> [percdiff]</span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> dt_lookup[bn] <span class="op">&gt;</span> datetime(<span class="dv">2021</span>,<span class="dv">9</span>,<span class="dv">10</span>):</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>            sumpercdiff <span class="op">+=</span> percdiff</span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>            count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>,<span class="dv">8</span>))</span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>ax.scatter(x, y)</span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Difference in Tornado Cash fees for legacy and type 2 transactions occurring in the same block'</span>)</span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Fee difference (%)'</span>)</span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>first_day, xmax<span class="op">=</span>last_day)</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>ax.xaxis.set_major_locator(ticker.MultipleLocator(<span class="dv">14</span>))</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>ax.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>)</span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"average difference in fees from legacy -&gt; type 2 transactions: </span><span class="sc">{</span>sumpercdiff <span class="op">/</span> count<span class="sc">:.1f}</span><span class="ss">%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    average difference in fees from legacy -&gt; type 2 transactions: -6.4%</code></pre>
+<p><img src="images/gas-market-analysis_12_1.png" class="img-fluid"></p>
+<p>If we look at the proportions of Tornado Cash deposit transactions of different types (below) we see that during August and early September, most of the type 2 transactions were in fact “legacy-equivalent” transactions with the fee cap and priority fee set to the same value. As mentioned previously, the presence of these transactions indicates that the Tornado Cash front end was still using an old version of web3.js. If we dig into their commit history, we find that the web3.js version was bumped up to a release that supported EIP-1559 transactions <a href="https://github.com/tornadocash/provider/commit/c3cac21dd19cfbd81de9f2b6e265335530084631">on 30 August</a>. A few days later, by 10 September, the proportion of legacy-equivalent transactions has plummeted, indicating that the live version of the Tornado Cash interface was by that stage upgraded to handle type 2 transactions properly.</p>
+<p>With this in mind, it makes more sense to look at the blocks containing Tornado Cash deposits which occur after this point, of which the vast majority are below the line, indicating a discount for users submitting type 2 transactions. <strong>The average discount accross all of these blocks was 6.4%</strong>.</p>
+<details>
+<summary>
+<code>plot changing proportions of legacy/type2 transactions on Tornado Cash [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot changing proportions of legacy/type2 transactions on Tornado Cash</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>dates <span class="op">=</span> [first_day <span class="op">+</span> timedelta(days<span class="op">=</span>i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_days)]</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>,<span class="dv">8</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>legacy_frac <span class="op">=</span> [<span class="dv">100</span> <span class="op">*</span> l <span class="op">/</span> (l<span class="op">+</span>e<span class="op">+</span>t) <span class="cf">for</span> l, e, t <span class="kw">in</span> <span class="bu">zip</span>(legacy_counts, equiv_counts, type2_counts)]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>equiv_frac <span class="op">=</span> [<span class="dv">100</span> <span class="op">*</span> e <span class="op">/</span> (l<span class="op">+</span>e<span class="op">+</span>t) <span class="cf">for</span> l, e, t <span class="kw">in</span> <span class="bu">zip</span>(legacy_counts, equiv_counts, type2_counts)]</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>type2_frac <span class="op">=</span> [<span class="dv">100</span> <span class="op">*</span> t <span class="op">/</span> (l<span class="op">+</span>e<span class="op">+</span>t) <span class="cf">for</span> l, e, t <span class="kw">in</span> <span class="bu">zip</span>(legacy_counts, equiv_counts, type2_counts)]</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">'Legacy tx (types 0 and 1)'</span>, <span class="st">'Legacy-equivalent tx (type 2)'</span>, <span class="st">'EIP-1559 tx (type 2)'</span>]</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>ax.stackplot(dates, legacy_frac, equiv_frac, type2_frac, labels<span class="op">=</span>labels)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Proportions of Tornado Cash Transaction Types'</span>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Proportion of Transactions (%)'</span>)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>first_day, xmax<span class="op">=</span>last_day)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>, ymax<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>ax.xaxis.set_major_locator(ticker.MultipleLocator(<span class="dv">14</span>))</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_14_0.png" class="img-fluid"></p>
+</section>
+</section>
+<section id="prompt-inclusion" class="level1">
+<h1>Prompt Inclusion</h1>
+<p>The second question to examine is whether, since the London hard fork, users are better able to get their transactions included quickly. Anecdotally, this seemed to be the case for my own usage, and a few people on Twitter made similar observations soon after the London hard fork. The question is how to determine how long transactions take to get included on the blockchain, since in general, transactions include no information about when they were first transmitted. A tweet from Uniswap founder Hayden Adams caught my eye:</p>
+<blockquote class="twitter-tweet blockquote">
+<p lang="en" dir="ltr">
+Yup, Uniswap v3 swap tx fail rate is at an all time low of 6.7% right now <br><br>Historically has averaged between 10-15%<br><br>This was always one of the primary benefits of EIP-1559 <a href="https://t.co/IC6hYWnZ2o">https://t.co/IC6hYWnZ2o</a>
+</p>
+— hayden.eth 🦄 (<span class="citation" data-cites="haydenzadams">@haydenzadams</span>) <a href="https://twitter.com/haydenzadams/status/1431291143065636870?ref_src=twsrc%5Etfw">August 27, 2021</a>
+</blockquote>
+<script async="" src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>Here, Hayden is arguing that faster inclusion of transactions on Uniswap v3 is causing fewer of these transactions to fail. But why would faster inclusion stop these transactions from failing? There are two main reasons:</p>
+<ol type="1">
+<li>Movement in the market of the asset being exchanged could result in the available price being outside the limits set by the user by the time the transaction is included. This would cause the transaction to fail. The longer it takes for the transaction to be included, the more likely such market movement is to have occurred.</li>
+<li>Transactions submitted on Uniswap have a “deadline” parameter which ensures that transactions eventually expire. This prevents a zombie transaction being executed long after a user has forgotten about it. If such a transaction is included after the deadline, it will fail.</li>
+</ol>
+<section id="uniswap-v3-error-rate" class="level2">
+<h2 class="anchored" data-anchor-id="uniswap-v3-error-rate">Uniswap v3 Error Rate</h2>
+<p>A decrease in the transaction failure rate could therefore be explained by faster inclusion of users’ transactions. There are various other factors that can cause a transaction to fail, such as if users attempt to execute a swap for which they don’t have sufficient funds, or if they set the gas limit on the transaction too low. Sudden market movements can also cause transactions to fail even if they are included quickly. So we shouldn’t assume that changes in the failure rate can only be explained by the speed of transaction inclusion. With all this in mind, let’s take a look at the failure rate for Uniswap v3 transactions. Again, we’ll be using <a href="https://trueblocks.io/">TrueBlocks</a> to extract the relevant data.</p>
+<details>
+<summary>
+<code>look at error rates for Uniswap v3 transactions [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># look at error rates for Uniswap v3 transactions</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>swaps <span class="op">=</span> []</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">'univ3-swaps.csv'</span>) <span class="im">as</span> f:</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    reader <span class="op">=</span> csv.reader(f)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row <span class="kw">in</span> reader:</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        inclusion_ts <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">1</span>])</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        error <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">2</span>])</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        deadline_ts <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">4</span>])</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        inclusion_dt <span class="op">=</span> datetime.utcfromtimestamp(inclusion_ts)</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        remainder <span class="op">=</span> deadline_ts <span class="op">-</span> inclusion_ts</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        swaps.append([inclusion_dt, error, remainder])</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>start_date <span class="op">=</span> swaps[<span class="dv">0</span>][<span class="dv">0</span>].date()</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>num_days <span class="op">=</span> (swaps[<span class="op">-</span><span class="dv">1</span>][<span class="dv">0</span>].date() <span class="op">-</span> start_date).days <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>daily_tx_count <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>daily_exp_count <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>daily_err_count <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> num_days</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>daily_remainders <span class="op">=</span> [[] <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(num_days)]</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> dt, error, remainder <span class="kw">in</span> swaps:</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    daynum <span class="op">=</span> (dt.date() <span class="op">-</span> start_date).days</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    daily_tx_count[daynum] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    daily_err_count[daynum] <span class="op">+=</span> error</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    daily_exp_count[daynum] <span class="op">+=</span> <span class="dv">1</span> <span class="cf">if</span> remainder <span class="op">&lt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="dv">0</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    daily_remainders[daynum].append(remainder)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>dates <span class="op">=</span> [start_date <span class="op">+</span> timedelta(days<span class="op">=</span>i) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_days)]</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>err_frac <span class="op">=</span> [e <span class="op">/</span> t <span class="cf">if</span> t <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="va">None</span> <span class="cf">for</span> e, t <span class="kw">in</span> <span class="bu">zip</span>(daily_err_count, daily_tx_count)]</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>exp_frac <span class="op">=</span> [e <span class="op">/</span> t <span class="cf">if</span> t <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="va">None</span> <span class="cf">for</span> e, t <span class="kw">in</span> <span class="bu">zip</span>(daily_exp_count, daily_tx_count)]</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>med_remainder <span class="op">=</span> [median(r) <span class="cf">for</span> r <span class="kw">in</span> daily_remainders]</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame({<span class="st">'err_frac'</span>: err_frac, <span class="st">'exp_frac'</span>: exp_frac, <span class="st">'med_remainder'</span>: med_remainder}, index<span class="op">=</span>dates)</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'err_frac'</span>].plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"Proportion of failed swaps (daily)"</span>)</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'err_frac'</span>].rolling(<span class="dv">7</span>).mean().plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"7-day rolling mean"</span>)</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>ax.axvline(datetime(<span class="dv">2021</span>,<span class="dv">8</span>,<span class="dv">27</span>), color<span class="op">=</span><span class="st">'g'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"Hayden's tweet"</span>)</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Unswap v3 transaction failure rates'</span>)</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax<span class="op">=</span><span class="dv">1</span>, decimals<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Transaction failure rate'</span>)</span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_16_0.png" class="img-fluid"></p>
+<p>So it appears that swap failure rates did come down in the month or so after the London hard fork, and at the time that Hayden tweeted about it, they had reached their lowest level since the launch of Uniswap v3. However, this appears to have been something of a fluke since, in the months that followed, failure rates didn’t show any particular trend, staying in roughly the range they had been in the couple of months <em>before</em> London.</p>
+</section>
+<section id="uniswap-v3-expiry-rate" class="level2">
+<h2 class="anchored" data-anchor-id="uniswap-v3-expiry-rate">Uniswap v3 Expiry Rate</h2>
+<p>So can we do any better? Maybe. Remember that Uniswap v3 transactions include a <em>deadline</em> parameter, after which the transactions will expire, and fail if included. Using this parameter, we can filter for the transactions which failed specifically because they expired. If a lower proportion of transactions expire, it is reasonable to infer that some of these transactions have been included more quickly than they would have been in the previous gas market.</p>
+<details>
+<summary>
+<code>plot expiry rates for Uniswap v3 transactions [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot expiry rates for Uniswap v3 transactions</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'exp_frac'</span>].plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"Proportion of expired swaps"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'exp_frac'</span>].rolling(<span class="dv">7</span>).mean().plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"7-day rolling mean"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>ax.axvline(datetime(<span class="dv">2021</span>,<span class="dv">8</span>,<span class="dv">27</span>), color<span class="op">=</span><span class="st">'g'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"Hayden's tweet"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Unswap v3 transaction expiry rates'</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax<span class="op">=</span><span class="dv">1</span>, decimals<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Transaction expiry rate'</span>)</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_18_0.png" class="img-fluid"></p>
+<p>The plot showing the proportion of expired swaps each day seems to show a more durable reduction since the London hard fork. Again, there is a steep drop immediately after London, but when we zoom out, we might wonder whether this change is due to the fee market change, or whether the decrease is part of a trend that began well before.</p>
+</section>
+<section id="uniswap-v3-remaining-time-to-expiry" class="level2">
+<h2 class="anchored" data-anchor-id="uniswap-v3-remaining-time-to-expiry">Uniswap v3 Remaining Time to Expiry</h2>
+<p>Maybe we can use the Uniswap v3 <em>deadline</em> parameter a bit more cleverly. Rather than looking only at the proportion of transactions which have expired, we could look at the difference between the transaction’s deadline and the timestamp of the block in which it was included, the “remaining time to expiry”. By taking the median of this quantity over all swap transactions in a 24-hour period, we can look for any difference resulting from the fee market change. If transactions are being included more quickly, we would expect them to have a longer remaining time to expiry, assuming the initial validity time set for new swaps is unchanged.</p>
+<details>
+<summary>
+<code>plot the median remaining time to expiry [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the median remaining time to expiry</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'med_remainder'</span>].plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"Daily median remaining time to expiry"</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'med_remainder'</span>].rolling(<span class="dv">7</span>).mean().plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"7-day rolling mean"</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>ax.axvline(datetime(<span class="dv">2021</span>,<span class="dv">8</span>,<span class="dv">27</span>), color<span class="op">=</span><span class="st">'g'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"Hayden's tweet"</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Swaps on Uniswap v3 — remaining time to expiry'</span>)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Remaining time to expiry (seconds)'</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_20_0.png" class="img-fluid"></p>
+<p>Here, we see a general general trend for increasing time to expiry which again <em>could</em> be the result of faster transaction inclusion. However again we cannot say that this trend <em>began</em> with the London hard fork. Indeed much larger changes seem to occur in the months before London, which could be the result of changes in the Uniswap user interface which sets the deadline parameter.</p>
+</section>
+<section id="uniswap-v2-approveswap-delay" class="level2">
+<h2 class="anchored" data-anchor-id="uniswap-v2-approveswap-delay">Uniswap v2 Approve/Swap Delay</h2>
+<p>If the swap deadline is unreliable as a way of working out the inclusion delay, are there any on-chain metrics which are less susceptible to UI changes? One idea might be to look at pairs of transactions executed in succession. Again, Uniswap provides us with such an example. Commonly users are required to make two transactions when they want to perform a swap — they first need to approve the ERC-20 token for use on Uniswap, and then make the trade itself. The design of Uniswap v3 has largely eliminated this UI headache by building in “multicall” functionality which allows users to bundle the “approve” and “swap” actions into a single transaction.</p>
+<p>However, Uniswap v2 did not have such functionality and although its usage has been in steady decline since the launch of Uniswap v3, it still provides us with a dataset of linked transactions, where users would generally prefer the delay between the transactions to be as short as possible. We’re going to focus on trades involving historically one of the most popular ERC-20 tokens on Uniswap — the DAI stablecoin.</p>
+<p>We’re looking for pairs of transactions where transaction (1) is an “approve” transaction sent to the DAI contract authorising the Uniswap v2 router, and transaction (2) is a “swap” transaction from the same address, sent to the Uniswap v2 router, where DAI is the token being supplied for the trade. Transactions (1) and (2) should also have a consecutive nonce (i.e.&nbsp;no transactions from that account have occurred in between (1) and (2)). Let’s start by looking at how many such instances occur:</p>
+<details>
+<summary>
+<code>investigate inclusion delays using Uniswap v2 DAI data, plot instances per week [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># investigate inclusion delays using Uniswap v2 DAI data, plot instances per week</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>APPROVALS_FILE <span class="op">=</span> <span class="st">'dai-approvals-univ2.csv'</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>SWAPS_FILE <span class="op">=</span> <span class="st">'univ2-swaps-dai.csv'</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co">#         0                 1                  2         3         4        5       6         7</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># [{BLOCKNUMBER}],[{TRANSACTIONINDEX}], [{TIMESTAMP}],[{FROM}],[{NONCE}],[{TO}],[{HASH}],[{ISERROR}]</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>approvals <span class="op">=</span> {}</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(APPROVALS_FILE) <span class="im">as</span> f:</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    reader <span class="op">=</span> csv.reader(f)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row <span class="kw">in</span> reader:</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>        address <span class="op">=</span> row[<span class="dv">3</span>]</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>        iserror <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">7</span>])</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> address <span class="kw">not</span> <span class="kw">in</span> approvals <span class="kw">and</span> <span class="kw">not</span> iserror:</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>            timestamp <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">2</span>])</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>            nonce <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">4</span>])</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>            approvals[address] <span class="op">=</span> [nonce, timestamp]</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>first_swaps <span class="op">=</span> {}</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>row_count <span class="op">=</span> error_count <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>swap_iserror <span class="op">=</span> []</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(SWAPS_FILE) <span class="im">as</span> f:</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    reader <span class="op">=</span> csv.reader(f)</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i, row <span class="kw">in</span> <span class="bu">enumerate</span>(reader):</span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>        row_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>        timestamp <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">2</span>])</span>
+<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>        address <span class="op">=</span> row[<span class="dv">3</span>]</span>
+<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>        iserror <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">7</span>])</span>
+<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>        swap_iserror <span class="op">+=</span> [[timestamp, iserror]]</span>
+<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> iserror:</span>
+<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>            error_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> address <span class="kw">not</span> <span class="kw">in</span> first_swaps:</span>
+<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>            nonce <span class="op">=</span> <span class="bu">int</span>(row[<span class="dv">4</span>])</span>
+<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>            first_swaps[address] <span class="op">=</span> [nonce, timestamp]</span>
+<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>gapped_count <span class="op">=</span> matched_count <span class="op">=</span> unmatched_approval_count <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>instances <span class="op">=</span> []</span>
+<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> address <span class="kw">in</span> approvals:</span>
+<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> address <span class="kw">in</span> first_swaps:</span>
+<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>        matched_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a>        approval_nonce, approval_timestamp <span class="op">=</span> approvals[address]</span>
+<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a>        swap_nonce, swap_timestamp <span class="op">=</span> first_swaps[address]</span>
+<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> swap_nonce <span class="op">-</span> approval_nonce <span class="op">==</span> <span class="dv">1</span>:</span>
+<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a>            dt <span class="op">=</span> datetime.utcfromtimestamp(approval_timestamp)</span>
+<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a>            instances <span class="op">+=</span> [[dt, swap_timestamp <span class="op">-</span> approval_timestamp]]</span>
+<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>            gapped_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a>        unmatched_approval_count <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="bu">len</span>(instances)<span class="sc">}</span><span class="ss"> consecutive / </span><span class="sc">{</span>gapped_count<span class="sc">}</span><span class="ss"> gapped approve/swap sequences"</span>)</span>
+<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>matched_count<span class="sc">}</span><span class="ss"> matches vs </span><span class="sc">{</span>unmatched_approval_count<span class="sc">}</span><span class="ss"> unmatched approvals"</span>)</span>
+<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a>first_swap_dt <span class="op">=</span> datetime.utcfromtimestamp(<span class="bu">min</span>(k[<span class="dv">1</span>] <span class="cf">for</span> k <span class="kw">in</span> first_swaps.values()))</span>
+<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a>last_swap_dt <span class="op">=</span> datetime.utcfromtimestamp(<span class="bu">max</span>(k[<span class="dv">1</span>] <span class="cf">for</span> k <span class="kw">in</span> first_swaps.values()))</span>
+<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-58"><a href="#cb15-58" aria-hidden="true" tabindex="-1"></a>day0 <span class="op">=</span> first_swap_dt.date()</span>
+<span id="cb15-59"><a href="#cb15-59" aria-hidden="true" tabindex="-1"></a>ndays <span class="op">=</span> (last_swap_dt.date() <span class="op">-</span> day0).days <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb15-60"><a href="#cb15-60" aria-hidden="true" tabindex="-1"></a>nweeks <span class="op">=</span> math.ceil(ndays <span class="op">/</span> <span class="dv">7</span>)</span>
+<span id="cb15-61"><a href="#cb15-61" aria-hidden="true" tabindex="-1"></a>weekly_instances <span class="op">=</span> [[] <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(nweeks)]</span>
+<span id="cb15-62"><a href="#cb15-62" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> dt, duration <span class="kw">in</span> instances:</span>
+<span id="cb15-63"><a href="#cb15-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dt <span class="op">&lt;</span> first_swap_dt <span class="kw">or</span> dt <span class="op">&gt;</span> last_swap_dt:</span>
+<span id="cb15-64"><a href="#cb15-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb15-65"><a href="#cb15-65" aria-hidden="true" tabindex="-1"></a>    weeknum <span class="op">=</span> (dt.date() <span class="op">-</span> day0).days <span class="op">//</span> <span class="dv">7</span></span>
+<span id="cb15-66"><a href="#cb15-66" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> weeknum <span class="op">&lt;</span> <span class="dv">0</span>:</span>
+<span id="cb15-67"><a href="#cb15-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb15-68"><a href="#cb15-68" aria-hidden="true" tabindex="-1"></a>    weekly_instances[weeknum] <span class="op">+=</span> [duration]</span>
+<span id="cb15-69"><a href="#cb15-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-70"><a href="#cb15-70" aria-hidden="true" tabindex="-1"></a>dates <span class="op">=</span> [day0 <span class="op">+</span> timedelta(days<span class="op">=</span>i<span class="op">*</span><span class="dv">7</span>) <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(nweeks)]</span>
+<span id="cb15-71"><a href="#cb15-71" aria-hidden="true" tabindex="-1"></a>weekly <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb15-72"><a href="#cb15-72" aria-hidden="true" tabindex="-1"></a>    <span class="st">'median'</span>: [median(g) <span class="cf">for</span> g <span class="kw">in</span> weekly_instances],</span>
+<span id="cb15-73"><a href="#cb15-73" aria-hidden="true" tabindex="-1"></a>    <span class="st">'count'</span>: [<span class="bu">len</span>(g) <span class="cf">for</span> g <span class="kw">in</span> weekly_instances]</span>
+<span id="cb15-74"><a href="#cb15-74" aria-hidden="true" tabindex="-1"></a>}, index<span class="op">=</span>dates)</span>
+<span id="cb15-75"><a href="#cb15-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-76"><a href="#cb15-76" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>,<span class="dv">8</span>))</span>
+<span id="cb15-77"><a href="#cb15-77" aria-hidden="true" tabindex="-1"></a>weekly[<span class="st">'count'</span>].plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">'DAI "approve then swap" instances per week'</span>)</span>
+<span id="cb15-78"><a href="#cb15-78" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Uniswap v2: Number of DAI "approve then swap" instances per week'</span>)</span>
+<span id="cb15-79"><a href="#cb15-79" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb15-80"><a href="#cb15-80" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb15-81"><a href="#cb15-81" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb15-82"><a href="#cb15-82" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Number of instances'</span>)</span>
+<span id="cb15-83"><a href="#cb15-83" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    7412 consecutive / 2552 gapped approve/swap sequences
+    9964 matches vs 18466 unmatched approvals</code></pre>
+<p><img src="images/gas-market-analysis_22_1.png" class="img-fluid"></p>
+<p>As mentioned above, clearly the usage of Uniswap v2 is on a downward trend over the last few months, resulting in a generally decreasing number of approve/swap pairs being identified over time. For this reason we’re going to work with per-week rather than daily statistics — otherwise the data becomes too noisy to be useful as the number of identified instances dwindles.</p>
+<p>So now let’s look at the median delay time, and see if any impact from the London hard fork can be identified.</p>
+<details>
+<summary>
+<code>plot median approve/swap delay time [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot median approve/swap delay time</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>,<span class="dv">8</span>))</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>weekly[<span class="st">'median'</span>].plot(ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">'Median approve/swap delay'</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Uniswap v2: Per-week median delay between approval and swap for DAI swaps'</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Delay (seconds)'</span>)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>ax.axvline(london_dt, color<span class="op">=</span><span class="st">'r'</span>, linestyle<span class="op">=</span><span class="st">'dashed'</span>, label<span class="op">=</span><span class="st">"London hard fork"</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">5</span>,<span class="dv">5</span>), xmax<span class="op">=</span>datetime(<span class="dv">2021</span>,<span class="dv">12</span>,<span class="dv">2</span>))</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>ax.legend()<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_24_0.png" class="img-fluid"></p>
+<p>In this case the answer seems to be: “no”.</p>
+<p>Of course, it’s worth mentioning that some users do not sit compulsively refreshing Etherscan after submitting their ‘approve’ transaction so that they can execute the desired swap as soon as the approve goes through (that may just be me). If a user switches their attention to something else after submitting the approve transaction, then the delay between ‘approve’ and ‘swap’ is really just a measure of how closely that user is paying attention, rather than how quickly their transactions are being included. On the other hand, a median delay of about 2.5 minutes does seem to suggest many users do respond fairly quickly.</p>
+<p>Let’s take one final look at this data in a slightly different way. We can make a more detailed pre- vs.&nbsp;post-London comparison by looking at a cumulative histogram. This is plotted below.</p>
+<details>
+<summary>
+<code>plot histogram of approve/swap delays on Uniswap v2 pre- and post-London [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot histogram of approve/swap delays on Uniswap v2 pre- and post-London</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, (dt, _) <span class="kw">in</span> <span class="bu">enumerate</span>(instances):</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> dt <span class="op">&gt;=</span> london_dt:</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>        index_after_london <span class="op">=</span> i</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>df0 <span class="op">=</span> pd.DataFrame([k[<span class="dv">1</span>] <span class="cf">for</span> k <span class="kw">in</span> instances[:index_after_london]])</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>df1 <span class="op">=</span> pd.DataFrame([k[<span class="dv">1</span>] <span class="cf">for</span> k <span class="kw">in</span> instances[index_after_london:]])</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>,<span class="dv">8</span>))</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>bins <span class="op">=</span> [b <span class="cf">for</span> b <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">max</span>(k[<span class="dv">1</span>] <span class="cf">for</span> k <span class="kw">in</span> instances))]</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>df0.hist(bins<span class="op">=</span>bins, ax<span class="op">=</span>ax, density<span class="op">=</span><span class="va">True</span>, histtype<span class="op">=</span><span class="st">'step'</span>, cumulative<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">'Pre-London'</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>df1.hist(bins<span class="op">=</span>bins, ax<span class="op">=</span>ax, density<span class="op">=</span><span class="va">True</span>, histtype<span class="op">=</span><span class="st">'step'</span>, cumulative<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span><span class="st">'Post-London'</span>)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span><span class="dv">0</span>, xmax<span class="op">=</span><span class="dv">600</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>, ymax<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">'lower right'</span>)</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Cumulative histogram of DAI Uniswap v2 approve/swap delays pre- and post-London'</span>)</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Delay (seconds)'</span>)</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Proportion of approve/swap instances'</span>)</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>ax.yaxis.set_major_formatter(ticker.PercentFormatter(xmax<span class="op">=</span><span class="dv">1</span>, decimals<span class="op">=</span><span class="dv">0</span>))<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/gas-market-analysis_26_0.png" class="img-fluid"></p>
+<p>This chart shows that for both pre- and post-London approve/swap pairs, around 75% were executed within 10 minutes (600 seconds) of one another. To the left of this point, the fact that the blue pre-London line sits just above the orange post-London line indicates that in fact approve/swap pairs were actually executed faster <em>before</em> the London hard fork than after it. The effect is very slight, and could be explained by any number of other factors including changes in user behaviour, or changes to the population of users who are actually using Uniswap v2 over the last few months. But certainly it does not indicate any significant impact from the introduction of EIP-1559.</p>
+</section>
+</section>
+<section id="conclusions" class="level1">
+<h1>Conclusions</h1>
+<p>So what does this all mean? Is there something missing from my analysis, or were intuitions/anecdotes from myself and others that transaction inclusion has got faster since the London hard fork simply wrong?</p>
+<p>Possibly. However — and I have no clever ways of proving this — my suspicion is that I and others like me are actually not “typical” users. In general I go to some effort to minimise my transaction fees, using resources such as <a href="https://ethgasstation.info/">ETH Gas Station</a> to look at prevailing fee levels, and usually adjusting downwards from the suggested gas price using the “advanced options” in Metamask. Most users presumably do not delve into the advanced features of their wallet, instead accepting the defaults — indeed in a discussion held on 10 September (so <em>after</em> the London hard fork), Metamask UX designer Jake Haugen <a href="https://www.youtube.com/watch?v=YtkU2773K6w&amp;t=154s">commented</a> that in the previous 7 days only 20% of users had clicked the “advanced options” button.</p>
+<p>While historically my stingy approach has allowed me to minimise what I spend on transactions, it has on many occasions caused me to wait a <em>long</em> time when I have slightly misjudged the fee during a period of rising gas prices. I’m no expert in the transaction pricing mechanisms used by Metamask and other wallets, but my belief is that pre-London, they likely built in more of a margin than I typically would when I choose my own gas price — if new users had the same experience as me of frequently stuck transactions, they would rightly complain about an inadequate user experience.</p>
+<p>However, since the London hard fork I, and users like me, no longer feel the need to tinker with the gas price on my transactions. I am happy that the defaults will not cause me to overpay, and I am likely to get my transaction included in the next block — except in highly dynamic short periods which still periodically occur upon the launch of some popular NFT from a provider who has yet to understand how to design an <a href="https://www.paradigm.xyz/2021/10/a-guide-to-designing-effective-nft-launches/">effective NFT launch</a>.</p>
+<p>The fact that the gas market now is more efficient is borne out by the significantly lower pricing variability seen across 5-minute windows, demonstrated in the first part of this article. It seems as though the prompt inclusion problem had already been largely solved for most users by wallet providers, by overpaying with generous buffers on gas prices. However, since the deployment of EIP-1559, users get to enjoy the benefits of prompt inclusion <em>without</em> overpaying for them.</p>
+</section>
+<section id="acknowledgements" class="level1">
+<h1>Acknowledgements</h1>
+<p>Many thanks to <a href="https://twitter.com/tjayrush">Thomas Jay Rush</a> for <a href="https://medium.com/coinmonks/commanding-the-line-ca5fe3496ae1">helping me</a> to use the fantastic <a href="https://trueblocks.io/">TrueBlocks</a> transaction scraper. I’d recommend anyone doing similar analysis work to give it a try. Also thank you to <a href="https://twitter.com/TimBeiko">Tim Beiko</a> and <a href="https://twitter.com/barnabemonnot">Barnabé Monnot</a> for accepting my pitch to take on this analysis, and for your feedback.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/pintail\.xyz");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>© Pintail</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

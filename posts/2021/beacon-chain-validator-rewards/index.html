@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2021-04-07">
+<meta name="description" content="How much can Ethereum validators earn? A model of beacon chain rewards covering base rewards, block proposal variability, and the impact of imperfect participation.">
+
+<title>Beacon Chain Validator Rewards – pintail’s notes</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-d4d76bf8491c20bad77d141916dc28e1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-8b21b9066471f0167ac10ccf36324965.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Beacon Chain Validator Rewards – pintail’s notes">
+<meta property="og:description" content="How much can Ethereum validators earn? A model of beacon chain rewards covering base rewards, block proposal variability, and the impact of imperfect participation.">
+<meta property="og:image" content="https://pintail.xyz/posts/2021/beacon-chain-validator-rewards/images/thumbnail.jpg">
+<meta property="og:site_name" content="pintail's notes">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../pintail_silhouette.svg" alt="Pintail duck silhouette" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">pintail’s notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/pintail_xyz"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/pintail-xyz"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#available-rewards" id="toc-available-rewards" class="nav-link active" data-scroll-target="#available-rewards">Available Rewards</a></li>
+  <li><a href="#the-ideal-case" id="toc-the-ideal-case" class="nav-link" data-scroll-target="#the-ideal-case">The Ideal Case</a></li>
+  <li><a href="#block-rewards" id="toc-block-rewards" class="nav-link" data-scroll-target="#block-rewards">Block Rewards</a></li>
+  <li><a href="#modelling-imperfect-participation" id="toc-modelling-imperfect-participation" class="nav-link" data-scroll-target="#modelling-imperfect-participation">Modelling Imperfect Participation</a>
+  <ul class="collapse">
+  <li><a href="#perfect-validator-on-an-imperfect-network" id="toc-perfect-validator-on-an-imperfect-network" class="nav-link" data-scroll-target="#perfect-validator-on-an-imperfect-network">Perfect Validator on an Imperfect Network</a></li>
+  <li><a href="#imperfect-validator-on-a-perfect-network" id="toc-imperfect-validator-on-a-perfect-network" class="nav-link" data-scroll-target="#imperfect-validator-on-a-perfect-network">Imperfect Validator on a Perfect Network</a></li>
+  </ul></li>
+  <li><a href="#full-model" id="toc-full-model" class="nav-link" data-scroll-target="#full-model">Full Model</a></li>
+  <li><a href="#final-notes" id="toc-final-notes" class="nav-link" data-scroll-target="#final-notes">Final Notes</a></li>
+  <li><a href="#acknowledgements" id="toc-acknowledgements" class="nav-link" data-scroll-target="#acknowledgements">Acknowledgements</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Beacon Chain Validator Rewards</h1>
+</div>
+
+<div>
+  <div class="description">
+    How much can Ethereum validators earn? A model of beacon chain rewards covering base rewards, block proposal variability, and the impact of imperfect participation.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 7, 2021</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">September 28, 2022</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><img src="images/cookie-the-pom-gySMaocSdqs-unsplash.jpg" class="img-fluid"></p>
+<blockquote class="blockquote">
+<p><strong>Note</strong> This article uses values from the original ‘phase 0’ Beacon Chain specification. Some of the values used below are out of date since the Altair fork which occurred on 27 October 2021.</p>
+</blockquote>
+<p>The core of Ethereum’s Proof of Stake consensus mechanism launched in December 2020, finally delivering the first phase of the transition away from Proof of Work — a vision set out <a href="https://blog.ethereum.org/2014/07/05/stake/">in 2014</a>, a full year before Ethereum’s mainnet launch. In Ethereum’s Proof of Stake, the blockchain is secured by <em>validators</em> who provide a security deposit of 32 ETH and are given the duty of coming to consensus on the state of a new blockchain called the <em>beacon chain</em>. They are incentivised to do this reliably with rewards for carrying out their duties, and penalties for failing to do this properly. There are also severe penalties (slashing) for validators who can be proven to have acted maliciously.</p>
+<p>These validator rewards and penalties are a little more complex than the the block rewards familiar from Proof of Work blockchains. While some excellent resources such as <a href="https://beaconcha.in">beaconcha.in</a> can help validators to understand <em>how much</em> they are earning, it may not be obvious <em>why</em>. This article will try and give validators a feeling for how much they can earn, and how this may vary.</p>
+<p>You might have seen an “estimated APR” for running a validator, such as the graphic on the Proof of Stake <a href="https://launchpad.ethereum.org/">launchpad</a> and wonder whether those numbers are realistic — where do they come from anyway? In fact, all the APR estimations currently available rest on a series of assumptions (often unstated), and in some cases may be using an outdated version of the beacon chain spec. So to start off, let’s look at what validators would earn if they — and all other validators — participated perfectly. I’ll be using Ben Edgington’s invaluable <a href="https://benjaminion.xyz/eth2-annotated-spec/phase0/beacon-chain">annotated spec</a> to do this. Note: we’ll be using the mainnet spec used for the December 2020 launch of the beacon chain. Some refinements to validator rewards and penalties are planned for the upcoming <a href="https://blog.ethereum.org/2021/03/24/finalized-no-24/">Altair beacon chain fork</a>.</p>
+<section id="available-rewards" class="level1">
+<h1>Available Rewards</h1>
+<p>Ethereum validators receive rewards for participating every <em>epoch</em> (6.4 minutes). The rewards that they receive are a multiple of something called the <code>base_reward</code>. One <code>base_reward</code> is paid to each validator for accurately voting on (or, in the jargon, <em>attesting to</em>) current values of each of 3 aspects of the beacon chain. I’ll refer to these three rewards collectively as the <em>accuracy rewards</em>. They get a fourth reward, the <em>inclusion reward</em>, if their vote (<em>attestation</em>) is included promptly into a beacon chain block. So the maximum reward a validator can receive each epoch is <code>4 * base_reward</code>. To work out how much validators can earn, then, we need to know how <code>base_reward</code> is determined.</p>
+<p>The level of <code>base_reward</code> is determined by the number of active validators on the network, and tuned to incentivise a validator set of the right size. We want to incentivise a good number of validators to join the validator set, without paying out more issuance than necessary. If there aren’t many validators, the protocol needs to offer a high return, to encourage more validators to join. However if there is already a large number of validators, the protocol can afford to pay less, and save on issuance. The function which does this for the beacon chain is an inverse square root — that is, the level of the reward is divided by the square root of currently validating Ether (the reasoning for choosing an inverse square root relationship is explained in Vitalik Buterin’s <a href="https://notes.ethereum.org/@vbuterin/rkhCgQteN?type=view#Base-rewards">design rationale</a> document).</p>
+<p>From the annotated spec we have:</p>
+<p><code>base_reward = effective_balance * BASE_REWARD_FACTOR // integer_squareroot(total_balance) // BASE_REWARDS_PER_EPOCH</code></p>
+<p>Which calculates the <code>base_reward</code> for each validator, measured in Gwei (=10<sup>-9</sup> ETH), where the terms have the following meanings:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>effective_balance</code></td>
+<td>An integer number of ETH according to each validator’s balance (measured in Gwei). It has a maximum value of 32 × 10<sup>9</sup>.</td>
+</tr>
+<tr class="even">
+<td><code>BASE_REWARD_FACTOR</code></td>
+<td>A constant value of 64 in the eth2 spec, it is the factor used to tune the overall issuance of ETH — some of the rationale for this value was given in the <a href="https://github.com/ethereum/eth2.0-specs/pull/971">pull request</a> in which it was set.</td>
+</tr>
+<tr class="odd">
+<td><code>total_balance</code></td>
+<td>The sum of <code>effective_balance</code> for all active validators.</td>
+</tr>
+<tr class="even">
+<td><code>BASE_REWARDS_PER_EPOCH</code></td>
+<td>This is a constant value of 4, corresponding to the 4 components of validator reward, each worth one <code>base_reward</code>, which can be earned by each validator, each epoch.</td>
+</tr>
+</tbody>
+</table>
+<p>For our ideal reward case, this all simplifies down, since <em>all</em> validators have an effective balance of 32 ETH. So the ideal base reward for <code>n</code> validators is:</p>
+<p><code>base_reward = 512e9 // integer_squareroot(n * 32e9)</code></p>
+<p>(NB again, in the beacon chain spec, this is measured in Gwei. We can just divide by 10<sup>9</sup> to convert to ETH)</p>
+</section>
+<section id="the-ideal-case" class="level1">
+<h1>The Ideal Case</h1>
+<p>From the information above, we can calculate the maximum rewards available if all validators participated perfectly (i.e.&nbsp;validators receive <code>4*base_reward</code> every epoch), and we can turn this into an annualised ideal reward, by multiplying by the number epochs in a year. This is simply the number of seconds in a year (31556952) divided by the number of seconds in an epoch (384) to give approximately 82180 epochs per year. The ideal annual per-validator reward is plotted below, as a function of total staked Ether.</p>
+<details>
+<summary>
+<code>input 1 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define annualised base reward (measured in ETH) for n validators</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># assuming all validators have an effective balance of 32 ETH</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>EPOCHS_PER_YEAR <span class="op">=</span> <span class="dv">82180</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> annualised_base_reward(n):</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> EPOCHS_PER_YEAR <span class="op">*</span> <span class="dv">512</span> <span class="op">/</span> math.sqrt(n <span class="op">*</span> <span class="fl">32e9</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<details>
+<summary>
+<code>input 2 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot ideal ETH staking return</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>n_validators <span class="op">=</span> [n <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">524288</span><span class="op">//</span><span class="dv">32</span>,<span class="bu">int</span>(<span class="fl">10e6</span>)<span class="op">//</span><span class="dv">32</span>,<span class="dv">3200</span>)]</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>ideal_reward <span class="op">=</span> [<span class="dv">4</span> <span class="op">*</span> annualised_base_reward(n) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> plt.figure(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ax1<span class="op">=</span>fig.add_subplot(<span class="dv">111</span>, label<span class="op">=</span><span class="st">"1"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>ax2<span class="op">=</span>fig.add_subplot(<span class="dv">111</span>, label<span class="op">=</span><span class="st">"2"</span>, frame_on<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>ax1.plot(n_validators, ideal_reward)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>ax2.plot([n <span class="op">*</span> <span class="fl">32e-6</span> <span class="cf">for</span> n <span class="kw">in</span> n_validators], [<span class="dv">100</span> <span class="op">*</span> r <span class="op">/</span> <span class="dv">32</span> <span class="cf">for</span> r <span class="kw">in</span> ideal_reward])</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>ax1.set_xlabel(<span class="st">'Number of validators'</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Ideal annual per-validator reward (ETH)'</span>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>ax2.set_title(<span class="st">'Ideal annual validator returns'</span>)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>ax2.xaxis.tick_top()</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>ax2.yaxis.tick_right()</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>ax2.xaxis.set_label_position(<span class="st">'top'</span>) </span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>ax2.yaxis.set_label_position(<span class="st">'right'</span>) </span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>ax2.set_xlabel(<span class="st">'Total ETH staked (millions)'</span>)</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">'Annual yield on 32 ETH deposit (%)'</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/beacon-chain-validator-rewards_2_0.png" class="img-fluid"></p>
+<p>A few values from this graph are tabulated below for reference</p>
+<details>
+<summary>
+<code>input 3 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tabulate a few values for validator return</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>n_validators <span class="op">=</span> [<span class="dv">524288</span> <span class="op">//</span> <span class="dv">32</span>, <span class="dv">50000</span>, <span class="dv">100000</span>, <span class="dv">150000</span>, <span class="dv">200000</span>, <span class="dv">250000</span>, <span class="dv">300000</span>, <span class="dv">10000000</span> <span class="op">//</span> <span class="dv">32</span>]</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>staked <span class="op">=</span> [<span class="dv">32</span> <span class="op">*</span> n <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>ideal_reward <span class="op">=</span> [<span class="dv">4</span> <span class="op">*</span> annualised_base_reward(n) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>annual_yield <span class="op">=</span> [<span class="dv">100</span> <span class="op">*</span> r <span class="op">/</span> <span class="dv">32</span> <span class="cf">for</span> r <span class="kw">in</span> ideal_reward]</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_validators'</span>: n_validators,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">'total_staked (ETH)'</span>: staked,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">'annual_reward (ETH)'</span>: ideal_reward,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">'annual_yield (%)'</span>: annual_yield</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(data)</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>pd.options.display.float_format <span class="op">=</span> <span class="st">'</span><span class="sc">{:,.2f}</span><span class="st">'</span>.<span class="bu">format</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>df.set_index(<span class="st">'n_validators'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div>
+
+<table class="dataframe table table-sm table-striped small">
+<thead>
+<tr>
+<th>
+n_validators
+</th>
+<th>
+total_staked (ETH)
+</th>
+<th>
+annual_reward (ETH)
+</th>
+<th>
+annual_yield (%)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>
+16384
+</th>
+<td>
+524288
+</td>
+<td>
+7.35
+</td>
+<td>
+22.97
+</td>
+</tr>
+<tr>
+<th>
+50000
+</th>
+<td>
+1600000
+</td>
+<td>
+4.21
+</td>
+<td>
+13.15
+</td>
+</tr>
+<tr>
+<th>
+100000
+</th>
+<td>
+3200000
+</td>
+<td>
+2.98
+</td>
+<td>
+9.30
+</td>
+</tr>
+<tr>
+<th>
+150000
+</th>
+<td>
+4800000
+</td>
+<td>
+2.43
+</td>
+<td>
+7.59
+</td>
+</tr>
+<tr>
+<th>
+200000
+</th>
+<td>
+6400000
+</td>
+<td>
+2.10
+</td>
+<td>
+6.57
+</td>
+</tr>
+<tr>
+<th>
+250000
+</th>
+<td>
+8000000
+</td>
+<td>
+1.88
+</td>
+<td>
+5.88
+</td>
+</tr>
+<tr>
+<th>
+300000
+</th>
+<td>
+9600000
+</td>
+<td>
+1.72
+</td>
+<td>
+5.37
+</td>
+</tr>
+<tr>
+<th>
+312500
+</th>
+<td>
+10000000
+</td>
+<td>
+1.68
+</td>
+<td>
+5.26
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="block-rewards" class="level1">
+<h1>Block Rewards</h1>
+<p>The figure and table above give us a highly idealised version of what validators would earn if all validators participated perfectly, and all rewards were distributed evenly. However, there is an important component missing from this picture, which is the beacon chain block reward.</p>
+<p>The block reward doesn’t change the total amount of Ether paid to validators, but it does mean that a portion of of the available reward is allocated to the block producer. For every <em>slot</em> (a slot is 12 seconds — there are 32 slots in an epoch), one validator, chosen at random, is responsible for producing a block. The block is made up of beacon chain attestations submitted by the other validators, and the block producer is rewarded with a proportion of all the inclusion rewards from attestations in the block. This means that the block producer has an incentive to include all the valid attestations they can gather for the block, maximising their profits <em>and</em> those of all the attesting validators they include.</p>
+<p>In the beacon chain spec, the proportion of the inclusion rewards given to the block producer is determined by a constant called <code>PROPOSER_REWARD_QUOTIENT</code>, which has a value of 8. That is, ⅛ of the <em>inclusion reward</em> (or equivalently ¹⁄₃₂ of the full per-epoch reward) goes to the block producer, and ⅞ goes to the validators whose attestations are included in the block.</p>
+<p>Since every validator has an equal chance of being selected to produce a block, in the long run the rewards should even out, matching the graph above. But over any finite timescale, there will be variability in rewards, since some validators will be lucky and be given the opportunity to propose a greater than average number of blocks, and some unlucky, proposing fewer.</p>
+<p>To work out how significant is the element of luck in block proposal frequency we can apply some basic statistics. Every validator has an equal chance of being selected to propose each slot, and there are <code>31556952 / 12 = 2629746</code> slots per year. If there are 100,000 validators then the chance of being selected to propose each slot is 10<sup>-5</sup>. The number of block proposal opportunities each validator gets will be governed by the binomial distribution.</p>
+<p>The probability mass function plotted below gives us a visual sense of how many block proposal opportunities validators can expect to get:</p>
+<details>
+<summary>
+<code>input 4 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot pdf</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> binom</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> [el <span class="cf">for</span> el <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">51</span>)]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> binom.pmf(x, <span class="dv">31556952</span><span class="op">/</span><span class="dv">12</span>, <span class="fl">1e-5</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>ax.bar(x, y)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(xmin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(ymin<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Probability mass function (100,000 validators) — number of block proposal opportunities per year'</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Number of block proposal opportunities in a year'</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Probability'</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>lmu <span class="op">=</span> binom.ppf([<span class="fl">0.01</span>, <span class="fl">0.5</span>, <span class="fl">0.99</span>],<span class="dv">31556952</span><span class="op">/</span><span class="dv">12</span>, <span class="fl">1e-5</span>)</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>avg <span class="op">=</span> <span class="dv">31556952</span> <span class="op">/</span> (<span class="dv">12</span> <span class="op">*</span> <span class="dv">100000</span>)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"With 100,000 validators, the mean number of blocks proposed per validator per year is </span><span class="sc">{</span>avg<span class="sc">:.2f}</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"The unluckiest 1% of validators will have the opportunity to produce at most </span><span class="sc">{</span><span class="bu">int</span>(lmu[<span class="dv">0</span>])<span class="sc">}</span><span class="ss"> blocks in a year"</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"The median (average) validator will have the opportunity to produce </span><span class="sc">{</span><span class="bu">int</span>(lmu[<span class="dv">1</span>])<span class="sc">}</span><span class="ss"> blocks in a year"</span>)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"The luckiest 1% of validators will have the opportunity to produce at least </span><span class="sc">{</span><span class="bu">int</span>(lmu[<span class="dv">2</span>])<span class="sc">}</span><span class="ss"> blocks in a year"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    With 100,000 validators, the mean number of blocks proposed per validator per year is 26.30
+    
+    The unluckiest 1% of validators will have the opportunity to produce at most 15 blocks in a year
+    The median (average) validator will have the opportunity to produce 26 blocks in a year
+    The luckiest 1% of validators will have the opportunity to produce at least 39 blocks in a year</code></pre>
+<p><img src="images/beacon-chain-validator-rewards_6_1.png" class="img-fluid"></p>
+<p>So we can see that there is significant variability in the number of block proposal opportunities each validator will receive, based on luck alone. The luckiest 1% of validators will propose well over twice as many blocks, in the course of a year, as the unluckiest 1%. Over a long enough time, this effect evens out. However, as the number of validators increases and the probability of proposing a block goes down, the unevenness increases.</p>
+<p>To show the impact of this effect on validator rewards, I’ve recalculated the ideal validator returns graph, but now I’m going to plot lines to show the luckiest and unluckiest 1% of validators. Another way of looking at this is that 98% of validators will receive an annual reward that sits between the two lines.</p>
+<details>
+<summary>
+<code>input 5 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot ideal ETH staking return with interpercentile range</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>n_validators <span class="op">=</span> [n <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">50000</span>,<span class="bu">int</span>(<span class="fl">10e6</span>)<span class="op">//</span><span class="dv">32</span>,<span class="dv">1000</span>)]</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>full_reward <span class="op">=</span> [<span class="dv">4</span> <span class="op">*</span> annualised_base_reward(n) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>attestation_reward <span class="op">=</span> [<span class="fl">0.75</span> <span class="op">*</span> f <span class="cf">for</span> f <span class="kw">in</span> full_reward]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>inclusion_reward <span class="op">=</span> [<span class="fl">0.25</span> <span class="op">*</span> f <span class="cf">for</span> f <span class="kw">in</span> full_reward]</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>p <span class="op">=</span> [<span class="dv">1</span><span class="op">/</span>n <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate lower and upper quartiles for block proposal opportunities</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>l_bpo <span class="op">=</span> [<span class="bu">int</span>(binom.ppf(<span class="fl">0.01</span>,<span class="dv">31556952</span><span class="op">/</span><span class="dv">12</span>, <span class="dv">1</span><span class="op">/</span>n)) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>mean_bpo <span class="op">=</span> [<span class="bu">float</span>(binom.mean(<span class="dv">31556952</span><span class="op">/</span><span class="dv">12</span>, <span class="dv">1</span><span class="op">/</span>n)) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>u_bpo <span class="op">=</span> [<span class="bu">int</span>(binom.ppf(<span class="fl">0.99</span>,<span class="dv">31556952</span><span class="op">/</span><span class="dv">12</span>, <span class="dv">1</span><span class="op">/</span>n)) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate lower and upper quartiles for ideal reward, based on block proposal opportunties</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>l_reward, u_reward <span class="op">=</span> [], []</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(full_reward)):</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    r_att <span class="op">=</span> attestation_reward[i]</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    r_inc <span class="op">=</span> inclusion_reward[i]</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    l_reward.append(r_att <span class="op">+</span> r_inc <span class="op">*</span> ((<span class="dv">7</span><span class="op">/</span><span class="dv">8</span>) <span class="op">+</span> (<span class="dv">1</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> l_bpo[i] <span class="op">/</span> mean_bpo[i]))</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    u_reward.append(r_att <span class="op">+</span> r_inc <span class="op">*</span> ((<span class="dv">7</span><span class="op">/</span><span class="dv">8</span>) <span class="op">+</span> (<span class="dv">1</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> u_bpo[i] <span class="op">/</span> mean_bpo[i]))</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>ax.plot(n_validators, u_reward, label<span class="op">=</span><span class="st">'Luckiest 1</span><span class="sc">% o</span><span class="st">f validators'</span>)</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>ax.plot(n_validators, l_reward, label<span class="op">=</span><span class="st">'Unluckiest 1</span><span class="sc">% o</span><span class="st">f validators'</span>)</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Number of validators'</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Ideal annual per-validator reward (ETH)'</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Ideal annual validator rewards'</span>)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>leg <span class="op">=</span> ax.legend()</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>ratio0 <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> (u_reward[<span class="dv">0</span>] <span class="op">/</span> full_reward[<span class="dv">0</span>] <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>ratio1 <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> l_reward[<span class="dv">0</span>] <span class="op">/</span> full_reward[<span class="dv">0</span>])</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"With 50,000 validators:</span><span class="ch">\n</span><span class="ss">the luckiest 1% of validators receive </span><span class="sc">{</span>ratio0<span class="sc">:.1f}</span><span class="ss">% greater reward than average"</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>     <span class="ss">f"</span><span class="ch">\n</span><span class="ss">the unluckiest 1% of validators receive </span><span class="sc">{</span>ratio1<span class="sc">:.1f}</span><span class="ss">% smaller reward than average"</span>)</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>ratio0 <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> (u_reward[<span class="dv">50</span>] <span class="op">/</span> full_reward[<span class="dv">50</span>] <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>ratio1 <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> l_reward[<span class="dv">50</span>] <span class="op">/</span> full_reward[<span class="dv">50</span>])</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">With 100,000 validators:</span><span class="ch">\n</span><span class="ss">the luckiest 1% of validators receive </span><span class="sc">{</span>ratio0<span class="sc">:.1f}</span><span class="ss">% greater reward than average"</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>     <span class="ss">f"</span><span class="ch">\n</span><span class="ss">the unluckiest 1% of validators receive </span><span class="sc">{</span>ratio1<span class="sc">:.1f}</span><span class="ss">% smaller reward than average"</span>)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>ratio0 <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> (u_reward[<span class="dv">150</span>] <span class="op">/</span> full_reward[<span class="dv">150</span>] <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>ratio1 <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> l_reward[<span class="dv">150</span>] <span class="op">/</span> full_reward[<span class="dv">150</span>])</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">With 200,000 validators:</span><span class="ch">\n</span><span class="ss">the luckiest 1% of validators receive </span><span class="sc">{</span>ratio0<span class="sc">:.1f}</span><span class="ss">% greater reward than average"</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>     <span class="ss">f"</span><span class="ch">\n</span><span class="ss">the unluckiest 1% of validators receive </span><span class="sc">{</span>ratio1<span class="sc">:.1f}</span><span class="ss">% smaller reward than average"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    With 50,000 validators:
+    the luckiest 1% of validators receive 1.0% greater reward than average
+    the unluckiest 1% of validators receive 1.0% smaller reward than average
+    
+    With 100,000 validators:
+    the luckiest 1% of validators receive 1.5% greater reward than average
+    the unluckiest 1% of validators receive 1.3% smaller reward than average
+    
+    With 200,000 validators:
+    the luckiest 1% of validators receive 2.1% greater reward than average
+    the unluckiest 1% of validators receive 1.7% smaller reward than average</code></pre>
+<p><img src="images/beacon-chain-validator-rewards_8_1.png" class="img-fluid"></p>
+<p>As can be seen from the graph and stats calculated above, there is a potential variation in reward in the range of a few percent over the course of a year. Remember, this applies even though in our ideal case, every validator performs all their duties <em>perfectly</em>. The effect gradually increases as the validator set grows, due to the reduced per-slot probability of block proposal for each validator.</p>
+<p>While this level of variation is perhaps not worrying from the point of view of the investment risk for validators, it is worth bearing in mind as we delve into the actual performance of validators in the network. Marginal differences in performance can easily be swallowed up — even over the course of a whole year, as modelled here — by the random variation in block proposal opportunities given to validators.</p>
+</section>
+<section id="modelling-imperfect-participation" class="level1">
+<h1>Modelling Imperfect Participation</h1>
+<p>Our model so far has assumed that all validators carry out their duties perfectly. This allows us to set an upper bound on the rewards available, subject to the variation in block producer opportunities explained above. To get a bit closer to modelling real-world rewards however, we need to consider the impact of a less-than-perfect validator set. Even if <em>you</em> are running a perfect validator with zero downtime, your rewards will be impacted if the rest of the network falls short of the ideal case. The beacon chain incentives are designed such that rewards for everyone are maximised if overall network performance is optimised. This helpfully disincentivises adversarial behaviour (such as trying to take other validators offline to maximise your own rewards), but it does mean that individual validators’ rewards can be reduced through no fault of their own.</p>
+<p>There are lots of reason why validators might fail to produce attestations, or fail to propagate them to the network, or fail to produce blocks, or fail to have their blocks accepted by the network. Modelling all of these factors would be very difficult, so we’ll try something simpler. We’ll assume that either validators are online and operating perfectly, or they are offline and not fulfilling out their duties at all. In our model, the level of network performance can be captured by a single number called the <em>participation rate</em>, which corresponds to the proportion of validators who are online.</p>
+<section id="perfect-validator-on-an-imperfect-network" class="level2">
+<h2 class="anchored" data-anchor-id="perfect-validator-on-an-imperfect-network">Perfect Validator on an Imperfect Network</h2>
+<p>Considering a perfect validator operating within an imperfect validator set, there are two mechanisms that will tend to reduce the rewards they receive:</p>
+<ol type="1">
+<li>For the accuracy rewards, the reward is scaled by the proportion of active validators who voted the same way. So if 99% of the validators are online and vote correctly, the rewards are scaled by 0.99.</li>
+<li>If our perfect validator’s attestation is included late — for example because the block producer in the first slot after our attestation fails to produce a block because it is offline — then the inclusion reward declines in inverse proportion to the inclusion delay (i.e.&nbsp;it scales by ½, then ⅓, then ¼ etc.).</li>
+</ol>
+<p>So it’s easy to work out that if 99% of the network participates correctly in one epoch, the impact on the accuracy rewards for our perfect validator is a 1% reduction from the ideal case. The inclusion reward is a little more tricky however. Again, it comes down to luck — if the block producer who <em>should have</em> included our attestation at the next slot just happens to be part of the 1% of validators who are offline, then our inclusion reward will be cut in half. If we are exceptionally unlucky and this happens twice in a row, then our inclusion delay will be reduced by a factor of three.</p>
+<p>Calculating the <em>expected</em> (i.e.&nbsp;average) inclusion reward, taking account of every possible delay is given by the sum of a geometric series (this was previously explained in the context of <a href="https://github.com/hermanjunge/eth2-reward-simulation/blob/master/assumptions.md#attester-incentives">beacon chain modelling by Herman Junge</a>). If <em>B</em> is the <code>base_reward</code> and <em>P</em> is the participation rate, we calculate the expected reward as:</p>
+<p><span class="math display">
+\begin{align}
+E(P) &amp;= \frac{7}{8}B\left(P + \frac{P(1-P)}{2} + \frac{P(1-P)^2}{3} + \ldots\right) \\\\\\
+&amp;= \frac{7}{8}BP\sum_{i=1}^{\infty}\frac{(1-P)^{i-1}}{i} \\\\\\
+&amp;= \frac{7}{8}BP\frac{\ln(P)}{P-1}
+\end{align}
+</span></p>
+<p>Note that the latest that an attestation can be included into the chain is a delay of 32 slots. Properly therefore, we should only sum up to 32 rather than infinity as in the above form. However if the participation rate <span class="math inline">P</span> is high (e.g.&nbsp;in the 99% range as in the current network), the error that results from summing to infinity rather than 32 is vanishingly small.</p>
+<p>So now let’s plot the expected rewards for a perfect validator operating within a range of different participation rate scenarios, bearing in mind that in the 4 months since the genesis of the beacon chain, the participation rate has <a href="https://beaconcha.in/charts/participation_rate">almost never dipped below 96%</a>.</p>
+<details>
+<summary>
+<code>input 6 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot reward for perfect validator in several participation level contexts</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>participation_rate <span class="op">=</span> [<span class="dv">1</span>,<span class="fl">0.99</span>,<span class="fl">0.98</span>,<span class="fl">0.97</span>,<span class="fl">0.96</span>]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>n_validators <span class="op">=</span> [n <span class="cf">for</span> n <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">50000</span>,<span class="bu">int</span>(<span class="fl">10e6</span>)<span class="op">//</span><span class="dv">32</span>,<span class="dv">1000</span>)]</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>base_reward <span class="op">=</span> [annualised_base_reward(n) <span class="cf">for</span> n <span class="kw">in</span> n_validators]</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>r_100000 <span class="op">=</span> []</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> P <span class="kw">in</span> participation_rate:</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    accuracy_rewards <span class="op">=</span> [P <span class="op">*</span> <span class="dv">3</span> <span class="op">*</span> r <span class="cf">for</span> r <span class="kw">in</span> base_reward]</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> P <span class="op">&lt;</span> <span class="dv">1</span>:</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        inclusion_reward <span class="op">=</span> [(<span class="dv">7</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> r <span class="op">*</span> P <span class="op">*</span> math.log(P) <span class="op">/</span> (P<span class="op">-</span><span class="dv">1</span>) <span class="cf">for</span> r <span class="kw">in</span> base_reward]</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        inclusion_reward <span class="op">=</span> [(<span class="dv">7</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> r <span class="cf">for</span> r <span class="kw">in</span> base_reward]</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    block_reward <span class="op">=</span> [(<span class="dv">1</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> r <span class="op">*</span> P <span class="cf">for</span> r <span class="kw">in</span> base_reward]</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    total_reward <span class="op">=</span> [accuracy_rewards[i] <span class="op">+</span> inclusion_reward[i] <span class="op">+</span> block_reward[i]</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(block_reward))]</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    ax.plot(n_validators, total_reward, label<span class="op">=</span><span class="ss">f'P = </span><span class="sc">{</span>P<span class="sc">:.2f}</span><span class="ss">'</span>)</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    r_100000.append(total_reward[<span class="dv">50</span>])</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Number of validators'</span>)</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Ideal annual per-validator reward (ETH)'</span>)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Ideal annual validator rewards'</span>)</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>leg <span class="op">=</span> ax.legend()</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'at P = </span><span class="sc">{</span>participation_rate[<span class="dv">1</span>]<span class="sc">:.2f}</span><span class="ss">, rewards fall by </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> r_100000[<span class="dv">1</span>] <span class="op">/</span> r_100000[<span class="dv">0</span>])<span class="sc">:.2f}</span><span class="ss">%'</span>)</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'at P = </span><span class="sc">{</span>participation_rate[<span class="dv">2</span>]<span class="sc">:.2f}</span><span class="ss">, rewards fall by </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> r_100000[<span class="dv">2</span>] <span class="op">/</span> r_100000[<span class="dv">0</span>])<span class="sc">:.2f}</span><span class="ss">%'</span>)</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'at P = </span><span class="sc">{</span>participation_rate[<span class="dv">3</span>]<span class="sc">:.2f}</span><span class="ss">, rewards fall by </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> r_100000[<span class="dv">3</span>] <span class="op">/</span> r_100000[<span class="dv">0</span>])<span class="sc">:.2f}</span><span class="ss">%'</span>)</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'at P = </span><span class="sc">{</span>participation_rate[<span class="dv">4</span>]<span class="sc">:.2f}</span><span class="ss">, rewards fall by </span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> r_100000[<span class="dv">4</span>] <span class="op">/</span> r_100000[<span class="dv">0</span>])<span class="sc">:.2f}</span><span class="ss">%'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    at P = 0.99, rewards fall by 0.89%
+    at P = 0.98, rewards fall by 1.78%
+    at P = 0.97, rewards fall by 2.68%
+    at P = 0.96, rewards fall by 3.57%</code></pre>
+<p><img src="images/beacon-chain-validator-rewards_11_1.png" class="img-fluid"></p>
+<p>As shown in the graph and figures above, rewards for our perfect validator fall slightly less than the drop in participation in the network in general.</p>
+</section>
+<section id="imperfect-validator-on-a-perfect-network" class="level2">
+<h2 class="anchored" data-anchor-id="imperfect-validator-on-a-perfect-network">Imperfect Validator on a Perfect Network</h2>
+<p>If our own validator is in fact offline some of the time then it will miss out on some rewards, and will also receive penalties for missed attestations. The accuracy rewards each have counterpart penalties — providing incorrect attestations, or failing to provide an attestation at all, is penalised by a single <code>base_reward</code> for each part of the attestation that was incorrect. This means that <em>missed</em> attestations result in a penalty of <code>3 * base_reward</code>. To see what impact this has, imagine that you are running a validator which has some level of downtime, but that every other validator on the network behaves perfectly. We’ll ignore the fact that the network participation rate is actually just below 100% due to our lone imperfect validator and instead model the network as being ‘perfect’ whilst our validator occasionally goes offline. What would the impact on our profitability be, taking into account the penalties we will accrue for going offline?</p>
+<p>Operating as part of an otherwise perfect validator set, our validator earns an expected <code>4 * base_reward</code> when it is online, and suffers a penalty of <code>3 * base_reward</code> when it is offline. So for <code>base_reward</code> <span class="math inline">B</span> and uptime fraction <span class="math inline">U</span>, the net reward <span class="math inline">R</span> is given by: <span class="math display">\begin{align}
+R &amp;= 4BU - 3B(1-U) \\\\\\
+  &amp;= B(7U - 3)
+\end{align}</span> And if the net reward is zero, we have: <span class="math display">
+U = \frac{3}{7} \approx 43\%
+</span></p>
+<p>Which implies as long as the validator is <em>online</em> at least 43% of the time, it will receive a positive net reward.</p>
+<details>
+<summary>
+<code>input 7 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot expected reward for imperfect validator/perfect network at various validator set sizes</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>n_validators <span class="op">=</span> [<span class="dv">50000</span>, <span class="dv">100000</span>, <span class="dv">150000</span>, <span class="dv">200000</span>, <span class="dv">250000</span>, <span class="dv">300000</span>]</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>uptime <span class="op">=</span> [i <span class="op">/</span> <span class="dv">100</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">101</span>)]</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">12</span>, <span class="dv">8</span>))</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> n <span class="kw">in</span> n_validators:</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    base_reward <span class="op">=</span> annualised_base_reward(n)</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    net_reward <span class="op">=</span> []</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> u <span class="kw">in</span> uptime:</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        rewards <span class="op">=</span> <span class="dv">4</span> <span class="op">*</span> u <span class="op">*</span> base_reward</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        penalties <span class="op">=</span> <span class="dv">3</span> <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> u) <span class="op">*</span> base_reward</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        net_reward.append(rewards <span class="op">-</span> penalties)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    ax.plot(<span class="bu">range</span>(<span class="dv">101</span>), net_reward, label<span class="op">=</span><span class="ss">f'n_validators = </span><span class="sc">{</span>n<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Percentage uptime'</span>)</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Annual net reward (ETH)'</span>)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">'Expected annual net rewards against validator downtime</span><span class="ch">\n</span><span class="st">'</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>             <span class="st">'(for an imperfect validator in a perfect validator set)'</span>)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>leg <span class="op">=</span> ax.legend()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<p><img src="images/beacon-chain-validator-rewards_13_0.png" class="img-fluid"></p>
+</section>
+</section>
+<section id="full-model" class="level1">
+<h1>Full Model</h1>
+<p>Putting this all together we have our model for an imperfect validator operating in an imperfect validator set. With a <code>base_reward</code> of <span class="math inline">B</span>, a participation rate of <span class="math inline">P</span> and uptime for ‘our’ validator of <span class="math inline">U</span>, we have: <span class="math display">
+R = \underbrace{\vphantom{\frac{1}{1}}3BPU  }\_{\text{accuracy}} - \underbrace{\vphantom{\frac{1}{1}}3B(1-U)}\_{\text{penalties}} + \underbrace{\frac{7}{8}BPU\frac{\ln(P)}{P-1}}\_{\text{inclusion}} + \underbrace{\vphantom{\frac{1}{1}}\frac{1}{8}BPU}\_{\text{block reward}}
+</span></p>
+<p>So, for example, if you run a validator with 99% uptime on a network of 100,000 validators with a participation rate of 99%, this model can be used to predict the expected net reward:</p>
+<details>
+<summary>
+<code>input 8 [click to view code]</code>
+</summary>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate annualised expected net reward for given parameters</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>base_reward <span class="op">=</span> annualised_base_reward(<span class="dv">100000</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>participation <span class="op">=</span> <span class="fl">0.99</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>uptime <span class="op">=</span> <span class="fl">0.99</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>net_reward <span class="op">=</span> <span class="dv">3</span> <span class="op">*</span> base_reward <span class="op">*</span> participation <span class="op">*</span> uptime <span class="op">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>             <span class="op">-</span> <span class="dv">3</span> <span class="op">*</span> base_reward <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> participation)  <span class="op">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>             <span class="op">+</span> (<span class="dv">7</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> base_reward <span class="op">*</span> participation <span class="op">*</span> uptime <span class="op">*</span> math.log(participation) <span class="op">/</span> (participation <span class="op">-</span> <span class="dv">1</span>) <span class="op">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>             <span class="op">+</span> (<span class="dv">1</span><span class="op">/</span><span class="dv">8</span>) <span class="op">*</span> base_reward <span class="op">*</span> participation <span class="op">*</span> uptime</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Net annual reward = </span><span class="sc">{</span>net_reward<span class="sc">:.2f}</span><span class="ss"> ETH (</span><span class="sc">{</span><span class="dv">100</span> <span class="op">*</span> net_reward <span class="op">/</span> <span class="dv">32</span><span class="sc">:.2f}</span><span class="ss">% return on 32 ETH stake)'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<pre><code>output:
+    Net annual reward = 2.90 ETH (9.05% return on 32 ETH stake)</code></pre>
+<p>For ease of experimentation, please see <a href="https://docs.google.com/spreadsheets/d/1RjOKfdaZzez6t5l6FbwHVIEITK1zBbTJDPhOsiosqmw/edit?usp=sharing">this spreadsheet</a> which will allow you to see the effect of different participation rates, uptime levels and validator numbers on the expected net reward.</p>
+<p>Again, however, we need to remember that this expected net reward does <em>not</em> take into account the element of luck. As well as the random chance of being assigned as the block producer for a given slot, as our model has grown in complexity, there are additional items in the formula above which are subject to chance. For example, there is the risk of receiving a reduced inclusion reward because the block producer for the next slot happens to be offline, or the risk of missing the opportunity to produce a block, because <em>your</em> validator happens to be offline when allocated the block proposer duty. These additional factors will slightly increase the variability of net rewards around the “expected” case given by the model.</p>
+<p>Given the non-linearity in the inclusion reward, it is tricky to combine all the items in the formula above to produce a probability distribution as we did for block proposer opportunities. We could get a good idea what the distribution looks like by running a Monte Carlo simulation (i.e.&nbsp;use a random number generator to simulate lots of validators and then plot their net rewards on a graph), but let’s leave that step until we are comparing our model to the real network…</p>
+</section>
+<section id="final-notes" class="level1">
+<h1>Final Notes</h1>
+<p>Congratulations for making it to the end! Hopefully this article has helped explain why and how beacon chain rewards vary — both when validators behave in an idealised fashion and when they are less than perfectly reliable.</p>
+<p>One key takeaway from this modelling seems to be that although the available rewards vary significantly according to the number of active validators on the network, they are not dramatically affected by small amounts of down time. In fact we showed that in an idealised network, validators are profitable as long as they are online more than 43% of the time. We would not expect this minimum uptime figure to be significantly higher in the beacon chain that we observe today (which generally exhibits participation rates around the 99% level). If you’re considering staking your own Ether at home, this should reassure you — even major internet or power outages should not significantly affect your profitability over the course of a year.</p>
+</section>
+<section id="acknowledgements" class="level1">
+<h1>Acknowledgements</h1>
+<p>This article was written as part of an <a href="https://blog.ethereum.org/2021/02/09/esp-staking-community-grantee-announcement/">Ethereum Foundation Staking Community Grant</a>. Many thanks to <a href="https://twitter.com/lakshmansankar">Lakshman Sankar</a>, <a href="https://twitter.com/barnabemonnot">Barnabé Monnot</a> and <a href="https://twitter.com/jgm">Jim McDonald</a> for suggestions and feedback. Photo by <a href="https://unsplash.com/@cookiethepom?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Cookie the Pom</a> on <a href="https://unsplash.com/s/photos/computer?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Unsplash</a>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/pintail\.xyz");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>© Pintail</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
