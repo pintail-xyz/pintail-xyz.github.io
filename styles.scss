@@ -294,6 +294,13 @@ blockquote {
 }
 
 // ── TOC ───────────────────────────────────────────────────────────────────────
+@media (max-width: 991px) {
+  #quarto-margin-sidebar {
+    display: none;
+  }
+}
+
+
 #TOC {
   border-left: 2px solid #E8E4DC;
   padding-left: 1rem;
