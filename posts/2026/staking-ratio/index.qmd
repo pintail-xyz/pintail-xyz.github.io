@@ -12,17 +12,23 @@ comments:
     category-id: PLACEHOLDER
 ---
 
+![](images/mohamed-marey-xmJCsnQMU7k-unsplash.jpg)
+
 Over the last year, the environment for Ethereum staking has changed significantly. Regulatory changes in the US have emboldened providers of Exchange Traded Funds (ETFs) and Digital Asset Treasuries (DATs) to deploy their significant reserves to consume the apparently free lunch on offer from Ethereum's proof-of-stake yield. As of March 2026, if we include Ether sitting in the staking entry queue, **the proportion of the Ether supply which is staked (the staking ratio) has reached 1/3 for the first time**. So now is a good time to ask: where might this lead? Is this desirable?
 
 Questions about Ethereum proof-of-stake economics, and specifically the relationship between security and Ether issuance, are not new. As we will see, they have been debated since before the 2020 launch of the beacon chain. However the inherently contentious proposition of altering protocol incentives has led to such issues being sidelined in favour of uncontroversial upgrades or simply considered too hard to address. What I will do in this article is take a closer look at how we got here, where we appear to be headed, and the impact of this on Ethereum. Ultimately I will make the case that we can no longer afford to push this question away. **Action to put us onto a more sustainable course should be a near-term priority**.
 
-<div class="stakechart-embed">
-<div id="stakechart" class="plotly-graph-div" style="width:100%; height:700px;"></div>
-<script charset="utf-8" src="https://cdn.plot.ly/plotly-3.4.0.min.js" integrity="sha256-KEmPoupLpFyGMyGAiOsiNDbKDKAvxXAn/W+oQa0ZAfk=" crossorigin="anonymous"></script>
-<script src="stakechart.js"></script>
-</div>
+# A History of Staking on Ethereum
 
-*Data from https://github.com/pintail-xyz/cedar*
+The chart below shows how
+
+::: {#fig-stakechart}
+
+{{< include _stakechart.html >}}
+
+Staking ratio over time. Data aggregation using [pintail-xyz/cedar](https://github.com/pintail-xyz/cedar).
+
+:::
 
 ## Staking pioneers
 
@@ -56,6 +62,26 @@ This episode generated considerable disquiet within the Ethereum community, but 
 Throughout the whole period from the beacon chain launch, through the merge and afterwards, new stake continued to flow into the consensus layer at a fairly steady rate. Of course, staking flows could only be one-way at this stage, and with the advent of staking withdrawals in the Shapella upgrade in April 2023 [traders worried about mass withdrawals impacting the Ether market](https://fortune.com/crypto/2023/04/08/ethereum-shanghai-upgrade-ether-crypto-markets/).
 
 A modest amount of stake did withdraw immediately after Shapella, almost entirely due to the exit of Kraken's validators (the result of a [settlement with the SEC](https://www.sec.gov/newsroom/press-releases/2023-25) which at the time viewed staking services as engaged in the sale of securities). But, by and large, the impact of enabling withdrawals was to derisk Ethereum staking, and the result was a massive inflow which quickly overwhelmed the Kraken withdrawals and led to a substantial entry queue of Ether waiting to join the active validator set.
+
+# Current trajectory
+
+* Staking rate is practically up only over the whole history of PoS on Ethereum
+* Dramatic rise in staking rate since SEC guidance has been masked by exogenous events (Kiln withdrawal, AAVE rate shock)
+* As staking rate rises further, the incentive to stake actually grows for lots of reasons
+* The declining APR has had no effect. The reason is that the net incentive to stake remains far greater than the costs associated with staking (and remain so all the way out to 100%)
+* Likely that in the long run Hasu/Georgios's prediction will play out
+
+# Does this Matter?
+
+* What do we lose by going 100% staked?
+* We want to preserve raw, trust minimised ETH as the default asset. Any rewards from staking should match the costs.
+* Paying a subsidy in excess of this does not preserve a superior validator set. It just guarantees eventual total capture by large entities (solo stakers can't go on)
+
+# What can we do
+
+* Surprise surprise: issuance. But note that:
+* A new issuance curve is technically trivial
+* The precise form doesn't matter as much as the memetics - there is a wide healthy range
 
 * look at what happened when EIGEN became tradeable
 * make comparison with AAVE yield. Can I get this data onchain?
