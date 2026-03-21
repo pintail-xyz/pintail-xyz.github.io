@@ -43,7 +43,6 @@ Given how uncertain all of this seemed at the time, there was [serious considera
 In all of these deliberations, the envisaged staking participant was a small-scale solo staker. That is, an individual enthusiast, locking up their own Ether and running their own node at home. It was acknowledged that bigger players would also be involved, and many were concerned that centralised providers might offer attractive delegated staking services which could lead to centralisation of the validator set. The hope was that by nurturing a vibrant enthusiast staker community, sufficient decentralisation would be achieved. 
 
 
-
 Regardless, within weeks of the beacon chain launch, [Lido was accepting deposits](https://blog.lido.fi/staking-ethereum-with-lido/). And by April 2021, [prominent voices](https://www.paradigm.xyz/2021/04/on-staking-pools-and-staking-derivatives) were arguing that:
 
 > Without staking derivatives, we might expect 15-30% of ETH to be staked. However, with staking derivatives, **this number could be as high as 80-100%**, because there is no additional cost to staking compared to non-staking.
