@@ -22,7 +22,6 @@ if (document.getElementById('stakechart')) {
     var box = document.createElement('div');
     box.style.cssText = [
         'position:absolute',
-        'width:640px',
         'height:100px',
         'background:rgba(255,255,255,0.96)',
         'border:1px solid #C0C5D0',
@@ -56,8 +55,10 @@ if (document.getElementById('stakechart')) {
     function positionBox() {
         var fl = el._fullLayout;
         if (!fl) return;
-        box.style.top  = '4px';
-        box.style.left = Math.round((el.offsetWidth - 640) / 2) + 'px';
+        var w = Math.min(640, fl.width - fl.margin.l - fl.margin.r);
+        box.style.width = w + 'px';
+        box.style.top   = '4px';
+        box.style.left  = Math.round((el.offsetWidth - w) / 2) + 'px';
     }
     positionBox();
     el.on('plotly_relayout', positionBox);
