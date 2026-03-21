@@ -77,7 +77,7 @@ A modest amount of stake did withdraw immediately after Shapella, almost entirel
 * We want to preserve raw, trust minimised ETH as the default asset. Any rewards from staking should match the costs.
 * Paying a subsidy in excess of this does not preserve a superior validator set. It just guarantees eventual total capture by large entities (solo stakers can't go on)
 
-# What can we do
+# What can we do?
 
 * Surprise surprise: issuance. But note that:
 * A new issuance curve is technically trivial
@@ -103,7 +103,6 @@ A modest amount of stake did withdraw immediately after Shapella, almost entirel
     * Also the focus on issuance rather than staking ratio may have led to some confusion
 * So what has happened since?
     * The problem has not gone away! Staking participation continues to increase practically monotonically
-    * Take a look at current staking queue
     * Why should we still care?
     * What does a 100% staked environment actually look like (i.e. solo stakers leave, SSPs effectively extract rent)?
     * Who cares? Who is the constituency here?
