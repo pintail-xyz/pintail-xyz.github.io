@@ -36,6 +36,11 @@ $border-radius-sm:  0.1rem;
   letter-spacing: 0.01em;
 }
 
+.navbar-logo {
+  height: 18px;
+  width: auto;
+}
+
 .navbar-nav .nav-link {
   color: rgba(255, 255, 255, 0.85) !important;
 }
@@ -311,7 +316,7 @@ blockquote {
 // ── Home page hero ────────────────────────────────────────────────────────────
 .home-hero {
   text-align: center;
-  padding: 1rem 0 0.75rem;
+  padding: 0.2rem 0 0.1rem;
 }
 
 .pintail-hero-svg {

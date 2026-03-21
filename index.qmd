@@ -20,7 +20,7 @@ anchor-sections: false
 </style>
 
 ::: {.home-hero}
-![](pintail.svg){.pintail-hero-svg}
+![](assets/pintail.svg){.pintail-hero-svg}
 :::
 
 ## Posts

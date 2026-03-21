@@ -4,7 +4,6 @@ project:
   render:
     - "*.qmd"
     - "posts/**/*.qmd"
-    - "pages/**/*.qmd"
 
 website:
   title: "pintail's notes"
@@ -13,7 +12,7 @@ website:
   favicon: favicon.svg
 
   navbar:
-    logo: pintail_silhouette.svg
+    logo: assets/pintail_silhouette.svg
     logo-alt: "Pintail duck silhouette"
     right:
       - icon: twitter
