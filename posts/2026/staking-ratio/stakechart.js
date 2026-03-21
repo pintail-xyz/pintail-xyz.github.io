@@ -22,7 +22,7 @@ if (document.getElementById('stakechart')) {
     var box = document.createElement('div');
     box.style.cssText = [
         'position:absolute',
-        'height:100px',
+        'height:110px',
         'background:rgba(255,255,255,0.96)',
         'border:1px solid #C0C5D0',
         'border-radius:4px',
