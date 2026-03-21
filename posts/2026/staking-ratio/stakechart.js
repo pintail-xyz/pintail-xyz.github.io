@@ -55,7 +55,7 @@ if (document.getElementById('stakechart')) {
     function positionBox() {
         var fl = el._fullLayout;
         if (!fl) return;
-        var w = Math.min(640, fl.width - fl.margin.l - fl.margin.r);
+        var w = Math.min(640, el.offsetWidth - 16);
         box.style.width = w + 'px';
         box.style.top   = '4px';
         box.style.left  = Math.round((el.offsetWidth - w) / 2) + 'px';
