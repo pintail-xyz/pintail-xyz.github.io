@@ -7,6 +7,7 @@ project:
 
 website:
   title: "pintail's notes"
+  draft-mode: unlinked
   site-url: https://pintail.xyz
   description: "Ethereum data analysis and research"
   favicon: favicon.svg
