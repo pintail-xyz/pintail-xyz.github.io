@@ -124,19 +124,24 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#a-history-of-staking-on-ethereum" id="toc-a-history-of-staking-on-ethereum" class="nav-link active" data-scroll-target="#a-history-of-staking-on-ethereum">A History of Staking on Ethereum</a>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">tl;dr</a></li>
+  <li><a href="#a-history-of-staking-on-ethereum" id="toc-a-history-of-staking-on-ethereum" class="nav-link" data-scroll-target="#a-history-of-staking-on-ethereum">A History of Staking on Ethereum</a>
   <ul class="collapse">
   <li><a href="#design-philosophy" id="toc-design-philosophy" class="nav-link" data-scroll-target="#design-philosophy">Design philosophy</a></li>
   <li><a href="#staking-pioneers" id="toc-staking-pioneers" class="nav-link" data-scroll-target="#staking-pioneers">Staking pioneers</a></li>
   <li><a href="#enter-liquid-staking" id="toc-enter-liquid-staking" class="nav-link" data-scroll-target="#enter-liquid-staking">Enter liquid staking</a></li>
-  <li><a href="#staking-derisked" id="toc-staking-derisked" class="nav-link" data-scroll-target="#staking-derisked">Staking derisked</a></li>
-  <li><a href="#looping-restaking-and-native-yield" id="toc-looping-restaking-and-native-yield" class="nav-link" data-scroll-target="#looping-restaking-and-native-yield">Looping, Restaking and “Native Yield”</a></li>
-  <li><a href="#the-sec-etfs-dats" id="toc-the-sec-etfs-dats" class="nav-link" data-scroll-target="#the-sec-etfs-dats">The SEC, ETFs, DATs</a></li>
+  <li><a href="#rehypothecation" id="toc-rehypothecation" class="nav-link" data-scroll-target="#rehypothecation">Rehypothecation</a></li>
+  <li><a href="#restaking-native-yield" id="toc-restaking-native-yield" class="nav-link" data-scroll-target="#restaking-native-yield">Restaking, “Native Yield”</a></li>
+  <li><a href="#issuance-debate" id="toc-issuance-debate" class="nav-link" data-scroll-target="#issuance-debate">Issuance Debate</a></li>
+  <li><a href="#on-ossification" id="toc-on-ossification" class="nav-link" data-scroll-target="#on-ossification">On Ossification</a></li>
   </ul></li>
-  <li><a href="#current-trajectory" id="toc-current-trajectory" class="nav-link" data-scroll-target="#current-trajectory">Current trajectory</a></li>
-  <li><a href="#does-this-matter" id="toc-does-this-matter" class="nav-link" data-scroll-target="#does-this-matter">Does this Matter?</a></li>
-  <li><a href="#what-can-we-do" id="toc-what-can-we-do" class="nav-link" data-scroll-target="#what-can-we-do">What can we do?</a></li>
-  <li><a href="#scratch-notesideas" id="toc-scratch-notesideas" class="nav-link" data-scroll-target="#scratch-notesideas">Scratch notes/ideas</a></li>
+  <li><a href="#trajectory" id="toc-trajectory" class="nav-link" data-scroll-target="#trajectory">Trajectory</a>
+  <ul class="collapse">
+  <li><a href="#the-sec-etfs-dats" id="toc-the-sec-etfs-dats" class="nav-link" data-scroll-target="#the-sec-etfs-dats">The SEC, ETFs, DATs</a></li>
+  <li><a href="#the-tipping-point" id="toc-the-tipping-point" class="nav-link" data-scroll-target="#the-tipping-point">The Tipping Point</a></li>
+  </ul></li>
+  <li><a href="#the-battle-for-ethereums-soul" id="toc-the-battle-for-ethereums-soul" class="nav-link" data-scroll-target="#the-battle-for-ethereums-soul">The Battle for Ethereum’s Soul</a></li>
+  <li><a href="#what-next" id="toc-what-next" class="nav-link" data-scroll-target="#what-next">What Next?</a></li>
   </ul>
 </nav>
     </div>
@@ -174,19 +179,27 @@ ul.task-list li input[type="checkbox"] {
 
 
 <p><img src="images/mohamed-marey-xmJCsnQMU7k-unsplash.jpg" class="img-fluid"></p>
-<p>Over the last year, the environment for Ethereum staking has changed significantly. Regulatory changes in the US have emboldened providers of Exchange Traded Funds (ETFs) and Digital Asset Treasuries (DATs) to deploy their significant reserves to consume the apparently free lunch on offer from Ethereum’s proof-of-stake yield. As of March 2026, if we include Ether sitting in the staking entry queue, <strong>the proportion of the Ether supply which is staked (the staking ratio) has surpassed 1/3 for the first time</strong>. So now is a good time to ask: where might this lead? Is this desirable?</p>
-<p>Questions about Ethereum proof-of-stake economics, and specifically the relationship between security and Ether issuance, are not new. As we will see, they have been debated since before the 2020 launch of the beacon chain. However the inherently contentious proposition of altering protocol incentives has led to such issues being sidelined in favour of uncontroversial upgrades and generally considered too hard to address. What I will do in this article is take a closer look at how we got here, where we appear to be headed, and the impact of this on Ethereum. Ultimately I will make the case that we can no longer afford to push this question away. <strong>Action to put Ethereum staking economics onto a more sustainable course should be a near-term priority</strong>.</p>
+<p>Over the last year, the environment for Ethereum staking has changed significantly. Regulatory changes in the US have emboldened providers of Exchange Traded Funds (ETFs) and Digital Asset Treasuries (DATs) to deploy their significant reserves to take advantage of the near-risk-free yield on offer from Ethereum’s proof-of-stake issuance. As of April 2026, if we include Ether sitting in the staking entry queue, <strong>the proportion of the Ether supply which is staked (the staking ratio) has surpassed 1/3 for the first time</strong>. So now is a good time to ask: where might this lead? Is this desirable?</p>
+<p>Questions about Ethereum proof-of-stake economics, and specifically the relationship between security and Ether issuance, are not new. As we will see, they have been debated since before the 2020 launch of the beacon chain. However, the inherently contentious proposition of altering protocol incentives has led to economic issues being sidelined in favour of uncontroversial upgrades. What I will do in this article is take a closer look at how we got here, where we appear to be headed, and the impact of this on Ethereum. Ultimately, I will make the case that we can no longer afford to push this question away. <strong>Action to put Ethereum staking economics onto a more sustainable foundation is an urgent priority</strong>.</p>
+<section id="tldr" class="level1">
+<h1>tl;dr</h1>
+<ul>
+<li>Ethereum staking ratio is at all-time high and will keep rising — incentives baked into the protocol will take us close to a 100% staking ratio if we do nothing;</li>
+<li>This situation is the result of an issuance curve which was chosen before the emergence of liquid staking, which fundamentally altered staking economics;</li>
+<li>An excessive staking ratio undermines core properties of Ethereum and makes it <em>less</em> secure;</li>
+<li>Past the tipping point at which solo stakers are forced out, it will be very difficult, perhaps impossible to return to a desirable state;</li>
+<li>By adjusting the issuance curve to target a healthy staking level we restore the primacy of ETH, monetary premium, security and scarcity while creating space for a flourishing DeFi ecosystem.</li>
+</ul>
+</section>
 <section id="a-history-of-staking-on-ethereum" class="level1">
 <h1>A History of Staking on Ethereum</h1>
-<p>Before making that case, I want to look at the history of staking in Ethereum for a sense of how we got here. The chart below shows the evolution of staking on Ethereum since the beacon chain launch in late 2020. The staking ratio, plotted below, refers to the proportion of the entire Ether supply which is staked in Ethereum’s consensus layer. We could define this either as the <em>currently active</em> validating stake (solid line) or <em>all</em> of the Ether which is held in the consensus layer, including Ether which is in the process of joining or leaving the active set (dashed line). Due to the entry/exit queue mechanisms, the dotted line can be significantly higher than the solid line at times of high churn.</p>
-<p>The overall trend is obvious: consistent growth in staking fraction over time. But there are certain events, both on-chain and in the wider world, which have influenced how this growth has played out - sometimes accelerating, and sometimes pausing. It is worth taking a look at these before we explore how the staking ratio might evolve in future. Some of the key events are marked on the chart with dashed vertical lines, with explanatory notes shown on mouseover.</p>
+<p>Before making the case for issuance policy reform, I want to look at the history of staking in Ethereum for a sense of how we got here. The chart below shows the evolution of staking on Ethereum since the beacon chain launch in late 2020. The staking ratio, plotted below, refers to the proportion of the entire Ether supply which is staked in Ethereum’s consensus layer. We could define this either as the <em>currently active</em> validating stake (solid line) or <em>all</em> of the Ether which is held in the consensus layer, including Ether which is in the process of joining or leaving the active set (dashed line). Due to the entry/exit queue mechanisms, the dashed line can be significantly higher than the solid line at times of high churn.</p>
+<p>The overall trend is obvious: consistent growth in staking ratio over time. But there are certain events, both on-chain and in the wider world, which have influenced how this growth has played out — sometimes accelerating, and sometimes plateauing. It is worth taking a look at these before we explore how the staking ratio might evolve in future. Some of the key events are marked on the chart with dashed vertical lines, with explanatory notes shown on mouseover.</p>
 <div id="fig-stakechart" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-stakechart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="stakechart-embed">
-<div id="stakechart" class="plotly-graph-div" style="width:100%; height:700px;">
-
-</div>
+<div id="stakechart" class="plotly-graph-div" style="width:100%; height:700px;"></div>
 <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.4.0.min.js" integrity="sha256-KEmPoupLpFyGMyGAiOsiNDbKDKAvxXAn/W+oQa0ZAfk=" crossorigin="anonymous"></script>
 <script src="stakechart.js"></script>
 </div>
@@ -199,8 +212,8 @@ Figure&nbsp;1: Staking ratio over time. Data aggregation using <a href="https://
 <section id="design-philosophy" class="level2">
 <h2 class="anchored" data-anchor-id="design-philosophy">Design philosophy</h2>
 <p>But let’s go back even further. If we want to know whether the staking economy is behaving as intended, we need to look at the factors which actually drove the design decisions behind it.</p>
-<p>The design of Proof of stake on Ethereum emerged gradually as researchers wrestled with problems which had invalidated the security models of earlier attempts (starting with the <a href="https://blog.ethereum.org/2014/01/15/slasher-a-punitive-proof-of-stake-algorithm">nothing-at-stake problem</a>). Throughout the design phase, the emphasis was on engendering the most diverse validator set possible, and efforts to disincentivise various forms of centralisation by the use of increased penalties for correlated failures.</p>
-<p><a href="https://vitalik.eth.limo/general/2016/12/29/pos_design.html">In Vitalik’s 2016 design philosophy</a> Ethereum’s proof-of-stake mechanism was envisaged as an improvement over the earlier <em>delegated</em> proof of stake (DPoS) protocols like BitShares at Steem, and would allow a large number of individual stakers to participate directly without delegation (indeed Steem’s DPoS consensus later proved to be its Achilles’ heel, <a href="https://vitalik.eth.limo/general/2021/03/23/legitimacy.html">allowing Justin Sun to wrest control of the protocol from its community by co-opting exchanges holding delegated stake</a>). Vitalik’s own position on this has remained consistent, <a href="https://vitalik.eth.limo/general/2024/05/17/decentralization.html">and he stated in May 2024 that</a>:</p>
+<p>The plan for Proof-of-Stake Ethereum emerged gradually as researchers wrestled with problems which had invalidated the security models of earlier attempts (starting with the <a href="https://blog.ethereum.org/2014/01/15/slasher-a-punitive-proof-of-stake-algorithm">nothing-at-stake problem</a>). Throughout the design phase, the emphasis was on engendering the most diverse validator set possible, and efforts to disincentivise various forms of centralisation through increased penalties for correlated failures.</p>
+<p><a href="https://vitalik.eth.limo/general/2016/12/29/pos_design.html">In Vitalik’s 2016 design philosophy</a>, Ethereum’s proof-of-stake mechanism was envisaged as an improvement over the earlier <em>delegated</em> proof of stake (DPoS) protocols like BitShares and Steem, and would allow a large number of individual stakers to participate directly without delegation (indeed Steem’s DPoS consensus eventually proved to be its Achilles’ heel, <a href="https://vitalik.eth.limo/general/2021/03/23/legitimacy.html">allowing Justin Sun to wrest control of the protocol from its community by co-opting exchanges holding delegated stake</a>). Vitalik’s own position on this has remained consistent; <a href="https://vitalik.eth.limo/general/2024/05/17/decentralization.html">he stated in May 2024 that</a>:</p>
 <blockquote class="blockquote">
 <p>To me, a robust solo staking ecosystem is by far my preferred outcome for Ethereum staking, and one of the best things about Ethereum is that we actually try to support a robust solo staking ecosystem instead of just surrendering to delegation.</p>
 <p>— Vitalik Buterin</p>
@@ -208,126 +221,212 @@ Figure&nbsp;1: Staking ratio over time. Data aggregation using <a href="https://
 </section>
 <section id="staking-pioneers" class="level2">
 <h2 class="anchored" data-anchor-id="staking-pioneers">Staking pioneers</h2>
-<p>Despite <a href="https://steemit.com/ethereum/@keysikg/vitalik-buterin-confirms-ethereum-s-proof-of-stake-75-percent-complete">early optimism</a> that a move to proof of stake would be complete by the end of 2017, as the shape of the design space became clearer, and improved technology became available (most notably <a href="https://eth2book.info/latest/part2/incentives/staking/#stake-size">BLS signature aggregation</a>), the complexity of the project grew. But this was justified by the goal of targeting the greatest number of validators possible. In order to manage this complexity, the deployment would be phased, building from a new “beacon chain” which would be launched and developed in parallel to the existing blockchain.</p>
-<p>This culminated in the <a href="https://blog.ethereum.org/2020/11/04/eth2-quick-update-no-19">announcement</a> of the beacon chain deposit contract on 4 November 2020. The launch was the result of years of research and engineering, but it delivered a chain which came to consensus about nothing except the state of its own validator set. Ethereum’s execution would continue to be secured by proof of work for an indeterminate period.</p>
-<p>The beacon chain was then planned as “phase 0” of a rollout which would continue through “phase 1” (data sharding) and “phase 2” (execution environments). It was assumed that the existing execution chain and its state would somehow be folded into one of the new execution environments. The simpler idea of <em>merging</em> the beacon chain with the existing execution chain came later. With so much still to spec, implement and test, there was very little discussion of when depositors might again have access to the Ether locked in the contract. They had no way of withdrawing their funds and were to take it on trust that it would work out at some unspecified point in the future.</p>
-<p>From the perspective of ETH holders at the time, all of this appeared highly uncertain. Consequently, there was <a href="https://github.com/ethereum/consensus-specs/issues/2134">serious consideration</a> given to the possibility that there might not be enough interest from ETH holders to reach the minimum threshold stake of 524,288 ETH. Indeed the concern that there might not be enough capital available to secure the chain had been long-running. Back when the beacon chain spec was still in flux in <a href="https://github.com/ethereum/consensus-specs/pull/971">April 2019</a>, the proposed issuance level was more than doubled, for a 5.7% staking return at a targeted level of about 10M ETH staked, up from 2.5% return in the previous version of the spec. The result was that <strong>during the beacon chain’s gestation, the principal concern was whether there would be <em>enough</em> stake, and no consideration of whether there might be a level which was <em>too much</em>.</strong></p>
+<p>Despite <a href="https://steemit.com/ethereum/@keysikg/vitalik-buterin-confirms-ethereum-s-proof-of-stake-75-percent-complete">early optimism</a> that a move to proof of stake would be complete by the end of 2017, as the shape of the design space became clearer, and improved technology became available (most notably <a href="https://eth2book.info/latest/part2/incentives/staking/#stake-size">BLS signature aggregation</a>), the complexity of the project grew. But this was justified by the goal of maximising the number of validators the protocol could support. In order to manage this complexity, the deployment would be phased, building from a new “beacon chain” which would be launched and developed in parallel to the existing blockchain.</p>
+<p>This culminated in the <a href="https://blog.ethereum.org/2020/11/04/eth2-quick-update-no-19">announcement</a> of the beacon chain deposit contract on 4 November 2020. The launch was the result of years of research and engineering, but it delivered a chain that reached consensus only on the state of its own validator set. Ethereum’s execution would continue to be secured by proof of work for an indeterminate period.</p>
+<p>The beacon chain was, at that time, planned as “phase 0” of a rollout which would continue through “phase 1” (data sharding) and “phase 2” (execution environments). It was assumed that the existing execution chain and its state would somehow be folded into one of the new execution environments. The simpler idea of <em>merging</em> the beacon chain with the existing execution chain came later. With so much still to spec, implement and test, there was very little discussion of when depositors might again have access to the Ether locked in the contract. They had no way of withdrawing their funds and were to take it on trust that it would work out at some unspecified point in the future.</p>
+<p>From the perspective of ETH holders at the time, all of this appeared highly uncertain. Consequently, there was <a href="https://github.com/ethereum/consensus-specs/issues/2134">serious consideration</a> given to the possibility that there might not be enough interest from ETH holders to reach the minimum threshold stake of 524,288 ETH. Indeed, the concern that there might not be enough capital available to secure the chain had been long-running. Back when the beacon chain spec was still in flux in <a href="https://github.com/ethereum/consensus-specs/pull/971">April 2019</a>, the proposed issuance level was more than doubled, for a 5.7% staking return at a targeted level of about 10M ETH staked, up from 2.5% return in the previous version of the spec. The result was that <strong>during the beacon chain’s gestation, the principal concern was whether there would be <em>enough</em> stake, and no consideration of whether there might be a level which was <em>too much</em>.</strong></p>
+<div id="fig-issuancecurve" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-issuancecurve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #issuancecurve-chart { width: 100%; height: 460px; }
+  .issuancecurve-caption {
+    font-size: 0.76rem;
+    color: #999;
+    margin-top: 0.6rem;
+    line-height: 1.6;
+  }
+</style>
+
+<div id="issuancecurve-chart"></div>
+
+<script src="issuancecurve.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuancecurve-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: The issuance curve, varying with the amount of ETH staked.
+</figcaption>
+</figure>
+</div>
 </section>
 <section id="enter-liquid-staking" class="level2">
 <h2 class="anchored" data-anchor-id="enter-liquid-staking">Enter liquid staking</h2>
-<p>Considering the relentless focus on validator set diversity, and specifically on supporting small stakers, the envisaged staking participant was most often a solo staker. Perhaps an individual enthusiast, locking up their own Ether and running their own node at home. It was accepted that institutions such as exchanges were likely to offer staking services, and an Ethereum Foundation blog post a few days after beacon chain launch <a href="https://blog.ethereum.org/2020/12/10/validated-perfect-is-the-enemy-of-the-good#-staking-services">acknowledged this</a> but emphasised the increased risk of correlated failures. Solo staking was very obviously to be preferred if possible.</p>
-<p>Outside of the Ethereum ecosystem, some groups were looking seriously at the future role of liquid staking in emerging proof-of-stake protocols, most notably Cosmos’s Interchain Foundation, who funded a <a href="https://mirror.chorus.one/liquid-staking-report.pdf">report published in June 2020</a> by Chorus One. With hindsight it is rather ironic that one of the only people actively <a href="https://archive.ph/WM76M">warning about risks</a> posted by liquid staking specifically on Ethereum was Marco Di Maggio, Professor of Finance at Harvard Business School and at the time a core researcher at Terra Labs, where he worked on protocol design and stability mechanisms (<a href="https://en.wikipedia.org/wiki/Terra_(blockchain)#Collapse">Terra collapsed catastrophically in May 2022</a>).</p>
+<p>Considering the relentless focus on validator set diversity, and specifically on supporting small stakers, the envisaged staking participant was most often a solo staker — perhaps an individual enthusiast, locking up their own Ether and running their own node at home. It was accepted that institutions such as exchanges were likely to offer staking services, and an Ethereum Foundation blog post a few days after beacon chain launch <a href="https://blog.ethereum.org/2020/12/10/validated-perfect-is-the-enemy-of-the-good#-staking-services">acknowledged this</a> but emphasised the increased risk of correlated failures. Solo staking was very obviously to be preferred if possible.</p>
+<p>Outside of the Ethereum ecosystem, some groups were looking seriously at the future role of liquid staking in emerging proof-of-stake protocols, most notably Cosmos’s Interchain Foundation, who funded a <a href="https://mirror.chorus.one/liquid-staking-report.pdf">report published in June 2020</a> by Chorus One. With hindsight, it is rather ironic that one of the only people actively <a href="https://web.archive.org/web/20201103095609id_/https://medium.com/terra-money/liquid-staking-a-discussion-of-its-risks-and-benefits-bbaa957d9233">warning about risks</a> posed by liquid staking specifically on Ethereum was Marco Di Maggio, Professor of Finance at Harvard Business School and at the time a core researcher at Terra Labs, where he worked on protocol design and stability mechanisms (<a href="https://en.wikipedia.org/wiki/Terra_(blockchain)#Collapse">Terra collapsed catastrophically in May 2022</a>).</p>
 <p>But within the Ethereum community, and amongst the protocol researchers, there seems to have been close to zero discussion about the possible impact of liquid staking. This is striking considering the rapid expansion of liquid staking in the years which followed. It is maybe less surprising when framed in the context of the design philosophy, which emphasised that delegated staking would no longer be necessary and perhaps failed to recognise the power of solutions which offered <em>liquidity</em> to eliminate the opportunity cost associated with locking up Ether in validators. Bearing in mind also that Lido was only publicly <a href="https://web.archive.org/web/20201104202841/https://blog.lido.fi/introducing-lido/">announced in October 2020</a>, a few short weeks before the beacon chain deposit went live, it is clear that a <strong>consciousness of the possibilities of liquid staking emerged much too late to have any impact on the design of the protocol, despite upending assumptions about the costs of staking</strong>.</p>
 <p>Then, within weeks of the beacon chain launch, <a href="https://blog.lido.fi/staking-ethereum-with-lido/">Lido was accepting deposits</a>. And by April 2021, <a href="https://www.paradigm.xyz/2021/04/on-staking-pools-and-staking-derivatives">prominent voices</a> were arguing that:</p>
 <blockquote class="blockquote">
-<p>Without staking derivatives, we might expect 15-30% of ETH to be staked. However, with staking derivatives, <strong>this number could be as high as 80-100%</strong>, because there is no additional cost to staking compared to non-staking.</p>
-<p>— <em>Hasu, Georgios Konstantopoulos</em> (emphasis mine)</p>
+<p>Without staking derivatives, we might expect 15-30% of ETH to be staked. However, <strong>with staking derivatives, this number could be as high as 80-100%</strong>, because there is no additional cost to staking compared to non-staking.</p>
+<p>— Hasu, Georgios Konstantopoulos (emphasis mine)</p>
 </blockquote>
 </section>
-<section id="staking-derisked" class="level2">
-<h2 class="anchored" data-anchor-id="staking-derisked">Staking derisked</h2>
-<p>Gradually, the market matured. The staking fraction steadily grew over the following year, along with confidence that the underlying technologies were sound. The share going to liquid staking providers grew even faster. By May 2022, Danny Ryan sounded the alarm, highlighting <a href="https://notes.ethereum.org/@djrtwo/risks-of-lsd">the risks of LSD</a> and calling for liquid staking protocols to self-limit to avoid breaching consensus thresholds, with many others <a href="https://x.com/VitalikButerin/status/1525301234516652032">including Vitalik</a> chiming in in support. Weeks later, the Lido DAO voted almost unanimously that it would <a href="https://snapshot.org/#/s:lido-snapshot.eth/proposal/0x10abedcc563b66b1adee60825e78c387105110fa4a1e7354ab57bc9cc1e675c2">do no such thing</a>. Nonetheless, Lido’s share of staked Ether <a href="https://dune.com/queries/1937676/3202670">peaked</a> just below the 33% level around the same time.</p>
-<p>This episode generated considerable disquiet within the Ethereum community, but it was short-lived. For one thing, Lido’s market share dropped somewhat, alleviating the concerns of some. But more importantly, the community was by this stage fully focused on the merge, generating a burst of euphoria upon its delivery in September 2022 along with some <a href="https://www.ft.com/content/88518bc5-3af4-41c3-99b5-c0cd0ba69ab9">mainstream attention</a>.</p>
-<p>With the advent of staking withdrawals in the Shapella upgrade in April 2023 <a href="https://fortune.com/crypto/2023/04/08/ethereum-shanghai-upgrade-ether-crypto-markets/">traders worried about possible mass withdrawals impacting the Ether market</a>. And a modest amount of stake was withdrawn immediately after Shapella, almost entirely due to the exit of Kraken’s validators (the result of a <a href="https://www.sec.gov/newsroom/press-releases/2023-25">settlement with the SEC</a> which at the time viewed staking services as engaged in the sale of securities). But, by and large, the impact of enabling withdrawals was to derisk Ethereum staking, and the result was a massive inflow which quickly overwhelmed the Kraken withdrawals and led to a substantial entry queue of Ether waiting to join the active validator set. The entry queue was finally cleared more than 6 months later, but growth nonetheless continued.</p>
+<section id="rehypothecation" class="level2">
+<h2 class="anchored" data-anchor-id="rehypothecation">Rehypothecation</h2>
+<p>Lido’s liquid staking product received a significant boost in March 2022, when Lido’s proposal for integration with Aave was accepted, allowing its staked Ether token, stETH, to be used as lending collateral. This opened up the possibility of recursive/looped staking, in 5 easy steps:</p>
+<ol type="1">
+<li>Deposit Ether into Lido;</li>
+<li>Receive yield-bearing stETH token;</li>
+<li>Deposit stETH into Aave as collateral;</li>
+<li>Borrow Ether on Aave;</li>
+<li>Go to step 1.</li>
+</ol>
+<p>This possibility for “leveraged” staking was <a href="https://blog.lido.fi/aave-integrates-lidos-steth-as-collateral/">promoted by Lido</a>, with users encouraged to <a href="https://x.com/LidoFinance/status/1498653519993311233">repeat this process in line with their own risk appetites</a>. It was followed by the fastest growth in the staking ratio since the launch of the beacon chain, with the validator entry queue not clearing for several months. Over time, Aave allowed ever higher loan-to-value (LTV) ratios on the ETH-stETH pair, <a href="https://aave.com/blog/lido-aave-case-study">reaching 95% in July 2024</a> and allowing for many-times leveraged staking, promoted by Aave as a “liquidity flywheel”.</p>
+<p>Meanwhile, many in the community became concerned that the growing role of Liquid Staking Derivatives (LSDs, later rebranded as Liquid Staking Tokens) posed a threat to Ethereum. These anxieties were expressed by Danny Ryan in his <a href="https://notes.ethereum.org/@djrtwo/risks-of-lsd">“Risks of LSD”</a> article, which noted:</p>
+<blockquote class="blockquote">
+<p>although protocols such as Lido have a lot of room for improvement, this article does not target short-comings in currently implemented designs. Instead, the aim is to show that <strong>LSD protocols have inherent issues when they exceed consensus thresholds</strong>.</p>
+<p>…if an LSD protocol exceeds critical consensus thresholds such as 1/3, 1/2, and 2/3, the staking derivative can achieve outsized profits compared to non-pooled capital due to coordinated MEV extraction, block-timing manipulation, and/or censorship – the cartelization of block space.</p>
+<p>— Danny Ryan (emphasis mine)</p>
+</blockquote>
+<p>Danny argued that liquid staking protocols should self-limit to avoid breaching consensus thresholds, with many others <a href="https://x.com/VitalikButerin/status/1525301234516652032">including Vitalik</a> adding their voices in support. But weeks later, the Lido DAO voted almost unanimously that it would <a href="https://snapshot.org/#/s:lido-snapshot.eth/proposal/0x10abedcc563b66b1adee60825e78c387105110fa4a1e7354ab57bc9cc1e675c2">do no such thing</a> as imposing limits on its size. Nonetheless, Lido’s share of staked Ether <a href="https://dune.com/queries/1937676/3202670">peaked</a> just below the 33% level around the same time.</p>
+<p>Ultimately, this period of anxiety was short-lived. Community focus was on the ongoing transition to proof-of-stake, with the Merge eventually delivered in September 2022 to a burst of euphoria and some <a href="https://www.ft.com/content/88518bc5-3af4-41c3-99b5-c0cd0ba69ab9">mainstream attention</a>; a welcome antidote to the series of <a href="https://decrypt.co/117420/story-of-the-year-crypto-contagion-terra-ftx">cascading failures</a> which were the focus of many external observers throughout 2022.</p>
+<p>Still, although we had started to become aware of the risks presented by a liquid staking ecosystem being flooded with excess yield, nobody seriously asked whether the financialisation of staked ETH was actually a welcome development, or brought any benefits to Ethereum’s consensus mechanism. The reality was, just as Hasu and Georgios had explained, the opportunity cost of staking had been all but eliminated. All that remained was some risk premium, which dropped further the longer the beacon chain and Lido persisted. The staking yields on offer evidently exceeded this risk premium, amounting to an implicit subsidy from the protocol, and an ever-growing tax on ETH holders.</p>
+<p>With the advent of staking withdrawals in the Shapella upgrade in April 2023, <a href="https://fortune.com/crypto/2023/04/08/ethereum-shanghai-upgrade-ether-crypto-markets/">traders worried about possible mass withdrawals impacting the Ether market</a>. And a modest amount of stake was withdrawn immediately after Shapella, but this was almost entirely due to the exit of Kraken’s validators, as a result of Kraken’s <a href="https://www.sec.gov/newsroom/press-releases/2023-25">settlement with the SEC</a>, which at the time viewed staking services as engaged in the sale of securities. By and large, the impact of enabling withdrawals was to derisk Ethereum staking even further, and the result was a massive inflow which quickly overwhelmed the withdrawals and led to another substantial entry queue of Ether waiting to join the active validator set. The entry queue was finally cleared more than 6 months later, but growth nonetheless continued.</p>
 </section>
-<section id="looping-restaking-and-native-yield" class="level2">
-<h2 class="anchored" data-anchor-id="looping-restaking-and-native-yield">Looping, Restaking and “Native Yield”</h2>
-<ul>
-<li>Lido+AAVE enabled a looping strategy which drove lots of new stake. This is obviously degenerate but hasn’t really been called out. Note AAVE rate shock in July 2025.</li>
-<li>Eigenlayer hype+airdrop stimlated new stake (notably the stake stagnated for 8 months after EIGEN became tradeable…)</li>
-<li>“Native yield” from Blast should have been another warning sign that we’re offering a free lunch.</li>
-</ul>
+<section id="restaking-native-yield" class="level2">
+<h2 class="anchored" data-anchor-id="restaking-native-yield">Restaking, “Native Yield”</h2>
+<p>During 2023, a couple of developments added even more incentive for ETH holders to stake. The first of these was the <a href="https://web.archive.org/web/20230328184533/https://docs.eigenlayer.xyz/whitepaper.pdf">Eigenlayer concept of “restaking”</a>, which generated significant interest when presented at Devcon Bogotá in October 2022. While many were attracted to the promise of increased staking yield as a reward for performing additional roles, the incentive grew significantly with the announcement of an Eigenlayer restaking “points” system. This was widely — and correctly — assumed to be a precursor to an airdrop. Considering the buzz around Eigenlayer at the time, a future airdrop appeared likely to be very lucrative, and as we have seen, the costs associated with staking were very low anyway. Meanwhile, later in 2023 the Blast L2 blockchain launched its deposit bridge, promising “native yield” for holders of ETH within the L2. Perhaps more importantly, as with Eigenlayer, depositors were given “Blast points” in expectation of a future airdrop, which occurred in June 2024.</p>
+<p>It is difficult to separate the impact of Eigenlayer (and to a lesser extent Blast) from the general rush of inflows which followed the implementation of staking withdrawals in the Shapella hard fork. But one telling indicator is the fact that the October 2024 date when the EIGEN token was unlocked and became tradeable was very close to the peak staking ratio. With Eigenlayer’s additional staking stimulus withdrawn, some of those airdrop-induced stakers exited, and the staking ratio then stagnated for a period.</p>
 </section>
+<section id="issuance-debate" class="level2">
+<h2 class="anchored" data-anchor-id="issuance-debate">Issuance Debate</h2>
+<p>It was in the post-Shapella environment, with rapid and apparently relentless staking growth, aided by exogenous sources of yield (primarily the expected Eigenlayer and Blast airdrops) that several Ethereum researchers began to grapple seriously with the implications of high staking ratios, and the impact of liquid staking on the protocol. In particular, Caspar Schwarz-Schilling and Ansgar Dietrichs noted that the incentive for new stakers to join the staking set would not significantly diminish even approaching a 100% staking ratio, while the tax on ETH holders imposed by issuance would grow. Furthermore, there was an increasing risk of liquid staking tokens effectively supplanting ETH as the base asset of Ethereum. They argued for a policy of <a href="https://notes.ethereum.org/@css/targeting">stake ratio targeting</a>. But anticipating delays in agreeing and implementing a long-term solution, they also argued for an urgent <a href="https://notes.ethereum.org/@css/electra_issuance_curve">reduction in issuance</a> in the Pectra hard fork, as a way of buying time and slowing staking ratio growth.</p>
+<p>Caspar/Ansgar and other researchers were met with significant pushback from several sides. Predictably, staking services whose profits were threatened by issuance reductions opposed any change. Others argued that the changes were not needed and that issuance policy should become ossified. With several potential Ethereum Exchange Traded Funds (ETFs) under consideration by US regulators — decisions were expected in May 2024 — some may have worried that changes to Ethereum’s issuance policy would spook regulators and institutions, making early 2024 exactly the wrong time to consider making any changes.</p>
+<p>While proponents of change hoped to spark productive debate about the right level of issuance for Ethereum, the debate was stifled, and no Ethereum Improvement Proposal (EIP) managed to gain sufficient traction. Ultimately, the issuance debate was largely overtaken by wider concerns about Ethereum’s strategic direction and the role of the Ethereum Foundation. Meanwhile, as we have seen, there was a pause in staking ratio growth once the Eigenlayer and Blast incentives for stakers came to an end. This may have led some to conclude that the stated problem had been overblown. However, the fundamental issues raised in the debate remained unresolved.</p>
+</section>
+<section id="on-ossification" class="level2">
+<h2 class="anchored" data-anchor-id="on-ossification">On Ossification</h2>
+<p>As an aside to our history of Ethereum staking, I’d like to address one argument sometimes advanced during the 2024 issuance debate: that Ethereum’s economic incentives are “good enough” as-is and should now be ossified; or perhaps that a failure to ossify immediately would be a barrier to Ether being considered “sound money”. The idea that there should be a consistent issuance policy for Ether for it to gain the trust of the market seems reasonable. But I think before concluding that the current issuance policy is the right one to crystallise, it is worth considering the history of Ether issuance, presented in the chart below.</p>
+<div id="fig-issuancehistory" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-issuancehistory-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/issuance_history.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuancehistory-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: The history of issuance on Ethereum. After repeated reductions in ETH issuance during the proof-of-work era, issuance is now rising due to the growing staking ratio. Data aggregation using <a href="https://github.com/pintail-xyz/cedar">pintail-xyz/cedar</a>.
+</figcaption>
+</figure>
+</div>
+<p>For reasons mostly to do with the proof-of-work difficulty adjustment rule, and particularly the so-called “difficulty bomb” (💣), the picture is fairly noisy. But the overall trend has been periodic reductions in issuance, up until the merge. At launch in 2015, the base issuance was 5 ETH per block. This was reduced to 3 ETH per block in the Byzantium hard fork in 2017, and then to 2 ETH per block in the Constantinople hard fork in 2019. There was a slight increase in issuance due to the beacon chain launch in 2020, but then a large cut due to proof-of-work coming to an end in the Merge in September 2022.</p>
+<p>However, since the Merge, issuance has been growing. This is because the issuance curve increases Ether emissions with the square root of the total amount staked. Looking again at the history of issuance, we can say that an issuance change (nearly always a reduction) had been made every 2-3 years since genesis. So, in retrospect, it seems slightly odd that during the 2024 issuance debate, at a time when Ethereum issuance was continuously <em>rising</em> for the first time in its history, calls for a cut were met with protest on the basis that this harmed Ether’s credibility as “sound money”.</p>
+</section>
+</section>
+<section id="trajectory" class="level1">
+<h1>Trajectory</h1>
+<p>We saw that during the early phase of Ethereum proof-of-stake, the possibility of Liquid Staking was not factored into protocol design. Then, the protracted period over which proof-of-stake was deployed, starting with the beacon chain launch (December 2020) and ending with the Shapella hard fork which enabled withdrawals (April 2023), gave liquid staking an enormous head start, offering depositors a way to withdraw that native stakers did not have. As noted at the start of this article, the staking ratio has now reached the 1/3 level and is still growing rapidly. So where does this leave us in April 2026?</p>
 <section id="the-sec-etfs-dats" class="level2">
 <h2 class="anchored" data-anchor-id="the-sec-etfs-dats">The SEC, ETFs, DATs</h2>
-<ul>
-<li>Current era defined by SEC’s willingness to tolerate institutional participation.</li>
-<li>Staking will become the default for institutional holders (including ETFs and DATs).</li>
-<li>This feels a long way removed from stakers as service providers. Again, should be a wake-up call. This is not a desirable trend.</li>
-</ul>
+<p>The biggest catalyst behind current growth was the announcement in May 2025 by the Securities and Exchange Commission (SEC) that it would, within certain parameters, consider that staking services did not fall under its jurisdiction. At a stroke, this decision removed the legal barrier which had held back US financial institutions from the staking economy. As a result, the validator entry queue started growing immediately after this announcement was made in May 2025, and inflows have been sustained since then. The entry queue has not cleared for almost a year; the longest such period in Ethereum’s history.</p>
+<p>Some of this growth has been masked by a couple of other major events. The first of these was a sudden increase in ETH borrowing interest rates on Aave, reportedly triggered by <a href="https://x.com/robdogeth/status/1948033585404878957">large withdrawals of ETH deposits by Justin Sun</a>, and leading to a rapid unwinding of looped staking positions. The second event was a <a href="https://www.kiln.fi/post/re-enablement-of-kiln-services-and-security-incident-information">security incident</a> affecting the Kiln staking service provider, leading to the immediate exit of all of its validators.</p>
+<p>However, the most recent significant development — the decision by Digital Asset Treasuries (DATs), most notably BitMine, to stake their ETH holdings — has again led to enormous inflows. Growth past the 1/3 stake level is now effectively baked in via the entry queue. And this should come as no surprise: staking offers a yield far in excess of the opportunity cost or risk, while holding unstaked ETH is penalised through dilution.</p>
+</section>
+<section id="the-tipping-point" class="level2">
+<h2 class="anchored" data-anchor-id="the-tipping-point">The Tipping Point</h2>
+<p>We should expect this trend to continue. As predicted by researchers and by empirical observation, Ethereum’s staking ratio is up only. Staking incentives, as currently formulated, ensure that over time all rational actors will stake their Ether. Indeed, as Caspar and Ansgar noted, not only is there a simple economic incentive to stake to avoid dilution, but as the staking ratio grows, there is an increased risk that a Liquid Staking Token (LST) could squeeze out the roles ETH still plays as genuinely trustless collateral, meaning that users would be forced to hold LSTs instead of ETH in order to use it in DeFi. Furthermore, in a high staking ratio with a dominant staking provider, the slashing mechanism which is the basis for Ethereum’s economic security could break down, as that single provider becomes in practice “too big to slash”. <strong>Above some level, increasing staking ratio actually makes Ethereum more brittle, not more secure</strong>.</p>
+<p>But the tipping point that I am particularly worried about is the point at which solo stakers effectively earn negative yield. This occurs because:</p>
+<ol type="a">
+<li>At higher staking rates, <strong>dilution significantly affects the yield calculation</strong>. To understand the difference between <em>nominal</em> and <em>dilution-adjusted</em> yield, imagine 100% of ETH is staked. In this environment everybody receives exactly the same issuance yield, which means in practice nobody is earning anything. All the “yield” actually does is offset dilution.</li>
+<li>In most jurisdictions <strong>solo stakers pay income tax on their nominal yield</strong>, in the tax year in which it is earned. LST holders may be able to avoid this tax treatment, although they will still typically pay capital gains tax when they exit their staked position (disclaimer: please speak to an accountant to understand the implications in your own jurisdiction). This means that <strong>in high-staking-ratio environments, solo staker yield can be negative in dilution-adjusted terms</strong>, after accounting for income tax.</li>
+</ol>
+<p>This issue is illustrated by the chart below. Adjust the sliders to see the impact at varying income tax rates and execution layer income.</p>
+<div id="fig-soloyield" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-soloyield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  .soloyield-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+    margin-bottom: 0.75rem;
+  }
+  @media (max-width: 520px) {
+    .soloyield-controls { grid-template-columns: 1fr; }
+  }
+  .soloyield-controls .control-item label {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.35rem;
+  }
+  .soloyield-controls .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .soloyield-controls input[type=range] {
+    flex: 1;
+    cursor: pointer;
+    accent-color: #444;
+  }
+  .soloyield-controls .slider-value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    min-width: 3.5rem;
+    text-align: right;
+    color: #111;
+    font-variant-numeric: tabular-nums;
+  }
+  #soloyield-chart { width: 100%; height: 460px; }
+  .soloyield-caption {
+    font-size: 0.76rem;
+    color: #999;
+    margin-top: 0.6rem;
+    line-height: 1.6;
+  }
+</style>
+
+<div class="soloyield-controls">
+  <div class="control-item">
+    <label for="taxSlider">Income tax rate</label>
+    <div class="slider-row">
+      <input type="range" id="taxSlider" min="0" max="100" value="40" step="1">
+      <span class="slider-value" id="taxValue">40%</span>
+    </div>
+  </div>
+  <div class="control-item">
+    <label for="elSlider">Execution layer return</label>
+    <div class="slider-row">
+      <input type="range" id="elSlider" min="0" max="4" value="0.15" step="0.05">
+      <span class="slider-value" id="elValue">1.0%</span>
+    </div>
+  </div>
+</div>
+
+<div id="soloyield-chart"></div>
+
+
+<script src="soloyield.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-soloyield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Solo staker yield, adjusted for dilution and income tax, ignoring fixed costs.
+</figcaption>
+</figure>
+</div>
+<p>Note that this analysis excludes solo stakers’ fixed costs (hardware, electricity, internet bill), because to the group of people who have decided to stake at least 32 ETH, these costs are not really relevant. They are well within the bounds of what any homelab enthusiast might spend to run a NAS at home, for example. But what solo stakers will not be able to tolerate is an effective negative yield on their stake, once dilution and tax are taken into account.</p>
+<p>I call this a tipping point because it is hard to see how we would get the staking ratio back down to an acceptable level once we reach the point at which solo stakers can no longer compensate for dilution.</p>
 </section>
 </section>
-<section id="current-trajectory" class="level1">
-<h1>Current trajectory</h1>
-<ul>
-<li>Staking rate is practically up only over the whole history of PoS on Ethereum</li>
-<li>Dramatic rise in staking rate since SEC guidance has been masked by exogenous events (Kiln withdrawal, AAVE rate shock)</li>
-<li>As staking rate rises further, the incentive to stake actually grows for lots of reasons</li>
-<li>The declining APR has had no effect. The reason is that the net incentive to stake remains far greater than the costs associated with staking (and remain so all the way out to 100%)</li>
-<li>Likely that in the long run Hasu/Georgios’s prediction will play out - we will soon pass a tipping point.</li>
-</ul>
+<section id="the-battle-for-ethereums-soul" class="level1">
+<h1>The Battle for Ethereum’s Soul</h1>
+<blockquote class="blockquote">
+<p>…even a billion dollars of capital cannot compete with a project <em>having a soul</em>.</p>
+<p>— <a href="https://vitalik.eth.limo/general/2020/12/28/endnotes.html">Vitalik Buterin</a></p>
+</blockquote>
+<p>So, does this really matter? I, of course, believe that it does. For me, this issue goes to the heart of what makes Ethereum unique. “Raw” or unstaked ETH is the most neutral, permissionless, censorship-resistant asset that we have, but its future role risks being undermined. Solo stakers are the fulfilment of the promise that proof-of-stake could be delivered without intermediaries, and that it remains possible to resist relentless centralisation pressure. They too will not survive unless we take action. These two things are among the clearest manifestations of Ethereum’s <em>soul</em>, and they are worth protecting, even at the cost of a potentially contentious issuance change. Ethereum will be permanently harmed if we fail to respond.</p>
+<p>But let’s not end this part of the story on a negative note. Instead, consider the benefits that accrue to Ethereum (and by extension, to ETH) if we choose to act now:</p>
+<ol type="1">
+<li>Maximum neutrality, censorship resistance, trustlessness. Raw ETH has the lowest trust assumptions of any asset on Ethereum.</li>
+<li>ETH as money. Despite the growth of stablecoins, ETH can and should play a role as money. If we protect it, raw ETH will remain a Schelling point collateral and medium-of-exchange asset within the Ethereum economy. From this, it gains a monetary premium.</li>
+<li>Increased scarcity. With issuance under control, ETH is more attractive to hold and therefore more valuable.</li>
+<li>Increased security. By being deliberate about the staking ratio we target, we achieve the maximum possible economic security whilst avoiding tipping into a brittle regime. With the benefits of items 1, 2 and 3 above, a more valuable ETH provides more security to the network.</li>
+<li>Space for a flourishing DeFi ecosystem. Without ETH’s risk-free yield crowding out other products, a more diverse and valuable economy can emerge.</li>
+</ol>
 </section>
-<section id="does-this-matter" class="level1">
-<h1>Does this Matter?</h1>
-<ul>
-<li>This is very different from what the system was designed for
-<ul>
-<li>Issuance was set on the assumption of 10% staked</li>
-<li>Avoiding delegation was a design goal - principal agent problem</li>
-<li>Liquid staking protocols were not considered, or only imagined as an option for those without enough capital to run solo validators</li>
-</ul></li>
-<li>In practical terms we risk losing
-<ul>
-<li>ETH as money (MoE, collateral)</li>
-<li>The only truly permissionless/neutral/censorship resistant asset on Ethereum (compare with current sanctuary technology arc)</li>
-<li>Solo stakers</li>
-<li>Economic security - undermined by too-big-to-slash</li>
-</ul></li>
-<li>What do we lose by going 100% staked?</li>
-<li>We want to preserve raw, trust minimised ETH as the default asset. Any rewards from staking should match the costs.</li>
-<li>Paying a subsidy in excess of this does not preserve a superior validator set. It just guarantees eventual total capture by large entities (solo stakers can’t go on)</li>
-</ul>
-<p>Include one of the issuance curve charts with “real yield” and/or “net incentive to stake”. Probably just the latter, along with other contributors to the “tipping point” idea. Be optimistic/positive. (I can state my bias here as a crowdsale participant and early staker - being worried about what we lose) Focus on what do we <em>gain</em> by sustainable issuance:</p>
-<ul>
-<li>ETH as money - ETH’s value depends on it being so (can be medium of exchange, collateral, economic bandwidth etc etc)!</li>
-<li>We preserve a truly trustless asset</li>
-<li>We maximise neutrality and disintermediation - core Ethereum values!</li>
-<li>We keep hold of our solo validators. If we deliver on paths to significantly reduce minimum staking requirements we could open out participation to a new generation of enthusiasts who might stake a portion of their ETH holdings to participate (solo staking was relatively accessible at launch, with 32 ETH being worth less than $20k).</li>
-</ul>
-</section>
-<section id="what-can-we-do" class="level1">
-<h1>What can we do?</h1>
-<ul>
-<li>Surprise surprise: issuance. But note that:</li>
-<li>A new issuance curve is technically trivial</li>
-<li>The precise form doesn’t matter as much as the memetics - there is a wide healthy range</li>
-</ul>
-<p>And remember that in the long run: yield is set by the market!</p>
-</section>
-<section id="scratch-notesideas" class="level1">
-<h1>Scratch notes/ideas</h1>
-<ul>
-<li><p>make comparison with AAVE yield. Can I get this data onchain? This is relevant for exploring the “looping” dynamics. Key argument: looped staking is degenerate and a clear indication that we’ve got this wrong!</p></li>
-<li><p>question to answer: who do we actually <em>want</em> to be stakers?</p></li>
-<li><p>Answer the question implicit in the title: where is the tipping point?</p></li>
-<li><p>What does a 100% staked environment actually look like (i.e.&nbsp;solo stakers leave, SSPs effectively extract rent)?</p></li>
-<li><p>Who cares? Who is the constituency here?</p></li>
-<li><p>Why is this happening?</p></li>
-<li><p>Introduce the concept of market yield and the implied staker premium</p></li>
-<li><p>Note that the market yield has dropped massively (liquid staking, risk). If a staked version of Ether were to be more desirable collateral the market yield may be close to zero. So we will hit 100% staked</p></li>
-<li><p>What can we do about it?</p>
-<ul>
-<li>We need an issuance curve which takes account of staking fraction</li>
-<li>We want to ensure staking participation does not increase beyond some level</li>
-<li>Researchers tend to converge on 25% or lower. But we have missed the boat. 50% still in reach.</li>
-</ul></li>
-<li><p>Points to push back on / state a view on:</p>
-<ul>
-<li>Note that permissionlessness is a core property we don’t want to lose. There may be a tension with some measures of decentralisation but intermediation is a cure worse than the disease (need to express in a more nuanced way)</li>
-<li>While there would have been no appetite to change the issuance in the early days we now have plenty of data, and there is still some time to act.</li>
-<li>But the market has proven <em>not</em> to be winner-take-all! This will most likely not be the case in future. Network effects will likely lead to consolidation, however gradually. Why should we accept that?</li>
-<li>But with excess issuance we can magically preserve x magical property about the validator set! Nonsense</li>
-<li>Lido has basically stated an ambition to capture the staking system. Are we happy with that?</li>
-<li>Validators are Service providers. Just as we didn’t compromise for mining pools we must not overstate stakers individual interests. Staking is not there to support businesses of defi off the yield. It is there to secure the chain</li>
-<li>Hobbyists will absorb flat costs, but cannot pay interest on their capital</li>
-<li>More issuance cannot create a more desirable validator set - long run this will be captured by sophisticated actors. We must build for the long run</li>
-<li>The starting parameters for the beacon chain were chosen on the basis of assumptions that do not hold. If we had taken seriously the role of liquid staking when designing the curve, what would we have done?</li>
-<li>Is there a tipping point? Where is it?</li>
-<li>The protocol gains nothing at all from increased staking past some low amount (probably in the range 10-20%) but as it passes 50% and tips towards 100% it loses some desirable properties. We should not allow this to happen.</li>
-</ul></li>
-<li><p>Want to address both “ETH is money” and “ETH as a sanctuary technology” narratives.</p></li>
-<li><p>Spellcheck</p></li>
-</ul>
+<section id="what-next" class="level1">
+<h1>What Next?</h1>
+<p>I have argued in this article that Ethereum’s issuance curve is at the root of the problems we currently face. It needs to be adjusted to express a deliberate choice about the desired staking ratio, rather than incentivising every last ETH to be staked. This is a matter of some urgency, as the staking ratio continues to climb with each passing month. Multiple possible issuance curves have been suggested in recent years, and my next article will attempt to map out the path for the right curve to adopt.</p>
+<p>Making the right choice now may finally introduce sustainability to the Ether issuance policy, and perhaps ossification. Furthermore, a roadmap for future research set out in the <a href="https://stakemap.org/">stakemap</a> points to a world in which ordinary people might again stake a portion of their holdings using spare hardware. Permissionless staking is a source of vital legitimacy for Ethereum as a neutral platform, and even if it remains a relatively small part of the overall stake, it plays a critical role in holding the bigger players to account. Without them, we face an inexorable slide towards capture by centralised entities. And then, what was it all for?</p>
 
 
 </section>
