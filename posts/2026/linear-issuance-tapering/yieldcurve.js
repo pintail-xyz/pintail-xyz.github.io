@@ -74,14 +74,16 @@
     annotations: [
       {
         x: F_TODAY * 100, xanchor: 'left', xshift: 5,
-        yref: 'paper', y: 0.97,
+        yref: 'paper', y: 1, yanchor: 'top',
+        textangle: -90,
         text: 'Today (~33%)',
         showarrow: false,
         font: { size: 11, color: '#aaa' },
       },
       {
-        x: 50, xanchor: 'right', xshift: -5,
-        yref: 'paper', y: 0.88,
+        x: 50, xanchor: 'left', xshift: 5,
+        yref: 'paper', y: 1, yanchor: 'top',
+        textangle: -90,
         text: 'Saturation (50%)',
         showarrow: false,
         font: { size: 11, color: '#e57373' },
