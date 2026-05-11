@@ -351,7 +351,7 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>STAKING_CAP</code></td>
+<td><code>SATURATION_BALANCE</code></td>
 <td><code>Gwei(60_250_000 * 10**9)</code></td>
 <td>Total active balance (in Gwei) at which issuance falls to zero; set at the hard fork to approximately half the current ETH supply</td>
 </tr>
@@ -362,18 +362,18 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 </tr>
 </tbody>
 </table>
-<p><code>STAKING_CAP</code> plays the role of <span class="math inline">\(f_\mathrm{cap} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% cap, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
+<p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{cap} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
 </section>
 <section id="modified-function" class="level2">
 <h2 class="anchored" data-anchor-id="modified-function">Modified Function</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_per_increment(state: BeaconState) <span class="op">-&gt;</span> Gwei:</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    total_active_balance <span class="op">=</span> get_total_active_balance(state)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> total_active_balance <span class="op">&gt;=</span> STAKING_CAP:</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> total_active_balance <span class="op">&gt;=</span> SATURATION_BALANCE:</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Gwei(<span class="dv">0</span>)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        EFFECTIVE_BALANCE_INCREMENT <span class="op">*</span> BASE_REWARD_FACTOR</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span> (STAKING_CAP <span class="op">-</span> total_active_balance)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">//</span> (STAKING_CAP <span class="op">*</span> integer_squareroot(total_active_balance))</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span> (SATURATION_BALANCE <span class="op">-</span> total_active_balance)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">//</span> (SATURATION_BALANCE <span class="op">*</span> integer_squareroot(total_active_balance))</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward(state: BeaconState, index: ValidatorIndex) <span class="op">-&gt;</span> Gwei:</span>
@@ -381,7 +381,7 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        state.validators[index].effective_balance <span class="op">//</span> EFFECTIVE_BALANCE_INCREMENT</span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(increments <span class="op">*</span> get_base_reward_per_increment(state))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The factor <code>(STAKING_CAP - total_active_balance) / STAKING_CAP</code> is the discrete equivalent of <span class="math inline">\(c(f)/k = 1 - 2f\)</span>. Structuring the division as a single <code>//</code> at the end avoids the double floor-division of the original and preserves precision.</p>
+<p>The factor <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> is the discrete equivalent of <span class="math inline">\(c(f)/k = 1 - 2f\)</span>. Structuring the division as a single <code>//</code> at the end avoids the double floor-division of the original and preserves precision.</p>
 </section>
 <section id="calibration-1" class="level2">
 <h2 class="anchored" data-anchor-id="calibration-1">Calibration</h2>
