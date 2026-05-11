@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2026-05-10">
-<meta name="description" content="Comparing the properties of a one-parameter family of issuance modifications, of which the linear cap is one member.">
+<meta name="description" content="A minimal modification to Ethereum’s issuance curve that preserves current incentives while tapering new issuance to zero at a 50% staking ratio.">
 
-<title>A Power-Law Family of Issuance Caps for Ethereum – pintail’s notes</title>
+<title>Linear Issuance Tapering for Ethereum – pintail’s notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -102,8 +136,8 @@ window.Quarto = {
 };
 </script>
 
-<meta property="og:title" content="A Power-Law Family of Issuance Caps for Ethereum – pintail’s notes">
-<meta property="og:description" content="Comparing the properties of a one-parameter family of issuance modifications, of which the linear cap is one member.">
+<meta property="og:title" content="Linear Issuance Tapering for Ethereum – pintail’s notes">
+<meta property="og:description" content="A minimal modification to Ethereum’s issuance curve that preserves current incentives while tapering new issuance to zero at a 50% staking ratio.">
 <meta property="og:site_name" content="pintail's notes">
 </head>
 
@@ -154,17 +188,25 @@ window.Quarto = {
    
   <ul>
   <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">tl;dr</a></li>
-  <li><a href="#the-family" id="toc-the-family" class="nav-link" data-scroll-target="#the-family">The Family</a>
+  <li><a href="#the-proposal" id="toc-the-proposal" class="nav-link" data-scroll-target="#the-proposal">The Proposal</a>
   <ul class="collapse">
-  <li><a href="#definition" id="toc-definition" class="nav-link" data-scroll-target="#definition">Definition</a></li>
-  <li><a href="#key-parameters" id="toc-key-parameters" class="nav-link" data-scroll-target="#key-parameters">Key parameters</a></li>
-  <li><a href="#peak-issuance" id="toc-peak-issuance" class="nav-link" data-scroll-target="#peak-issuance">Peak issuance</a></li>
-  <li><a href="#dominance-of-beta-1" id="toc-dominance-of-beta-1" class="nav-link" data-scroll-target="#dominance-of-beta-1">Dominance of <span class="math inline">\(\beta &gt; 1\)</span></a></li>
+  <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation">Motivation</a></li>
+  <li><a href="#analytic-form" id="toc-analytic-form" class="nav-link" data-scroll-target="#analytic-form">Analytic Form</a></li>
+  <li><a href="#calibration" id="toc-calibration" class="nav-link" data-scroll-target="#calibration">Calibration</a></li>
   </ul></li>
-  <li><a href="#yield-comparison" id="toc-yield-comparison" class="nav-link" data-scroll-target="#yield-comparison">Yield Comparison</a></li>
-  <li><a href="#issuance-comparison" id="toc-issuance-comparison" class="nav-link" data-scroll-target="#issuance-comparison">Issuance Comparison</a></li>
-  <li><a href="#the-square-root-case-beta-tfrac12" id="toc-the-square-root-case-beta-tfrac12" class="nav-link" data-scroll-target="#the-square-root-case-beta-tfrac12">The Square Root Case (<span class="math inline">\(\beta = \tfrac{1}{2}\)</span>)</a></li>
+  <li><a href="#properties" id="toc-properties" class="nav-link" data-scroll-target="#properties">Properties</a>
+  <ul class="collapse">
+  <li><a href="#yield" id="toc-yield" class="nav-link" data-scroll-target="#yield">Yield</a></li>
+  <li><a href="#total-issuance" id="toc-total-issuance" class="nav-link" data-scroll-target="#total-issuance">Total Issuance</a></li>
+  <li><a href="#anti-discouragement-attacks" id="toc-anti-discouragement-attacks" class="nav-link" data-scroll-target="#anti-discouragement-attacks">Anti-Discouragement Attacks</a></li>
   <li><a href="#equilibrium-staking-ratio" id="toc-equilibrium-staking-ratio" class="nav-link" data-scroll-target="#equilibrium-staking-ratio">Equilibrium Staking Ratio</a></li>
+  </ul></li>
+  <li><a href="#consensus-layer-spec" id="toc-consensus-layer-spec" class="nav-link" data-scroll-target="#consensus-layer-spec">Consensus Layer Spec</a>
+  <ul class="collapse">
+  <li><a href="#new-constants" id="toc-new-constants" class="nav-link" data-scroll-target="#new-constants">New Constants</a></li>
+  <li><a href="#modified-function" id="toc-modified-function" class="nav-link" data-scroll-target="#modified-function">Modified Function</a></li>
+  <li><a href="#calibration-1" id="toc-calibration-1" class="nav-link" data-scroll-target="#calibration-1">Calibration</a></li>
+  </ul></li>
   <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
   </ul>
 </nav>
@@ -174,12 +216,12 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">A Power-Law Family of Issuance Caps for Ethereum</h1>
+<h1 class="title">Linear Issuance Tapering for Ethereum</h1>
 </div>
 
 <div>
   <div class="description">
-    Comparing the properties of a one-parameter family of issuance modifications, of which the linear cap is one member.
+    A minimal modification to Ethereum’s issuance curve that preserves current incentives while tapering new issuance to zero at a 50% staking ratio.
   </div>
 </div>
 
@@ -202,137 +244,159 @@ window.Quarto = {
 </header>
 
 
-<p>[Intro — reference to <a href="../linear-issuance-tapering/">linear issuance cap post</a>. The linear coefficient <span class="math inline">\(c(f) = k(1-2f)\)</span> is one member of a natural one-parameter family. This article characterises that family and examines which value of the exponent <span class="math inline">\(\beta\)</span> best satisfies the design objectives.]</p>
-<section id="tldr" class="level1">
-<h1>tl;dr</h1>
+<p>[Intro paragraph — reference to staking ratio post; motivation for proposing a specific curve.]</p>
+<section id="tldr" class="level2">
+<h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
-<li>The linear cap (<span class="math inline">\(\beta = 1\)</span>) generalises naturally to a power-law family parameterised by <span class="math inline">\(\beta &gt; 0\)</span>.</li>
-<li>Every member shares the same two anchors: unchanged issuance at the current staking ratio <span class="math inline">\(f_0\)</span> and zero issuance at the cap <span class="math inline">\(f = \tfrac{1}{2}\)</span>.</li>
-<li>For <span class="math inline">\(\beta &gt; 1\)</span>, the curve is <strong>strictly better</strong> on both stated objectives: stronger discouragement above <span class="math inline">\(f_0\)</span> and stronger anti-discouragement protection below <span class="math inline">\(f_0\)</span>.</li>
-<li>The cost of larger <span class="math inline">\(\beta\)</span> is higher theoretical rewards at very low staking ratios.</li>
-<li>The square root case (<span class="math inline">\(\beta = \tfrac{1}{2}\)</span>) has an elegant geometric-mean interpretation but is weaker at capping the staking ratio than the linear form.</li>
+<li>Above a 50% staking ratio, incentivising further stake actively harms Ethereum’s security; the proposed curve tapers issuance to zero there.</li>
+<li>At the current staking ratio (~1/3), yield and issuance are unchanged — making this the most conservative possible intervention.</li>
+<li>The anti-discouragement-attack property of the existing curve is preserved for staking ratios below 1/6.</li>
+<li>The modification has a single free parameter <span class="math inline">\(k\)</span>, which is fully determined by the current staking ratio.</li>
 </ul>
 </section>
-<section id="the-family" class="level1">
-<h1>The Family</h1>
-<section id="definition" class="level2">
-<h2 class="anchored" data-anchor-id="definition">Definition</h2>
-<p>Define a one-parameter family of issuance multipliers:</p>
-<p><span class="math display">\[c_\beta(f) = \begin{cases} \displaystyle\left(\frac{0.5 - f}{0.5 - f_0}\right)^{\!\beta} &amp; f \leq \tfrac{1}{2} \\[6pt] 0 &amp; f &gt; \tfrac{1}{2} \end{cases}\]</span></p>
-<p>Every member satisfies <span class="math inline">\(c_\beta(f_0) = 1\)</span> (issuance unchanged at current staking level) and <span class="math inline">\(c_\beta(\tfrac{1}{2}) = 0\)</span> (hard cap). The modified yield and issuance are:</p>
-<p><span class="math display">\[r_\beta(f) = c_\beta(f)\,r(f), \qquad I_\beta(f) = c_\beta(f)\,I(f)\]</span></p>
+<section id="the-proposal" class="level2">
+<h2 class="anchored" data-anchor-id="the-proposal">The Proposal</h2>
+<section id="motivation" class="level3">
+<h3 class="anchored" data-anchor-id="motivation">Motivation</h3>
+<p>[…]</p>
 </section>
-<section id="key-parameters" class="level2">
-<h2 class="anchored" data-anchor-id="key-parameters">Key parameters</h2>
-<p>With <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span> (current staking ratio) so that <span class="math inline">\(0.5 - f_0 = \tfrac{1}{6}\)</span>:</p>
+<section id="analytic-form" class="level3">
+<h3 class="anchored" data-anchor-id="analytic-form">Analytic Form</h3>
+<p>Let <span class="math inline">\(f\)</span> denote the staking ratio (ETH staked / total ETH supply) and let <span class="math inline">\(r(f)\)</span> and <span class="math inline">\(I(f)\)</span> be the consensus-layer nominal yield and total annual issuance under the current curve:</p>
+<p><span class="math display">\[r(f) = \frac{B \cdot E}{\sqrt{f \cdot S \cdot 10^9}}, \qquad I(f) = r(f) \cdot f \cdot S = B \cdot E \sqrt{\frac{f \cdot S}{10^9}}\]</span></p>
+<p>where <span class="math inline">\(B = 64\)</span> (<code>BASE_REWARD_FACTOR</code>), <span class="math inline">\(E \approx 82{,}181\)</span> (epochs per year), and <span class="math inline">\(S \approx 120.5 \times 10^6\)</span> ETH (total supply).</p>
+<p>The proposed modification multiplies both curves by a piecewise-linear coefficient <span class="math inline">\(c(f)\)</span>:</p>
+<p><span class="math display">\[c(f) = \begin{cases} k\,(1 - 2f) &amp; f \leq \tfrac{1}{2} \\ 0 &amp; f &gt; \tfrac{1}{2} \end{cases}\]</span></p>
+<p>giving modified yield and issuance:</p>
+<p><span class="math display">\[r_\text{new}(f) = c(f)\,r(f), \qquad I_\text{new}(f) = c(f)\,I(f)\]</span></p>
+</section>
+<section id="calibration" class="level3">
+<h3 class="anchored" data-anchor-id="calibration">Calibration</h3>
+<p>The constant <span class="math inline">\(k\)</span> is determined by requiring that yield (and hence issuance) is unchanged at the current staking ratio <span class="math inline">\(f_0\)</span>:</p>
+<p><span class="math display">\[c(f_0) = 1 \;\Longrightarrow\; k = \frac{1}{1 - 2f_0}\]</span></p>
+<p>With <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span> (the current staking ratio), this gives <span class="math inline">\(\boldsymbol{k = 3}\)</span>.</p>
+</section>
+</section>
+<section id="properties" class="level2">
+<h2 class="anchored" data-anchor-id="properties">Properties</h2>
+<section id="yield" class="level3">
+<h3 class="anchored" data-anchor-id="yield">Yield</h3>
+<div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #yieldcurve-chart { width: 100%; height: 460px; }
+</style>
+
+<div id="yieldcurve-chart"></div>
+
+<script src="yieldcurve.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The two curves coincide at the current staking ratio <span class="math inline">\(f_0 \approx \tfrac{1}{3}\)</span>. The proposed yield reaches zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="total-issuance" class="level3">
+<h3 class="anchored" data-anchor-id="total-issuance">Total Issuance</h3>
+<div id="fig-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #lin-issuancecurve-chart { width: 100%; height: 460px; }
+</style>
+
+<div id="lin-issuancecurve-chart"></div>
+
+<script src="issuancecurve.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under the proposed curve, issuance peaks at <span class="math inline">\(f^* = \tfrac{1}{6}\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="anti-discouragement-attacks" class="level3">
+<h3 class="anchored" data-anchor-id="anti-discouragement-attacks">Anti-Discouragement Attacks</h3>
+<p>A key security property of the current curve is that total issuance <span class="math inline">\(I(f) \propto \sqrt{f}\)</span> is strictly increasing in <span class="math inline">\(f\)</span>: an adversary who forces validators to exit does not gain a relative advantage, because the total reward pool shrinks. Under the proposed curve:</p>
+<p><span class="math display">\[I_\text{new}(f) \propto (1 - 2f)\sqrt{f}\]</span></p>
+<p>Differentiating:</p>
+<p><span class="math display">\[\frac{dI_\text{new}}{df} \propto 1 - 6f\]</span></p>
+<p>This is positive for <span class="math inline">\(f &lt; \tfrac{1}{6} \approx 16.7\%\)</span>, so the anti-discouragement property is preserved at the staking ratios where it is most relevant. Above <span class="math inline">\(f^* = \tfrac{1}{6}\)</span>, total issuance decreases as the staking ratio grows — creating an additional natural disincentive against excessive staking in the high-<span class="math inline">\(f\)</span> regime.</p>
+</section>
+<section id="equilibrium-staking-ratio" class="level3">
+<h3 class="anchored" data-anchor-id="equilibrium-staking-ratio">Equilibrium Staking Ratio</h3>
+<p>[Discussion of equilibrium — where the market will settle under the proposed curve vs.&nbsp;current curve. The proposed curve drives equilibrium to the point where yield equals the marginal staker’s opportunity cost, but now with a ceiling on <span class="math inline">\(f\)</span> imposed by <span class="math inline">\(c(f) \to 0\)</span> as <span class="math inline">\(f \to 0.5\)</span>.]</p>
+</section>
+</section>
+<section id="consensus-layer-spec" class="level2">
+<h2 class="anchored" data-anchor-id="consensus-layer-spec">Consensus Layer Spec</h2>
+<p>The analytic form translates to a minimal change in the Ethereum consensus layer spec: only <code>get_base_reward_per_increment</code> is modified.</p>
+<section id="new-constants" class="level3">
+<h3 class="anchored" data-anchor-id="new-constants">New Constants</h3>
+<p>Two parameters govern the new curve.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 20%">
-<col style="width: 13%">
-<col style="width: 30%">
-<col style="width: 18%">
-<col style="width: 16%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th><span class="math inline">\(\beta\)</span></th>
-<th>Form</th>
-<th><span class="math inline">\(c_\beta(0)\)</span></th>
-<th><span class="math inline">\(f^*\)</span></th>
+<th>Constant</th>
+<th>Value</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">\(\tfrac{1}{2}\)</span></td>
-<td>Square root</td>
-<td><span class="math inline">\(\sqrt{3} \approx 1.73\)</span></td>
-<td><span class="math inline">\(\tfrac{1}{4} = 25\%\)</span></td>
-<td>Geometric mean form; weaker cap</td>
+<td><code>SATURATION_BALANCE</code></td>
+<td><code>Gwei(60_250_000 * 10**9)</code></td>
+<td>Total active balance (in Gwei) at which issuance falls to zero; set at the hard fork to approximately half the current ETH supply</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(1\)</span></td>
-<td>Linear</td>
-<td><span class="math inline">\(3\)</span></td>
-<td><span class="math inline">\(\tfrac{1}{6} \approx 16.7\%\)</span></td>
-<td>Proposed in companion article</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\(2\)</span></td>
-<td>Quadratic</td>
-<td><span class="math inline">\(9\)</span></td>
-<td><span class="math inline">\(\tfrac{1}{10} = 10\%\)</span></td>
-<td>Stronger cap; higher low-<span class="math inline">\(f\)</span> rewards</td>
+<td><code>BASE_REWARD_FACTOR</code></td>
+<td><code>uint64(192)</code></td>
+<td>Replaces the current value of <code>64</code>; incorporates the calibration factor <span class="math inline">\(k = 3\)</span></td>
 </tr>
 </tbody>
 </table>
-<p>where <span class="math inline">\(f^*\)</span> is the staking ratio at which total issuance is maximised (anti-discouragement boundary), derived below.</p>
+<p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{cap} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
 </section>
-<section id="peak-issuance" class="level2">
-<h2 class="anchored" data-anchor-id="peak-issuance">Peak issuance</h2>
-<p>Total annual issuance under the modified curve is <span class="math inline">\(I_\beta(f) \propto (0.5 - f)^\beta \cdot \sqrt{f}\)</span>. Setting <span class="math inline">\(dI_\beta/df = 0\)</span>:</p>
-<p><span class="math display">\[\frac{dI_\beta}{df} \propto \tfrac{1}{4} - f\!\left(\beta + \tfrac{1}{2}\right) = 0 \;\Longrightarrow\; f^* = \frac{1}{4\beta + 2}\]</span></p>
-<p>The anti-discouragement property (<span class="math inline">\(dI_\beta/df &gt; 0\)</span>) holds for all <span class="math inline">\(f &lt; f^*\)</span>: total issuance grows as staking grows, so an adversary cannot profit by forcing validators to exit. For <span class="math inline">\(f &gt; f^*\)</span>, total issuance falls as <span class="math inline">\(f\)</span> increases, adding a natural market disincentive against excessive staking.</p>
+<section id="modified-function" class="level3">
+<h3 class="anchored" data-anchor-id="modified-function">Modified Function</h3>
+<p>The current function:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_per_increment(state: BeaconState) <span class="op">-&gt;</span> Gwei:</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        EFFECTIVE_BALANCE_INCREMENT <span class="op">*</span> BASE_REWARD_FACTOR</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">//</span> integer_squareroot(get_total_active_balance(state))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>is replaced by:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_per_increment(state: BeaconState) <span class="op">-&gt;</span> Gwei:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    total_active_balance <span class="op">=</span> get_total_active_balance(state)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> total_active_balance <span class="op">&gt;=</span> SATURATION_BALANCE:</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> Gwei(<span class="dv">0</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        EFFECTIVE_BALANCE_INCREMENT <span class="op">*</span> BASE_REWARD_FACTOR</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span> (SATURATION_BALANCE <span class="op">-</span> total_active_balance)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">//</span> (SATURATION_BALANCE <span class="op">*</span> integer_squareroot(total_active_balance))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The factor <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> is the discrete equivalent of <span class="math inline">\(c(f)/k = 1 - 2f\)</span>. Structuring the division as a single <code>//</code> at the end avoids the double floor-division of the original and preserves precision.</p>
 </section>
-<section id="dominance-of-beta-1" class="level2">
-<h2 class="anchored" data-anchor-id="dominance-of-beta-1">Dominance of <span class="math inline">\(\beta &gt; 1\)</span></h2>
-<p>For <span class="math inline">\(f &lt; f_0\)</span>: since <span class="math inline">\(\tfrac{0.5-f}{0.5-f_0} &gt; 1\)</span>, raising the exponent increases <span class="math inline">\(c_\beta\)</span>. Higher <span class="math inline">\(\beta\)</span> gives higher yield at low staking ratios — stronger anti-discouragement.</p>
-<p>For <span class="math inline">\(f &gt; f_0\)</span>: since <span class="math inline">\(\tfrac{0.5-f}{0.5-f_0} &lt; 1\)</span>, raising the exponent reduces <span class="math inline">\(c_\beta\)</span>. Higher <span class="math inline">\(\beta\)</span> gives lower yield above the current staking ratio — stronger downward pressure on the equilibrium.</p>
-<p>The <span class="math inline">\(\beta &gt; 1\)</span> curves therefore dominate <span class="math inline">\(\beta = 1\)</span> on both design objectives simultaneously. The trade-off is a larger <span class="math inline">\(c_\beta(0) = k^\beta\)</span> — higher theoretical rewards at very low staking ratios — which is largely of academic interest given the current <span class="math inline">\(f_0 \approx \tfrac{1}{3}\)</span>.</p>
+<section id="calibration-1" class="level3">
+<h3 class="anchored" data-anchor-id="calibration-1">Calibration</h3>
+<p><code>BASE_REWARD_FACTOR</code> is <a href="https://eth2book.info/latest/part3/transition/epoch/#helpers">described by Ben Edgington</a> as “the big knob to turn if we wish to increase or decrease the total reward for participating in Eth2.” In the proposed function it is supplemented by a tapering coefficient — the expression <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> — which reduces rewards as the total staked balance approaches <code>SATURATION_BALANCE</code>.</p>
+<p>At the calibration point <span class="math inline">\(f_0\)</span>, substituting <span class="math inline">\(D = f_0 \cdot S\)</span> and <span class="math inline">\(\texttt{SATURATION\_BALANCE} = f_\text{cap} \cdot S = \tfrac{S}{2}\)</span>, the tapering coefficient evaluates to:</p>
+<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{f_\text{cap} - f_0}{f_\text{cap}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
+<p>where the last step uses <span class="math inline">\(k = 1/(1 - 2f_0)\)</span> from the analytic calibration. The reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the original <code>BASE_REWARD_FACTOR</code>. To recover the original reward, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
+<p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = k \times 64\]</span></p>
+<p>With <span class="math inline">\(k = 3\)</span> this gives <span class="math inline">\(\texttt{BASE\_REWARD\_FACTOR} = 192\)</span>.</p>
 </section>
 </section>
-<section id="yield-comparison" class="level1">
-<h1>Yield Comparison</h1>
-<div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<style>
-  #family-yieldcurve-chart { width: 100%; height: 460px; }
-</style>
-
-<div id="family-yieldcurve-chart"></div>
-
-<script src="yieldcurve.js"></script>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: CL nominal yield as a function of staking ratio for three members of the family and the unmodified current curve. The <span class="math inline">\(\beta = 2\)</span> curve exceeds the plot range for <span class="math inline">\(f \lesssim 20\%\)</span>.
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="issuance-comparison" class="level1">
-<h1>Issuance Comparison</h1>
-<div id="fig-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<style>
-  #family-issuancecurve-chart { width: 100%; height: 460px; }
-</style>
-
-<div id="family-issuancecurve-chart"></div>
-
-<script src="issuancecurve.js"></script>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Total annual issuance as a function of staking ratio. Each proposed curve peaks at <span class="math inline">\(f^* = 1/(4\beta+2)\)</span> (marked with dashed verticals) and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>. The <span class="math inline">\(\beta = 2\)</span> curve peaks at <span class="math inline">\(\approx 3.3\)</span> M ETH near <span class="math inline">\(f = 10\%\)</span> and is clipped here.
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="the-square-root-case-beta-tfrac12" class="level1">
-<h1>The Square Root Case (<span class="math inline">\(\beta = \tfrac{1}{2}\)</span>)</h1>
-<p>[Discussion of β=1/2: total issuance ∝ sqrt(f · (1−2f)) — the geometric mean of staking ratio and remaining capacity. Peaks at f = 1/4, exactly midway between 0 and the cap. But as shown above, this is strictly worse than the linear form for capping excessive staking.]</p>
-</section>
-<section id="equilibrium-staking-ratio" class="level1">
-<h1>Equilibrium Staking Ratio</h1>
-<p>The equilibrium staking ratio <span class="math inline">\(f_\text{eq}\)</span> is set where the modified yield equals the marginal staker’s opportunity cost <span class="math inline">\(\rho\)</span>:</p>
-<p><span class="math display">\[c_\beta(f_\text{eq})\,r(f_\text{eq}) = \rho\]</span></p>
-<p>As <span class="math inline">\(\rho \to 0\)</span> (liquid staking near-eliminates opportunity cost), <span class="math inline">\(f_\text{eq} \to \tfrac{1}{2}\)</span> for any <span class="math inline">\(\beta &gt; 0\)</span>: the hard cap binds. For finite <span class="math inline">\(\rho &gt; 0\)</span>, higher <span class="math inline">\(\beta\)</span> yields a strictly lower <span class="math inline">\(f_\text{eq}\)</span>, since <span class="math inline">\(c_\beta(f) &lt; c_1(f)\)</span> throughout the range <span class="math inline">\((f_0, \tfrac{1}{2})\)</span>.</p>
-<p>[A chart of <span class="math inline">\(f_\text{eq}(\rho)\)</span> for the three <span class="math inline">\(\beta\)</span> values would be informative here.]</p>
-</section>
-<section id="discussion" class="level1">
-<h1>Discussion</h1>
-<p>[Which <span class="math inline">\(\beta\)</span> to recommend? Trade-offs between mathematical simplicity (<span class="math inline">\(\beta = 1\)</span>), strength of cap (<span class="math inline">\(\beta = 2\)</span>), and interpretability. Interaction with the EIP process — simpler forms are easier to spec and audit.]</p>
+<section id="discussion" class="level2">
+<h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
+<p>[Comparison with other proposed curves (e.g., stake-ratio targeting proposals). Trade-offs. Path to an EIP.]</p>
 
 
 </section>
