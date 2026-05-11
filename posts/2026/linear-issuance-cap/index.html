@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2026-05-10">
-<meta name="description" content="A minimal modification to Ethereum’s issuance curve that preserves current incentives while capping new issuance to zero at a 50% staking ratio.">
+<meta name="description" content="A minimal modification to Ethereum’s issuance curve that preserves current incentives while tapering new issuance to zero at a 50% staking ratio.">
 
-<title>A Linear Issuance Cap for Ethereum – pintail’s notes</title>
+<title>Linear Issuance Tapering for Ethereum – pintail’s notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -136,8 +136,8 @@ window.Quarto = {
 };
 </script>
 
-<meta property="og:title" content="A Linear Issuance Cap for Ethereum – pintail’s notes">
-<meta property="og:description" content="A minimal modification to Ethereum’s issuance curve that preserves current incentives while capping new issuance to zero at a 50% staking ratio.">
+<meta property="og:title" content="Linear Issuance Tapering for Ethereum – pintail’s notes">
+<meta property="og:description" content="A minimal modification to Ethereum’s issuance curve that preserves current incentives while tapering new issuance to zero at a 50% staking ratio.">
 <meta property="og:site_name" content="pintail's notes">
 </head>
 
@@ -216,12 +216,12 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">A Linear Issuance Cap for Ethereum</h1>
+<h1 class="title">Linear Issuance Tapering for Ethereum</h1>
 </div>
 
 <div>
   <div class="description">
-    A minimal modification to Ethereum’s issuance curve that preserves current incentives while capping new issuance to zero at a 50% staking ratio.
+    A minimal modification to Ethereum’s issuance curve that preserves current incentives while tapering new issuance to zero at a 50% staking ratio.
   </div>
 </div>
 
@@ -248,7 +248,7 @@ window.Quarto = {
 <section id="tldr" class="level2">
 <h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
-<li>Above a 50% staking ratio, incentivising further stake actively harms Ethereum’s security; the proposed curve enforces a hard cap there.</li>
+<li>Above a 50% staking ratio, incentivising further stake actively harms Ethereum’s security; the proposed curve tapers issuance to zero there.</li>
 <li>At the current staking ratio (~1/3), yield and issuance are unchanged — making this the most conservative possible intervention.</li>
 <li>The anti-discouragement-attack property of the existing curve is preserved for staking ratios below 1/6.</li>
 <li>The modification has a single free parameter <span class="math inline">\(k\)</span>, which is fully determined by the current staking ratio.</li>
