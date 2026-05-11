@@ -52,7 +52,7 @@
       zerolinecolor: '#555',
       gridcolor: '#eeeeee',
       showgrid: true,
-      range: [0, 20],
+      range: [0, 10],
       fixedrange: true,
     },
     shapes: [
