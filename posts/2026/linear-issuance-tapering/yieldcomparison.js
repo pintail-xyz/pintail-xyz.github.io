@@ -25,7 +25,7 @@
   }
 
   // ── Build series ─────────────────────────────────────────────────────────
-  var fs = [], yCurNom = [], yCurDil = [], yK2Nom = [], yK2Dil = [], yK3Nom = [], yK3Dil = [];
+  var fs = [], yCurNom = [], yCurDil = [], yK2Nom = [], yK2Dil = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
@@ -34,8 +34,6 @@
     yCurDil.push(+(clApr(f) * (1 - f) * 100).toFixed(4));
     yK2Nom.push(+(clAprNew(f, K2) * 100).toFixed(4));
     yK2Dil.push(+(clAprNew(f, K2) * (1 - f) * 100).toFixed(4));
-    yK3Nom.push(+(clAprNew(f, K3) * 100).toFixed(4));
-    yK3Dil.push(+(clAprNew(f, K3) * (1 - f) * 100).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -105,43 +103,29 @@
       x: fs, y: yCurNom,
       name: 'Current (nominal)',
       type: 'scatter', mode: 'lines',
-      line: { color: '#1565c0', width: 1.5, dash: 'dash' },
+      line: { color: '#1565c0', width: 2.5 },
       hovertemplate: 'Current nominal: %{y:.2f}%<extra></extra>',
     },
     {
       x: fs, y: yCurDil,
       name: 'Current (dilution-adj.)',
       type: 'scatter', mode: 'lines',
-      line: { color: '#1565c0', width: 2.5 },
+      line: { color: '#1565c0', width: 1.5, dash: 'dash' },
       hovertemplate: 'Current dilution-adj.: %{y:.2f}%<extra></extra>',
     },
     {
       x: fs, y: yK2Nom,
       name: 'k = 2 (nominal)',
       type: 'scatter', mode: 'lines',
-      line: { color: '#6a1b9a', width: 1.5, dash: 'dash' },
+      line: { color: '#6a1b9a', width: 2.5 },
       hovertemplate: 'k=2 nominal: %{y:.2f}%<extra></extra>',
     },
     {
       x: fs, y: yK2Dil,
       name: 'k = 2 (dilution-adj.)',
       type: 'scatter', mode: 'lines',
-      line: { color: '#6a1b9a', width: 2.5 },
+      line: { color: '#6a1b9a', width: 1.5, dash: 'dash' },
       hovertemplate: 'k=2 dilution-adj.: %{y:.2f}%<extra></extra>',
-    },
-    {
-      x: fs, y: yK3Nom,
-      name: 'k = 3 (nominal)',
-      type: 'scatter', mode: 'lines',
-      line: { color: '#00897b', width: 1.5, dash: 'dash' },
-      hovertemplate: 'k=3 nominal: %{y:.2f}%<extra></extra>',
-    },
-    {
-      x: fs, y: yK3Dil,
-      name: 'k = 3 (dilution-adj.)',
-      type: 'scatter', mode: 'lines',
-      line: { color: '#00897b', width: 2.5 },
-      hovertemplate: 'k=3 dilution-adj.: %{y:.2f}%<extra></extra>',
     },
   ];
 
