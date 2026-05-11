@@ -386,9 +386,10 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 </section>
 <section id="calibration-1" class="level3">
 <h3 class="anchored" data-anchor-id="calibration-1">Calibration</h3>
-<p>At the calibration point <span class="math inline">\(f_0\)</span>, the linear factor in the new function evaluates to:</p>
-<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
-<p>where the last step uses <span class="math inline">\(k = 1/(1 - 2f_0)\)</span> from the analytic calibration. The new reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the same <code>BASE_REWARD_FACTOR</code> as the original. To recover the original reward, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
+<p><code>BASE_REWARD_FACTOR</code> is <a href="https://eth2book.info/latest/part3/transition/epoch/#helpers">described by Ben Edgington</a> as “the big knob to turn if we wish to increase or decrease the total reward for participating in Eth2.” In the proposed function it is supplemented by a tapering coefficient — the expression <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> — which reduces rewards as the total staked balance approaches <code>SATURATION_BALANCE</code>.</p>
+<p>At the calibration point <span class="math inline">\(f_0\)</span>, substituting <span class="math inline">\(D = f_0 \cdot S\)</span> and <span class="math inline">\(\texttt{SATURATION\_BALANCE} = f_\text{cap} \cdot S = \tfrac{S}{2}\)</span>, the tapering coefficient evaluates to:</p>
+<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{f_\text{cap} - f_0}{f_\text{cap}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
+<p>where the last step uses <span class="math inline">\(k = 1/(1 - 2f_0)\)</span> from the analytic calibration. The reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the original <code>BASE_REWARD_FACTOR</code>. To recover the original reward, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
 <p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = k \times 64\]</span></p>
 <p>With <span class="math inline">\(k = 3\)</span> this gives <span class="math inline">\(\texttt{BASE\_REWARD\_FACTOR} = 192\)</span>.</p>
 </section>
