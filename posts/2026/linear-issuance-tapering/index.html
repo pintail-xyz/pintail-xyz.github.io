@@ -250,9 +250,9 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
 <li>Above a 50% staking ratio, incentivising further stake actively harms Ethereum’s security; the proposed curve tapers issuance to zero there.</li>
-<li>At the current staking ratio (~1/3), yield and issuance are unchanged — making this the most conservative possible intervention.</li>
-<li>The anti-discouragement-attack property of the existing curve is preserved for staking ratios below 1/6.</li>
-<li>The modification has a single free parameter <span class="math inline">\(k\)</span>, which is fully determined by the current staking ratio.</li>
+<li>The modification has a single free parameter <span class="math inline">\(k\)</span>; two principled choices are <span class="math inline">\(k = 3\)</span> (issuance unchanged at the current ~33% staking ratio — the minimal intervention) and <span class="math inline">\(k = 2\)</span> (targets a 25% equilibrium — the midpoint of the feasible staking range, with <code>BASE_REWARD_FACTOR</code> = 128 = <span class="math inline">\(2^7\)</span>).</li>
+<li>The anti-discouragement-attack property of the existing curve is preserved for staking ratios below 1/6, regardless of <span class="math inline">\(k\)</span>.</li>
+<li>Both curves share the same functional form; the choice of <span class="math inline">\(k\)</span> is a policy question about whether the current staking ratio is already above the optimal level.</li>
 </ul>
 </section>
 <section id="the-proposal" class="level2">
@@ -273,9 +273,12 @@ window.Quarto = {
 </section>
 <section id="calibration" class="level3">
 <h3 class="anchored" data-anchor-id="calibration">Calibration</h3>
-<p>The constant <span class="math inline">\(k\)</span> is determined by requiring that yield (and hence issuance) is unchanged at the current staking ratio <span class="math inline">\(f_0\)</span>:</p>
-<p><span class="math display">\[c(f_0) = 1 \;\Longrightarrow\; k = \frac{1}{1 - 2f_0}\]</span></p>
-<p>With <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span> (the current staking ratio), this gives <span class="math inline">\(\boldsymbol{k = 3}\)</span>.</p>
+<p>The constant <span class="math inline">\(k\)</span> sets the point at which the proposed curve crosses the current one — the staking ratio at which issuance is unchanged. This crossover occurs at:</p>
+<p><span class="math display">\[c(f_0) = 1 \;\Longrightarrow\; f_0 = \frac{k - 1}{2k}\]</span></p>
+<p>Two values of <span class="math inline">\(k\)</span> have clear analytic motivation:</p>
+<p><strong><span class="math inline">\(k = 3\)</span></strong> — sets <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span>, matching the current staking ratio. Issuance is unchanged today; the taper applies only to future growth. This is the minimal intervention.</p>
+<p><strong><span class="math inline">\(k = 2\)</span></strong> — sets <span class="math inline">\(f_0 = \tfrac{1}{4}\)</span>, the midpoint of the feasible staking range <span class="math inline">\([0, f_\text{sat}]\)</span>. This choice is independent of the current staking ratio and reflects a view that the current level is already somewhat above the optimum. It also gives <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(= k \times 64 = 128 = 2^7\)</span>, a power of two consistent with the spec’s existing constants (<span class="math inline">\(64 = 2^6\)</span>).</p>
+<p>The choice between them is a policy question: <span class="math inline">\(k = 3\)</span> says <em>leave current issuance alone and prevent further growth</em>; <span class="math inline">\(k = 2\)</span> says <em>the current staking ratio is itself too high and should correct toward 25%</em>.</p>
 </section>
 </section>
 <section id="properties" class="level2">
@@ -294,7 +297,7 @@ window.Quarto = {
 <script src="yieldcurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The two curves coincide at the current staking ratio <span class="math inline">\(f_0 \approx \tfrac{1}{3}\)</span>. The proposed yield reaches zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
+Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The <span class="math inline">\(k = 3\)</span> curve coincides with the current curve at <span class="math inline">\(f \approx \tfrac{1}{3}\)</span>; the <span class="math inline">\(k = 2\)</span> curve crosses it at <span class="math inline">\(f = \tfrac{1}{4}\)</span>. Both proposed curves reach zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
 </figcaption>
 </figure>
 </div>
@@ -316,7 +319,7 @@ Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The
 <script src="yieldcomparison.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Nominal yield (solid) and dilution-adjusted yield (dashed) for both curves. At the current staking ratio the two curves coincide on both measures. Above <span class="math inline">\(f_0\)</span>, the proposed curve narrows the gap between nominal and dilution-adjusted yield relative to the current curve.
+Figure&nbsp;2: Dilution-adjusted yield for the current curve and both proposed values of <span class="math inline">\(k\)</span>. At <span class="math inline">\(f = \tfrac{1}{3}\)</span> the <span class="math inline">\(k = 3\)</span> curve matches the current; at <span class="math inline">\(f = \tfrac{1}{4}\)</span> the <span class="math inline">\(k = 2\)</span> curve matches. Both proposed curves reduce the dilution-adjusted yield above their respective crossover points, compressing the gap between nominal and real staking returns.
 </figcaption>
 </figure>
 </div>
@@ -335,7 +338,7 @@ Figure&nbsp;2: Nominal yield (solid) and dilution-adjusted yield (dashed) for bo
 <script src="issuancecurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Annual ETH issuance as a percentage of total supply, as a function of staking ratio. Under the proposed curve, issuance peaks at <span class="math inline">\(f^* = \tfrac{1}{6}\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
+Figure&nbsp;3: Annual ETH issuance as a percentage of total supply. Both proposed curves peak at <span class="math inline">\(f^* = \tfrac{1}{6}\)</span> (the peak location is independent of <span class="math inline">\(k\)</span>) and fall to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>. The <span class="math inline">\(k = 3\)</span> curve is calibrated to match current issuance at <span class="math inline">\(f = \tfrac{1}{3}\)</span>; the <span class="math inline">\(k = 2\)</span> curve produces lower issuance above <span class="math inline">\(f = \tfrac{1}{4}\)</span>.
 </figcaption>
 </figure>
 </div>
@@ -380,12 +383,12 @@ Figure&nbsp;3: Annual ETH issuance as a percentage of total supply, as a functio
 </tr>
 <tr class="even">
 <td><code>BASE_REWARD_FACTOR</code></td>
-<td><code>uint64(192)</code></td>
-<td>Replaces the current value of <code>64</code>; incorporates the calibration factor <span class="math inline">\(k = 3\)</span></td>
+<td><code>uint64(128)</code> or <code>uint64(192)</code></td>
+<td>Replaces the current value of <code>64</code>; equal to <span class="math inline">\(k \times 64\)</span>, where <span class="math inline">\(k = 2\)</span> gives 128 and <span class="math inline">\(k = 3\)</span> gives 192</td>
 </tr>
 </tbody>
 </table>
-<p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{sat} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
+<p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{sat} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter; its value encodes the policy choice of <span class="math inline">\(k\)</span> as described in the calibration section above.</p>
 </section>
 <section id="modified-function" class="level3">
 <h3 class="anchored" data-anchor-id="modified-function">Modified Function</h3>
@@ -412,9 +415,9 @@ Figure&nbsp;3: Annual ETH issuance as a percentage of total supply, as a functio
 <p><code>BASE_REWARD_FACTOR</code> is <a href="https://eth2book.info/latest/part3/transition/epoch/#helpers">described by Ben Edgington</a> as “the big knob to turn if we wish to increase or decrease the total reward for participating in Eth2.” In the proposed function it is supplemented by a tapering coefficient — the expression <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> — which reduces rewards as the total staked balance approaches <code>SATURATION_BALANCE</code>.</p>
 <p>At the calibration point <span class="math inline">\(f_0\)</span>, substituting <span class="math inline">\(D = f_0 \cdot S\)</span> and <span class="math inline">\(\texttt{SATURATION\_BALANCE} = f_\text{sat} \cdot S = \tfrac{S}{2}\)</span>, the tapering coefficient evaluates to:</p>
 <p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{f_\text{sat} - f_0}{f_\text{sat}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
-<p>where the last step uses <span class="math inline">\(k = 1/(1 - 2f_0)\)</span> from the analytic calibration. The reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the original <code>BASE_REWARD_FACTOR</code>. To recover the original reward, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
+<p>The reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the original <code>BASE_REWARD_FACTOR</code>. To recover the original reward at <span class="math inline">\(f_0\)</span>, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
 <p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = k \times 64\]</span></p>
-<p>With <span class="math inline">\(k = 3\)</span> this gives <span class="math inline">\(\texttt{BASE\_REWARD\_FACTOR} = 192\)</span>.</p>
+<p>For <span class="math inline">\(k = 2\)</span> this gives <span class="math inline">\(128 = 2^7\)</span>; for <span class="math inline">\(k = 3\)</span> this gives <span class="math inline">\(192\)</span>.</p>
 </section>
 </section>
 <section id="discussion" class="level2">

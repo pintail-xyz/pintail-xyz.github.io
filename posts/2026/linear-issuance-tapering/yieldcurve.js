@@ -6,11 +6,12 @@
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
   // ── Proposal constants ───────────────────────────────────────────────────
-  var F0 = 1 / 3;           // current staking ratio
-  var K  = 1 / (1 - 2 * F0); // = 3
+  var F_TODAY = 1 / 3;   // current staking ratio
+  var K2 = 2;            // calibrated at f = 1/4
+  var K3 = 3;            // calibrated at f = 1/3 (current)
 
   var N_POINTS = 500;
-  var F_MIN    = 0.005; // 0.5% — avoid division by zero
+  var F_MIN    = 0.005;
   var F_MAX    = 1.0;
 
   // ── Yield functions ──────────────────────────────────────────────────────
@@ -18,19 +19,20 @@
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
   }
 
-  function clAprNew(f) {
+  function clAprNew(f, k) {
     if (f >= 0.5) return 0;
-    return K * (1 - 2 * f) * clApr(f);
+    return k * (1 - 2 * f) * clApr(f);
   }
 
   // ── Build series ─────────────────────────────────────────────────────────
-  var fs = [], yCurrent = [], yProposed = [];
+  var fs = [], yCurrent = [], yK2 = [], yK3 = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
     yCurrent.push(+(clApr(f) * 100).toFixed(4));
-    yProposed.push(+(clAprNew(f) * 100).toFixed(4));
+    yK2.push(+(clAprNew(f, K2) * 100).toFixed(4));
+    yK3.push(+(clAprNew(f, K3) * 100).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -58,7 +60,7 @@
     shapes: [
       {
         type: 'line',
-        x0: F0 * 100, x1: F0 * 100,
+        x0: F_TODAY * 100, x1: F_TODAY * 100,
         yref: 'paper', y0: 0, y1: 1,
         line: { color: '#bbb', width: 1.5, dash: 'dot' },
       },
@@ -71,7 +73,7 @@
     ],
     annotations: [
       {
-        x: F0 * 100, xanchor: 'left', xshift: 5,
+        x: F_TODAY * 100, xanchor: 'left', xshift: 5,
         yref: 'paper', y: 0.97,
         text: 'Today (~33%)',
         showarrow: false,
@@ -86,7 +88,7 @@
       },
     ],
     showlegend: true,
-    legend: { x: 0.65, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
+    legend: { x: 0.62, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
     dragmode: false,
     title: { text: 'CL yield: current vs. proposed', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 68 },
@@ -105,11 +107,18 @@
       hovertemplate: 'Current: %{y:.2f}%<extra></extra>',
     },
     {
-      x: fs, y: yProposed,
-      name: 'Proposed',
+      x: fs, y: yK2,
+      name: 'Proposed (k = 2)',
+      type: 'scatter', mode: 'lines',
+      line: { color: '#6a1b9a', width: 2.5 },
+      hovertemplate: 'Proposed (k=2): %{y:.2f}%<extra></extra>',
+    },
+    {
+      x: fs, y: yK3,
+      name: 'Proposed (k = 3)',
       type: 'scatter', mode: 'lines',
       line: { color: '#00897b', width: 2.5 },
-      hovertemplate: 'Proposed: %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Proposed (k=3): %{y:.2f}%<extra></extra>',
     },
   ];
 

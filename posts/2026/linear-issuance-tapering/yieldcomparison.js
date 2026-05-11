@@ -6,8 +6,9 @@
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
   // ── Proposal constants ───────────────────────────────────────────────────
-  var F0 = 1 / 3;
-  var K  = 1 / (1 - 2 * F0); // = 3
+  var F_TODAY = 1 / 3;
+  var K2 = 2;
+  var K3 = 3;
 
   var N_POINTS = 500;
   var F_MIN    = 0.005;
@@ -18,23 +19,20 @@
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
   }
 
-  function clAprNew(f) {
+  function clAprNew(f, k) {
     if (f >= 0.5) return 0;
-    return K * (1 - 2 * f) * clApr(f);
+    return k * (1 - 2 * f) * clApr(f);
   }
 
-  // ── Build series ─────────────────────────────────────────────────────────
-  var fs = [], yCurNom = [], yCurDil = [], yProNom = [], yProDil = [];
+  // ── Build series (dilution-adjusted yield only) ──────────────────────────
+  var fs = [], yCurDil = [], yK2Dil = [], yK3Dil = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
-    var rCur = clApr(f);
-    var rNew = clAprNew(f);
     fs.push(+(f * 100).toFixed(3));
-    yCurNom.push(+(rCur * 100).toFixed(4));
-    yCurDil.push(+(rCur * (1 - f) * 100).toFixed(4));
-    yProNom.push(+(rNew * 100).toFixed(4));
-    yProDil.push(+(rNew * (1 - f) * 100).toFixed(4));
+    yCurDil.push(+(clApr(f) * (1 - f) * 100).toFixed(4));
+    yK2Dil.push(+(clAprNew(f, K2) * (1 - f) * 100).toFixed(4));
+    yK3Dil.push(+(clAprNew(f, K3) * (1 - f) * 100).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -49,7 +47,7 @@
       showgrid: true,
     },
     yaxis: {
-      title: { text: 'CL yield', font: { size: 12 } },
+      title: { text: 'CL dilution-adjusted yield', font: { size: 12 } },
       ticksuffix: '%',
       zeroline: true,
       zerolinewidth: 1.5,
@@ -62,7 +60,7 @@
     shapes: [
       {
         type: 'line',
-        x0: F0 * 100, x1: F0 * 100,
+        x0: F_TODAY * 100, x1: F_TODAY * 100,
         yref: 'paper', y0: 0, y1: 1,
         line: { color: '#bbb', width: 1.5, dash: 'dot' },
       },
@@ -75,7 +73,7 @@
     ],
     annotations: [
       {
-        x: F0 * 100, xanchor: 'left', xshift: 5,
+        x: F_TODAY * 100, xanchor: 'left', xshift: 5,
         yref: 'paper', y: 0.97,
         text: 'Today (~33%)',
         showarrow: false,
@@ -90,9 +88,9 @@
       },
     ],
     showlegend: true,
-    legend: { x: 0.55, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
+    legend: { x: 0.62, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
     dragmode: false,
-    title: { text: 'CL yield: nominal vs. dilution-adjusted', font: { size: 14 }, x: 0.5, xanchor: 'center' },
+    title: { text: 'CL dilution-adjusted yield: current vs. proposed', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 68 },
     hovermode: 'x unified',
     hoverdistance: -1,
@@ -102,32 +100,25 @@
 
   var traces = [
     {
-      x: fs, y: yCurNom,
-      name: 'Current (nominal)',
+      x: fs, y: yCurDil,
+      name: 'Current',
       type: 'scatter', mode: 'lines',
       line: { color: '#1565c0', width: 2.5 },
-      hovertemplate: 'Current nominal: %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Current: %{y:.2f}%<extra></extra>',
     },
     {
-      x: fs, y: yCurDil,
-      name: 'Current (dilution-adj.)',
+      x: fs, y: yK2Dil,
+      name: 'Proposed (k = 2)',
       type: 'scatter', mode: 'lines',
-      line: { color: '#1565c0', width: 2, dash: 'dash' },
-      hovertemplate: 'Current dilution-adj.: %{y:.2f}%<extra></extra>',
+      line: { color: '#6a1b9a', width: 2.5 },
+      hovertemplate: 'Proposed (k=2): %{y:.2f}%<extra></extra>',
     },
     {
-      x: fs, y: yProNom,
-      name: 'Proposed (nominal)',
+      x: fs, y: yK3Dil,
+      name: 'Proposed (k = 3)',
       type: 'scatter', mode: 'lines',
       line: { color: '#00897b', width: 2.5 },
-      hovertemplate: 'Proposed nominal: %{y:.2f}%<extra></extra>',
-    },
-    {
-      x: fs, y: yProDil,
-      name: 'Proposed (dilution-adj.)',
-      type: 'scatter', mode: 'lines',
-      line: { color: '#00897b', width: 2, dash: 'dash' },
-      hovertemplate: 'Proposed dilution-adj.: %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Proposed (k=3): %{y:.2f}%<extra></extra>',
     },
   ];
 
