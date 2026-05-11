@@ -14,15 +14,15 @@
   var F_MIN    = 0.0;
   var F_MAX    = 1.0;
 
-  // ── Issuance functions (millions of ETH / year) ──────────────────────────
-  function annualIssuanceMETH(f) {
+  // ── Issuance functions (% of total ETH supply / year) ───────────────────
+  function annualInflationPct(f) {
     if (f <= 0) return 0;
-    return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR * Math.sqrt(f * TOTAL_ETH_SUPPLY / 1e9) / 1e6;
+    return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR * Math.sqrt(f / (TOTAL_ETH_SUPPLY * 1e9)) * 100;
   }
 
-  function annualIssuanceMETHNew(f) {
+  function annualInflationPctNew(f) {
     if (f >= 0.5) return 0;
-    return K * (1 - 2 * f) * annualIssuanceMETH(f);
+    return K * (1 - 2 * f) * annualInflationPct(f);
   }
 
   // ── Build series ─────────────────────────────────────────────────────────
@@ -31,8 +31,8 @@
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
-    yCurrent.push(+annualIssuanceMETH(f).toFixed(4));
-    yProposed.push(+annualIssuanceMETHNew(f).toFixed(4));
+    yCurrent.push(+annualInflationPct(f).toFixed(4));
+    yProposed.push(+annualInflationPctNew(f).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -47,7 +47,8 @@
       showgrid: true,
     },
     yaxis: {
-      title: { text: 'Annual issuance (M ETH)', font: { size: 12 } },
+      title: { text: 'Annual issuance (% of ETH supply)', font: { size: 12 } },
+      ticksuffix: '%',
       zeroline: true,
       zerolinewidth: 1.5,
       zerolinecolor: '#555',
@@ -116,14 +117,14 @@
       name: 'Current',
       type: 'scatter', mode: 'lines',
       line: { color: '#1565c0', width: 2.5 },
-      hovertemplate: 'Current: %{y:.3f} M ETH<extra></extra>',
+      hovertemplate: 'Current: %{y:.3f}%<extra></extra>',
     },
     {
       x: fs, y: yProposed,
       name: 'Proposed',
       type: 'scatter', mode: 'lines',
       line: { color: '#00897b', width: 2.5 },
-      hovertemplate: 'Proposed: %{y:.3f} M ETH<extra></extra>',
+      hovertemplate: 'Proposed: %{y:.3f}%<extra></extra>',
     },
   ];
 
