@@ -386,13 +386,11 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 </section>
 <section id="calibration-1" class="level3">
 <h3 class="anchored" data-anchor-id="calibration-1">Calibration</h3>
-<p>The two changes together reproduce the existing per-increment reward at any given staking ratio <span class="math inline">\(f_0\)</span>. Letting <span class="math inline">\(D = f_0 \cdot S\)</span> (total active balance at the calibration point), the new reward per increment is:</p>
-<p><span class="math display">\[\frac{\texttt{EBI} \times 192 \times (\texttt{SATURATION\_BALANCE} - D)}{\texttt{SATURATION\_BALANCE} \times \sqrt{D}}\]</span></p>
-<p>At <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span>, with <span class="math inline">\(\texttt{SATURATION\_BALANCE} = \tfrac{S}{2}\)</span>:</p>
-<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{\tfrac{S}{2} - \tfrac{S}{3}}{\tfrac{S}{2}} = \frac{\tfrac{1}{6}}{\tfrac{1}{2}} = \frac{1}{3}\]</span></p>
-<p>so the numerator factor becomes <span class="math inline">\(192 \times \tfrac{1}{3} = 64\)</span>, recovering the original <code>BASE_REWARD_FACTOR</code> exactly. More generally, the required value of <code>BASE_REWARD_FACTOR</code> for a calibration point <span class="math inline">\(f_0\)</span> and threshold <span class="math inline">\(f_\mathrm{cap}\)</span> is:</p>
-<p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = \frac{64}{1 - f_0 / f_\mathrm{cap}} = \frac{64\,f_\mathrm{cap}}{f_\mathrm{cap} - f_0}\]</span></p>
-<p>With <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span> and <span class="math inline">\(f_\mathrm{cap} = \tfrac{1}{2}\)</span> this gives <span class="math inline">\(192\)</span>, consistent with <span class="math inline">\(k = 3\)</span> from the analytic calibration.</p>
+<p>At the calibration point <span class="math inline">\(f_0\)</span>, the linear factor in the new function evaluates to:</p>
+<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
+<p>where the last step uses <span class="math inline">\(k = 1/(1 - 2f_0)\)</span> from the analytic calibration. The new reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the same <code>BASE_REWARD_FACTOR</code> as the original. To recover the original reward, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
+<p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = k \times 64\]</span></p>
+<p>With <span class="math inline">\(k = 3\)</span> this gives <span class="math inline">\(\texttt{BASE\_REWARD\_FACTOR} = 192\)</span>.</p>
 </section>
 </section>
 <section id="discussion" class="level2">
