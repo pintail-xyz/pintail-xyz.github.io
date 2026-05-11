@@ -306,7 +306,7 @@ Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The
 <h3 class="anchored" data-anchor-id="dilution-adjusted-yield">Dilution-Adjusted Yield</h3>
 <p>New issuance increases the total ETH supply, diluting all holders by the annual inflation rate <span class="math inline">\(I(f)/S = r(f) \cdot f\)</span>. The dilution-adjusted yield — the net return to a staker after accounting for this inflation — is:</p>
 <p><span class="math display">\[r_\text{adj}(f) = r(f)\,(1 - f)\]</span></p>
-<p>As discussed in the <a href="../staking-ratio/">staking ratio post</a>, the gap between the nominal and dilution-adjusted yield is distortive, particularly for solo stakers. The proposed curve reduces this discrepancy at staking ratios above <span class="math inline">\(f_0\)</span> by tapering issuance, and eliminates it entirely at <span class="math inline">\(f = \tfrac{1}{2}\)</span> where both yields reach zero.</p>
+<p>As discussed in the <a href="../staking-ratio/">staking ratio post</a>, the gap between the nominal and dilution-adjusted yield is distortive, particularly for solo stakers. The chart below shows both yields together: the dashed lines give the nominal yield for each curve; the solid lines give the dilution-adjusted yield. The proposed curve narrows this gap at staking ratios above <span class="math inline">\(f_0\)</span> and eliminates it entirely at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.</p>
 <div id="fig-yieldcomparison" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -319,7 +319,7 @@ Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The
 <script src="yieldcomparison.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Dilution-adjusted yield for the current curve and both proposed values of <span class="math inline">\(k\)</span>. At <span class="math inline">\(f = \tfrac{1}{3}\)</span> the <span class="math inline">\(k = 3\)</span> curve matches the current; at <span class="math inline">\(f = \tfrac{1}{4}\)</span> the <span class="math inline">\(k = 2\)</span> curve matches. Both proposed curves reduce the dilution-adjusted yield above their respective crossover points, compressing the gap between nominal and real staking returns.
+Figure&nbsp;2: Nominal yield (dashed) and dilution-adjusted yield (solid) for the current curve and both proposed values of <span class="math inline">\(k\)</span>. The gap between each pair of lines represents the inflation cost borne by stakers. Both proposed curves narrow this gap above their respective crossover points (<span class="math inline">\(f = \tfrac{1}{3}\)</span> for <span class="math inline">\(k = 3\)</span>; <span class="math inline">\(f = \tfrac{1}{4}\)</span> for <span class="math inline">\(k = 2\)</span>) and eliminate it entirely at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
 </figcaption>
 </figure>
 </div>
