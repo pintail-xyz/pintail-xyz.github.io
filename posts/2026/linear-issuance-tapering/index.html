@@ -345,11 +345,12 @@ Figure&nbsp;3: Annual ETH issuance as a percentage of total supply. Both propose
 </section>
 <section id="anti-discouragement-attacks" class="level3">
 <h3 class="anchored" data-anchor-id="anti-discouragement-attacks">Anti-Discouragement Attacks</h3>
-<p>A key security property of the current curve is that total issuance <span class="math inline">\(I(f) \propto \sqrt{f}\)</span> is strictly increasing in <span class="math inline">\(f\)</span>: an adversary who forces validators to exit does not gain a relative advantage, because the total reward pool shrinks. Under the proposed curve:</p>
+<p>Resistance to <a href="https://github.com/ethereum/research/blob/master/papers/discouragement/discouragement.pdf">discouragement attacks</a> was an explicit design criterion for the current issuance curve prior to the beacon chain launch. In a discouragement attack, an adversary forces validators offline — at some cost to itself — in order to increase its share of a shrinking reward pool, with the ultimate goal of reducing the honest validator set below the threshold needed for a 51% attack. Under the current curve, total issuance <span class="math inline">\(I(f) \propto \sqrt{f}\)</span> is strictly increasing in <span class="math inline">\(f\)</span>, so exits reduce the total reward pool: the attacker’s relative gain from shrinking the validator set never exceeds its cost.</p>
+<p>Under the proposed curve:</p>
 <p><span class="math display">\[I_\text{new}(f) \propto (1 - 2f)\sqrt{f}\]</span></p>
 <p>Differentiating:</p>
 <p><span class="math display">\[\frac{dI_\text{new}}{df} \propto 1 - 6f\]</span></p>
-<p>This is positive for <span class="math inline">\(f &lt; \tfrac{1}{6} \approx 16.7\%\)</span>, so the anti-discouragement property is preserved at the staking ratios where it is most relevant. Above <span class="math inline">\(f^* = \tfrac{1}{6}\)</span>, total issuance decreases as the staking ratio grows — creating an additional natural disincentive against excessive staking in the high-<span class="math inline">\(f\)</span> regime.</p>
+<p>This is positive for <span class="math inline">\(f &lt; \tfrac{1}{6} \approx 16.7\%\)</span>, so the anti-discouragement property is preserved precisely in the low-staking regime where discouragement attacks are a credible threat. A successful discouragement attack requires driving the validator set well below the current staking ratio — into a range where the proposed curve behaves identically to the current one in this respect. Above <span class="math inline">\(f^* = \tfrac{1}{6}\)</span>, total issuance decreases as the staking ratio grows, providing an additional natural disincentive against excessive staking.</p>
 </section>
 <section id="equilibrium-staking-ratio" class="level3">
 <h3 class="anchored" data-anchor-id="equilibrium-staking-ratio">Equilibrium Staking Ratio</h3>

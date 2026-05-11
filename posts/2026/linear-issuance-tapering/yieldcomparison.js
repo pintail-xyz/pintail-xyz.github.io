@@ -57,20 +57,6 @@
       range: [0, 10],
       fixedrange: true,
     },
-    shapes: [
-      {
-        type: 'line',
-        x0: F_TODAY * 100, x1: F_TODAY * 100,
-        yref: 'paper', y0: 0, y1: 1,
-        line: { color: '#bbb', width: 1.5, dash: 'dot' },
-      },
-      {
-        type: 'line',
-        x0: 50, x1: 50,
-        yref: 'paper', y0: 0, y1: 1,
-        line: { color: '#e57373', width: 1.5, dash: 'dot' },
-      },
-    ],
     annotations: [
       {
         x: F_TODAY * 100, xanchor: 'left', xshift: 5,
@@ -98,7 +84,20 @@
     paper_bgcolor: '#ffffff',
   };
 
+  var refY = [0, 10];
   var traces = [
+    {
+      x: [F_TODAY * 100, F_TODAY * 100], y: refY,
+      type: 'scatter', mode: 'lines',
+      line: { color: '#bbb', width: 1.5, dash: 'dot' },
+      showlegend: false, hoverinfo: 'skip',
+    },
+    {
+      x: [50, 50], y: refY,
+      type: 'scatter', mode: 'lines',
+      line: { color: '#e57373', width: 1.5, dash: 'dot' },
+      showlegend: false, hoverinfo: 'skip',
+    },
     {
       x: fs, y: yCurDil,
       name: 'Current',
