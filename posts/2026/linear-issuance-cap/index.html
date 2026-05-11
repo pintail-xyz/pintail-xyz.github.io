@@ -245,8 +245,8 @@ window.Quarto = {
 
 
 <p>[Intro paragraph — reference to staking ratio post; motivation for proposing a specific curve.]</p>
-<section id="tldr" class="level1">
-<h1>tl;dr</h1>
+<section id="tldr" class="level2">
+<h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
 <li>Above a 50% staking ratio, incentivising further stake actively harms Ethereum’s security; the proposed curve enforces a hard cap there.</li>
 <li>At the current staking ratio (~1/3), yield and issuance are unchanged — making this the most conservative possible intervention.</li>
@@ -254,14 +254,14 @@ window.Quarto = {
 <li>The modification has a single free parameter <span class="math inline">\(k\)</span>, which is fully determined by the current staking ratio.</li>
 </ul>
 </section>
-<section id="the-proposal" class="level1">
-<h1>The Proposal</h1>
-<section id="motivation" class="level2">
-<h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
+<section id="the-proposal" class="level2">
+<h2 class="anchored" data-anchor-id="the-proposal">The Proposal</h2>
+<section id="motivation" class="level3">
+<h3 class="anchored" data-anchor-id="motivation">Motivation</h3>
 <p>[…]</p>
 </section>
-<section id="analytic-form" class="level2">
-<h2 class="anchored" data-anchor-id="analytic-form">Analytic Form</h2>
+<section id="analytic-form" class="level3">
+<h3 class="anchored" data-anchor-id="analytic-form">Analytic Form</h3>
 <p>Let <span class="math inline">\(f\)</span> denote the staking ratio (ETH staked / total ETH supply) and let <span class="math inline">\(r(f)\)</span> and <span class="math inline">\(I(f)\)</span> be the consensus-layer nominal yield and total annual issuance under the current curve:</p>
 <p><span class="math display">\[r(f) = \frac{B \cdot E}{\sqrt{f \cdot S \cdot 10^9}}, \qquad I(f) = r(f) \cdot f \cdot S = B \cdot E \sqrt{\frac{f \cdot S}{10^9}}\]</span></p>
 <p>where <span class="math inline">\(B = 64\)</span> (<code>BASE_REWARD_FACTOR</code>), <span class="math inline">\(E \approx 82{,}181\)</span> (epochs per year), and <span class="math inline">\(S \approx 120.5 \times 10^6\)</span> ETH (total supply).</p>
@@ -270,17 +270,17 @@ window.Quarto = {
 <p>giving modified yield and issuance:</p>
 <p><span class="math display">\[r_\text{new}(f) = c(f)\,r(f), \qquad I_\text{new}(f) = c(f)\,I(f)\]</span></p>
 </section>
-<section id="calibration" class="level2">
-<h2 class="anchored" data-anchor-id="calibration">Calibration</h2>
+<section id="calibration" class="level3">
+<h3 class="anchored" data-anchor-id="calibration">Calibration</h3>
 <p>The constant <span class="math inline">\(k\)</span> is determined by requiring that yield (and hence issuance) is unchanged at the current staking ratio <span class="math inline">\(f_0\)</span>:</p>
 <p><span class="math display">\[c(f_0) = 1 \;\Longrightarrow\; k = \frac{1}{1 - 2f_0}\]</span></p>
 <p>With <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span> (the current staking ratio), this gives <span class="math inline">\(\boldsymbol{k = 3}\)</span>.</p>
 </section>
 </section>
-<section id="properties" class="level1">
-<h1>Properties</h1>
-<section id="yield" class="level2">
-<h2 class="anchored" data-anchor-id="yield">Yield</h2>
+<section id="properties" class="level2">
+<h2 class="anchored" data-anchor-id="properties">Properties</h2>
+<section id="yield" class="level3">
+<h3 class="anchored" data-anchor-id="yield">Yield</h3>
 <div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -298,8 +298,8 @@ Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The
 </figure>
 </div>
 </section>
-<section id="total-issuance" class="level2">
-<h2 class="anchored" data-anchor-id="total-issuance">Total Issuance</h2>
+<section id="total-issuance" class="level3">
+<h3 class="anchored" data-anchor-id="total-issuance">Total Issuance</h3>
 <div id="fig-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -317,24 +317,24 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 </figure>
 </div>
 </section>
-<section id="anti-discouragement-attacks" class="level2">
-<h2 class="anchored" data-anchor-id="anti-discouragement-attacks">Anti-Discouragement Attacks</h2>
+<section id="anti-discouragement-attacks" class="level3">
+<h3 class="anchored" data-anchor-id="anti-discouragement-attacks">Anti-Discouragement Attacks</h3>
 <p>A key security property of the current curve is that total issuance <span class="math inline">\(I(f) \propto \sqrt{f}\)</span> is strictly increasing in <span class="math inline">\(f\)</span>: an adversary who forces validators to exit does not gain a relative advantage, because the total reward pool shrinks. Under the proposed curve:</p>
 <p><span class="math display">\[I_\text{new}(f) \propto (1 - 2f)\sqrt{f}\]</span></p>
 <p>Differentiating:</p>
 <p><span class="math display">\[\frac{dI_\text{new}}{df} \propto 1 - 6f\]</span></p>
 <p>This is positive for <span class="math inline">\(f &lt; \tfrac{1}{6} \approx 16.7\%\)</span>, so the anti-discouragement property is preserved at the staking ratios where it is most relevant. Above <span class="math inline">\(f^* = \tfrac{1}{6}\)</span>, total issuance decreases as the staking ratio grows — creating an additional natural disincentive against excessive staking in the high-<span class="math inline">\(f\)</span> regime.</p>
 </section>
-<section id="equilibrium-staking-ratio" class="level2">
-<h2 class="anchored" data-anchor-id="equilibrium-staking-ratio">Equilibrium Staking Ratio</h2>
+<section id="equilibrium-staking-ratio" class="level3">
+<h3 class="anchored" data-anchor-id="equilibrium-staking-ratio">Equilibrium Staking Ratio</h3>
 <p>[Discussion of equilibrium — where the market will settle under the proposed curve vs.&nbsp;current curve. The proposed curve drives equilibrium to the point where yield equals the marginal staker’s opportunity cost, but now with a ceiling on <span class="math inline">\(f\)</span> imposed by <span class="math inline">\(c(f) \to 0\)</span> as <span class="math inline">\(f \to 0.5\)</span>.]</p>
 </section>
 </section>
-<section id="consensus-layer-spec" class="level1">
-<h1>Consensus Layer Spec</h1>
-<p>The analytic form translates to a minimal change in the Ethereum consensus layer spec: only <code>get_base_reward_per_increment</code> is modified. <code>get_base_reward</code> is unchanged.</p>
-<section id="new-constants" class="level2">
-<h2 class="anchored" data-anchor-id="new-constants">New Constants</h2>
+<section id="consensus-layer-spec" class="level2">
+<h2 class="anchored" data-anchor-id="consensus-layer-spec">Consensus Layer Spec</h2>
+<p>The analytic form translates to a minimal change in the Ethereum consensus layer spec: only <code>get_base_reward_per_increment</code> is modified.</p>
+<section id="new-constants" class="level3">
+<h3 class="anchored" data-anchor-id="new-constants">New Constants</h3>
 <p>Two parameters govern the new curve.</p>
 <table class="caption-top table">
 <colgroup>
@@ -364,8 +364,8 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 </table>
 <p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{cap} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
 </section>
-<section id="modified-function" class="level2">
-<h2 class="anchored" data-anchor-id="modified-function">Modified Function</h2>
+<section id="modified-function" class="level3">
+<h3 class="anchored" data-anchor-id="modified-function">Modified Function</h3>
 <p>The current function:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_per_increment(state: BeaconState) <span class="op">-&gt;</span> Gwei:</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(</span>
@@ -384,19 +384,19 @@ Figure&nbsp;2: Total annual ETH issuance as a function of staking ratio. Under t
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>The factor <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> is the discrete equivalent of <span class="math inline">\(c(f)/k = 1 - 2f\)</span>. Structuring the division as a single <code>//</code> at the end avoids the double floor-division of the original and preserves precision.</p>
 </section>
-<section id="calibration-1" class="level2">
-<h2 class="anchored" data-anchor-id="calibration-1">Calibration</h2>
+<section id="calibration-1" class="level3">
+<h3 class="anchored" data-anchor-id="calibration-1">Calibration</h3>
 <p>The two changes together reproduce the existing per-increment reward at any given staking ratio <span class="math inline">\(f_0\)</span>. Letting <span class="math inline">\(D = f_0 \cdot S\)</span> (total active balance at the calibration point), the new reward per increment is:</p>
-<p><span class="math display">\[\frac{\texttt{EBI} \times 192 \times (\texttt{STAKING\_CAP} - D)}{\texttt{STAKING\_CAP} \times \sqrt{D}}\]</span></p>
-<p>At <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span>, with <span class="math inline">\(\texttt{STAKING\_CAP} = \tfrac{S}{2}\)</span>:</p>
-<p><span class="math display">\[\frac{\texttt{STAKING\_CAP} - D}{\texttt{STAKING\_CAP}} = \frac{\tfrac{S}{2} - \tfrac{S}{3}}{\tfrac{S}{2}} = \frac{\tfrac{1}{6}}{\tfrac{1}{2}} = \frac{1}{3}\]</span></p>
-<p>so the numerator factor becomes <span class="math inline">\(192 \times \tfrac{1}{3} = 64\)</span>, recovering the original <code>BASE_REWARD_FACTOR</code> exactly. More generally, the required value of <code>BASE_REWARD_FACTOR</code> for a calibration point <span class="math inline">\(f_0\)</span> and cap <span class="math inline">\(f_\mathrm{cap}\)</span> is:</p>
+<p><span class="math display">\[\frac{\texttt{EBI} \times 192 \times (\texttt{SATURATION\_BALANCE} - D)}{\texttt{SATURATION\_BALANCE} \times \sqrt{D}}\]</span></p>
+<p>At <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span>, with <span class="math inline">\(\texttt{SATURATION\_BALANCE} = \tfrac{S}{2}\)</span>:</p>
+<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{\tfrac{S}{2} - \tfrac{S}{3}}{\tfrac{S}{2}} = \frac{\tfrac{1}{6}}{\tfrac{1}{2}} = \frac{1}{3}\]</span></p>
+<p>so the numerator factor becomes <span class="math inline">\(192 \times \tfrac{1}{3} = 64\)</span>, recovering the original <code>BASE_REWARD_FACTOR</code> exactly. More generally, the required value of <code>BASE_REWARD_FACTOR</code> for a calibration point <span class="math inline">\(f_0\)</span> and threshold <span class="math inline">\(f_\mathrm{cap}\)</span> is:</p>
 <p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = \frac{64}{1 - f_0 / f_\mathrm{cap}} = \frac{64\,f_\mathrm{cap}}{f_\mathrm{cap} - f_0}\]</span></p>
 <p>With <span class="math inline">\(f_0 = \tfrac{1}{3}\)</span> and <span class="math inline">\(f_\mathrm{cap} = \tfrac{1}{2}\)</span> this gives <span class="math inline">\(192\)</span>, consistent with <span class="math inline">\(k = 3\)</span> from the analytic calibration.</p>
 </section>
 </section>
-<section id="discussion" class="level1">
-<h1>Discussion</h1>
+<section id="discussion" class="level2">
+<h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
 <p>[Comparison with other proposed curves (e.g., stake-ratio targeting proposals). Trade-offs. Path to an EIP.]</p>
 
 
