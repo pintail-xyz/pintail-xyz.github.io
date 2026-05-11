@@ -301,8 +301,9 @@ Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The
 </section>
 <section id="dilution-adjusted-yield" class="level3">
 <h3 class="anchored" data-anchor-id="dilution-adjusted-yield">Dilution-Adjusted Yield</h3>
-<p>Nominal yield understates the true benefit of staking because it ignores the fact that new issuance dilutes all ETH holders. Every unit of newly issued ETH is effectively a transfer from non-stakers to stakers: it increases the total supply, eroding the real value of every ETH holder’s share by the annual inflation rate <span class="math inline">\(I(f)/S = r(f) \cdot f\)</span>. The net annualised benefit to a staker — the dilution-adjusted yield — is therefore:</p>
-<p><span class="math display">\[r_\text{adj}(f) = r(f) - r(f) \cdot f = r(f)\,(1 - f)\]</span></p>
+<p>New issuance increases the total ETH supply, diluting all holders by the annual inflation rate <span class="math inline">\(I(f)/S = r(f) \cdot f\)</span>. The dilution-adjusted yield — the net return to a staker after accounting for this inflation — is:</p>
+<p><span class="math display">\[r_\text{adj}(f) = r(f)\,(1 - f)\]</span></p>
+<p>As discussed in the <a href="../staking-ratio/">staking ratio post</a>, the gap between the nominal and dilution-adjusted yield is distortive, particularly for solo stakers. The proposed curve reduces this discrepancy at staking ratios above <span class="math inline">\(f_0\)</span> by tapering issuance, and eliminates it entirely at <span class="math inline">\(f = \tfrac{1}{2}\)</span> where both yields reach zero.</p>
 <div id="fig-yieldcomparison" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -315,7 +316,7 @@ Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The
 <script src="yieldcomparison.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Nominal yield (solid) and dilution-adjusted yield (dashed) for both curves. At the current staking ratio the two curves coincide on both measures. Under the proposed curve, both yields fall to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>; under the current curve, the dilution-adjusted yield continues to decline as growing issuance erodes non-staker holdings.
+Figure&nbsp;2: Nominal yield (solid) and dilution-adjusted yield (dashed) for both curves. At the current staking ratio the two curves coincide on both measures. Above <span class="math inline">\(f_0\)</span>, the proposed curve narrows the gap between nominal and dilution-adjusted yield relative to the current curve.
 </figcaption>
 </figure>
 </div>
@@ -384,7 +385,7 @@ Figure&nbsp;3: Total annual ETH issuance as a function of staking ratio. Under t
 </tr>
 </tbody>
 </table>
-<p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{cap} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
+<p><code>SATURATION_BALANCE</code> plays the role of <span class="math inline">\(f_\mathrm{sat} \cdot S\)</span> from the analytic form — it is the absolute staking level corresponding to the 50% threshold, expressed in Gwei rather than as a fraction of the supply. <code>BASE_REWARD_FACTOR</code> remains the overall issuance scaling parameter, its value adjusted to preserve current reward levels.</p>
 </section>
 <section id="modified-function" class="level3">
 <h3 class="anchored" data-anchor-id="modified-function">Modified Function</h3>
@@ -409,8 +410,8 @@ Figure&nbsp;3: Total annual ETH issuance as a function of staking ratio. Under t
 <section id="calibration-1" class="level3">
 <h3 class="anchored" data-anchor-id="calibration-1">Calibration</h3>
 <p><code>BASE_REWARD_FACTOR</code> is <a href="https://eth2book.info/latest/part3/transition/epoch/#helpers">described by Ben Edgington</a> as “the big knob to turn if we wish to increase or decrease the total reward for participating in Eth2.” In the proposed function it is supplemented by a tapering coefficient — the expression <code>(SATURATION_BALANCE - total_active_balance) / SATURATION_BALANCE</code> — which reduces rewards as the total staked balance approaches <code>SATURATION_BALANCE</code>.</p>
-<p>At the calibration point <span class="math inline">\(f_0\)</span>, substituting <span class="math inline">\(D = f_0 \cdot S\)</span> and <span class="math inline">\(\texttt{SATURATION\_BALANCE} = f_\text{cap} \cdot S = \tfrac{S}{2}\)</span>, the tapering coefficient evaluates to:</p>
-<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{f_\text{cap} - f_0}{f_\text{cap}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
+<p>At the calibration point <span class="math inline">\(f_0\)</span>, substituting <span class="math inline">\(D = f_0 \cdot S\)</span> and <span class="math inline">\(\texttt{SATURATION\_BALANCE} = f_\text{sat} \cdot S = \tfrac{S}{2}\)</span>, the tapering coefficient evaluates to:</p>
+<p><span class="math display">\[\frac{\texttt{SATURATION\_BALANCE} - D}{\texttt{SATURATION\_BALANCE}} = \frac{f_\text{sat} - f_0}{f_\text{sat}} = 1 - 2f_0 = \frac{1}{k}\]</span></p>
 <p>where the last step uses <span class="math inline">\(k = 1/(1 - 2f_0)\)</span> from the analytic calibration. The reward per increment at <span class="math inline">\(f_0\)</span> is therefore <span class="math inline">\(1/k\)</span> times what it would be with the original <code>BASE_REWARD_FACTOR</code>. To recover the original reward, <code>BASE_REWARD_FACTOR</code> must be scaled up by exactly <span class="math inline">\(k\)</span>:</p>
 <p><span class="math display">\[\texttt{BASE\_REWARD\_FACTOR} = k \times 64\]</span></p>
 <p>With <span class="math inline">\(k = 3\)</span> this gives <span class="math inline">\(\texttt{BASE\_REWARD\_FACTOR} = 192\)</span>.</p>
