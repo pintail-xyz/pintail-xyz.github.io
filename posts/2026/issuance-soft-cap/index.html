@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2026-05-10">
-<meta name="description" content="A minimal modification to Ethereum’s issuance curve that tapers new issuance to zero at a 50% staking ratio while preserving consensus penalties throughout.">
+<meta name="description" content="Two families of staking offset functions that reduce Ethereum issuance smoothly to near-zero at 50% staking and exactly zero at 100%, without any hard cutoff.">
 
-<title>Issuance Tapering via a Staking Offset for Ethereum – pintail’s notes</title>
+<title>Continuous Issuance Soft Caps for Ethereum – pintail’s notes</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,40 +21,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -136,8 +102,8 @@ window.Quarto = {
 };
 </script>
 
-<meta property="og:title" content="Issuance Tapering via a Staking Offset for Ethereum – pintail’s notes">
-<meta property="og:description" content="A minimal modification to Ethereum’s issuance curve that tapers new issuance to zero at a 50% staking ratio while preserving consensus penalties throughout.">
+<meta property="og:title" content="Continuous Issuance Soft Caps for Ethereum – pintail’s notes">
+<meta property="og:description" content="Two families of staking offset functions that reduce Ethereum issuance smoothly to near-zero at 50% staking and exactly zero at 100%, without any hard cutoff.">
 <meta property="og:site_name" content="pintail's notes">
 </head>
 
@@ -188,26 +154,22 @@ window.Quarto = {
    
   <ul>
   <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">tl;dr</a></li>
-  <li><a href="#the-proposal" id="toc-the-proposal" class="nav-link" data-scroll-target="#the-proposal">The Proposal</a>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#option-a-power-law-multiplier" id="toc-option-a-power-law-multiplier" class="nav-link" data-scroll-target="#option-a-power-law-multiplier">Option A: Power-Law Multiplier</a>
   <ul class="collapse">
-  <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation">Motivation</a></li>
-  <li><a href="#analytic-form" id="toc-analytic-form" class="nav-link" data-scroll-target="#analytic-form">Analytic Form</a></li>
-  </ul></li>
-  <li><a href="#properties" id="toc-properties" class="nav-link" data-scroll-target="#properties">Properties</a>
-  <ul class="collapse">
+  <li><a href="#definition" id="toc-definition" class="nav-link" data-scroll-target="#definition">Definition</a></li>
+  <li><a href="#properties" id="toc-properties" class="nav-link" data-scroll-target="#properties">Properties</a></li>
   <li><a href="#yield" id="toc-yield" class="nav-link" data-scroll-target="#yield">Yield</a></li>
-  <li><a href="#dilution-adjusted-yield" id="toc-dilution-adjusted-yield" class="nav-link" data-scroll-target="#dilution-adjusted-yield">Dilution-Adjusted Yield</a></li>
-  <li><a href="#total-issuance" id="toc-total-issuance" class="nav-link" data-scroll-target="#total-issuance">Total Issuance</a></li>
-  <li><a href="#anti-discouragement-attacks" id="toc-anti-discouragement-attacks" class="nav-link" data-scroll-target="#anti-discouragement-attacks">Anti-Discouragement Attacks</a></li>
-  <li><a href="#equilibrium-staking-ratio" id="toc-equilibrium-staking-ratio" class="nav-link" data-scroll-target="#equilibrium-staking-ratio">Equilibrium Staking Ratio</a></li>
+  <li><a href="#issuance" id="toc-issuance" class="nav-link" data-scroll-target="#issuance">Issuance</a></li>
   </ul></li>
-  <li><a href="#consensus-layer-spec" id="toc-consensus-layer-spec" class="nav-link" data-scroll-target="#consensus-layer-spec">Consensus Layer Spec</a>
+  <li><a href="#option-b-exponential-odds-ratio-multiplier" id="toc-option-b-exponential-odds-ratio-multiplier" class="nav-link" data-scroll-target="#option-b-exponential-odds-ratio-multiplier">Option B: Exponential Odds-Ratio Multiplier</a>
   <ul class="collapse">
-  <li><a href="#updated-constant-and-new-constant" id="toc-updated-constant-and-new-constant" class="nav-link" data-scroll-target="#updated-constant-and-new-constant">Updated Constant and New Constant</a></li>
-  <li><a href="#new-function" id="toc-new-function" class="nav-link" data-scroll-target="#new-function">New Function</a></li>
-  <li><a href="#application" id="toc-application" class="nav-link" data-scroll-target="#application">Application</a></li>
-  <li><a href="#verification" id="toc-verification" class="nav-link" data-scroll-target="#verification">Verification</a></li>
+  <li><a href="#definition-1" id="toc-definition-1" class="nav-link" data-scroll-target="#definition-1">Definition</a></li>
+  <li><a href="#properties-1" id="toc-properties-1" class="nav-link" data-scroll-target="#properties-1">Properties</a></li>
+  <li><a href="#yield-1" id="toc-yield-1" class="nav-link" data-scroll-target="#yield-1">Yield</a></li>
+  <li><a href="#issuance-1" id="toc-issuance-1" class="nav-link" data-scroll-target="#issuance-1">Issuance</a></li>
   </ul></li>
+  <li><a href="#comparison" id="toc-comparison" class="nav-link" data-scroll-target="#comparison">Comparison</a></li>
   <li><a href="#discussion" id="toc-discussion" class="nav-link" data-scroll-target="#discussion">Discussion</a></li>
   </ul>
 </nav>
@@ -217,12 +179,12 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Issuance Tapering via a Staking Offset for Ethereum</h1>
+<h1 class="title">Continuous Issuance Soft Caps for Ethereum</h1>
 </div>
 
 <div>
   <div class="description">
-    A minimal modification to Ethereum’s issuance curve that tapers new issuance to zero at a 50% staking ratio while preserving consensus penalties throughout.
+    Two families of staking offset functions that reduce Ethereum issuance smoothly to near-zero at 50% staking and exactly zero at 100%, without any hard cutoff.
   </div>
 </div>
 
@@ -245,186 +207,255 @@ window.Quarto = {
 </header>
 
 
-<p>[Intro paragraph — reference to staking ratio post; motivation for proposing a specific curve.]</p>
+<p>The <a href="../linear-issuance-tapering/">linear issuance tapering proposal</a> introduces a staking offset to taper net issuance to zero at a hard saturation point of 50% staking. But a hard cutoff is not the only option. If the goal is to strongly discourage staking ratios above 50% while avoiding the abruptness of a cliff, a continuous offset function that brings issuance to <em>near</em> zero by 50% and exactly zero at 100% may be preferable. This article examines two natural families with this property.</p>
 <section id="tldr" class="level2">
 <h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
-<li>A staking offset is subtracted from each validator’s attestation reward; it grows linearly from zero to the base reward as total staking grows from 0 to 50%, tapering net issuance to zero at the 50% threshold.</li>
-<li><code>BASE_REWARD_FACTOR</code> is updated from 64 to 128, doubling the gross reward and the offset together. Penalties scale with it too, strengthening the consensus incentive.</li>
-<li>The net yield at the current <span class="math inline">\(\sim\!33\%\)</span> staking ratio is approximately 91% of today’s level — a modest reduction at deployment.</li>
-<li>The effective issuance multiplier is <span class="math inline">\(2\bigl(1 - (2f)^{3/2}\bigr)\)</span>, which gives total issuance a natural peak at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span>.</li>
-<li>Only two spec changes are required: <code>BASE_REWARD_FACTOR</code> is updated to 128, and a single new function <code>get_base_reward_offset_per_increment</code> is added.</li>
+<li>A <strong>power-law multiplier</strong> <span class="math inline">\(m(f) = (1-f)^n\)</span> scales smoothly from 1 at zero staking to zero at full staking, with <span class="math inline">\(n\)</span> controlling how aggressively it tapers in the mid-range.</li>
+<li>An <strong>exponential odds-ratio multiplier</strong> <span class="math inline">\(m(f) = e^{-k f/(1-f)}\)</span> introduces a qualitatively different shape: nearly flat at low staking, then rapidly collapsing as the staking odds ratio <span class="math inline">\(f/(1-f)\)</span> diverges toward 100%.</li>
+<li>Neither family has a hard cliff: both are continuous and differentiable everywhere on <span class="math inline">\((0, 1)\)</span>, and both reach exactly zero only asymptotically as <span class="math inline">\(f \to 1\)</span>.</li>
+<li>The key design question is how much residual issuance remains at 50% staking — a proxy for how hard the soft cap bites near the threshold most commonly discussed as problematic.</li>
 </ul>
 </section>
-<section id="the-proposal" class="level2">
-<h2 class="anchored" data-anchor-id="the-proposal">The Proposal</h2>
-<section id="motivation" class="level3">
-<h3 class="anchored" data-anchor-id="motivation">Motivation</h3>
-<p>[…]</p>
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>As in the companion articles, <span class="math inline">\(f\)</span> denotes the staking ratio (ETH staked / total supply <span class="math inline">\(S\)</span>), and the current consensus-layer yield is:</p>
+<p><span class="math display">\[r(f) = \frac{B \cdot E}{\sqrt{f \cdot S \cdot 10^9}}\]</span></p>
+<p>where <span class="math inline">\(B = 64\)</span> (<code>BASE_REWARD_FACTOR</code>), <span class="math inline">\(E \approx 82{,}181\)</span> (epochs per year), <span class="math inline">\(S \approx 120.5 \times 10^6\)</span> ETH.</p>
+<p>Each proposal applies a yield multiplier <span class="math inline">\(m(f) \in [0, 1]\)</span>, giving:</p>
+<p><span class="math display">\[r_\text{new}(f) = m(f)\,r(f), \qquad I_\text{new}(f) = m(f)\,I(f)\]</span></p>
+<p>As discussed in the <a href="../linear-issuance-tapering/">staking offset article</a>, the multiplier is applied only to rewards; the base reward governing penalties is unchanged. The incentive to attest correctly — the sum of the foregone reward and the avoided penalty — is therefore never less than the full base reward, regardless of <span class="math inline">\(f\)</span>.</p>
 </section>
-<section id="analytic-form" class="level3">
-<h3 class="anchored" data-anchor-id="analytic-form">Analytic Form</h3>
-<p>Let <span class="math inline">\(f\)</span> denote the staking ratio (ETH staked / total ETH supply) and let <span class="math inline">\(r(f)\)</span> and <span class="math inline">\(I(f)\)</span> be the consensus-layer nominal yield and total annual issuance under the current curve:</p>
-<p><span class="math display">\[r(f) = \frac{B \cdot E}{\sqrt{f \cdot S \cdot 10^9}}, \qquad I(f) = r(f) \cdot f \cdot S = B \cdot E \sqrt{\frac{f \cdot S}{10^9}}\]</span></p>
-<p>where <span class="math inline">\(B = 64\)</span> (<code>BASE_REWARD_FACTOR</code>), <span class="math inline">\(E \approx 82{,}181\)</span> (epochs per year), and <span class="math inline">\(S \approx 120.5 \times 10^6\)</span> ETH (total supply).</p>
-<p>The proposed modification introduces a <strong>staking offset</strong> <span class="math inline">\(o(f)\)</span> that is subtracted from validator rewards but not from penalties. The offset is set so that it equals the base reward at the saturation point <span class="math inline">\(f_\text{sat} = \tfrac{1}{2}\)</span>, and scales linearly with <span class="math inline">\(f\)</span> below that:</p>
-<p><span class="math display">\[o(f) = \frac{f}{f_\text{sat}}\,r(f_\text{sat}) = 2f \cdot r\!\left(\tfrac{1}{2}\right)\]</span></p>
-<p>The gross reward is scaled by a factor of 2, so both the gross reward and the offset are doubled relative to the current base reward:</p>
-<p><span class="math display">\[r_\text{new}(f) = \max\!\left(0,\; 2\,r(f) - 2\,o(f)\right) = 2 \cdot \max\!\left(0,\; r(f) - o(f)\right), \qquad I_\text{new}(f) = r_\text{new}(f) \cdot f \cdot S\]</span></p>
-<p>By construction, <span class="math inline">\(r_\text{new}(f_\text{sat}) = 0\)</span>: at 50% staking the offset exactly cancels the gross reward, and net issuance falls to zero.</p>
-<p><strong>Effective multiplier.</strong> Since <span class="math inline">\(r(f) \propto f^{-1/2}\)</span>, the ratio <span class="math inline">\(r(f_\text{sat})/r(f) = \sqrt{f/f_\text{sat}}\)</span>, so:</p>
-<p><span class="math display">\[o(f) = r(f) \cdot \left(\frac{f}{f_\text{sat}}\right)^{3/2}\]</span></p>
-<p>This gives a clean multiplicative form:</p>
-<p><span class="math display">\[r_\text{new}(f) = 2\,r(f)\cdot\max\!\left(0,\;1 - (2f)^{3/2}\right), \qquad I_\text{new}(f) = 2\,I(f)\cdot\max\!\left(0,\;1 - (2f)^{3/2}\right)\]</span></p>
-<p>At the current staking ratio <span class="math inline">\(f_0 \approx \tfrac{1}{3}\)</span>, the multiplier evaluates to <span class="math inline">\(2\bigl(1-(2/3)^{3/2}\bigr) \approx 0.91\)</span>, so the proposed curve reduces issuance by about 9% relative to today at deployment.</p>
+<section id="option-a-power-law-multiplier" class="level2">
+<h2 class="anchored" data-anchor-id="option-a-power-law-multiplier">Option A: Power-Law Multiplier</h2>
+<section id="definition" class="level3">
+<h3 class="anchored" data-anchor-id="definition">Definition</h3>
+<p><span class="math display">\[m(f) = (1-f)^n, \qquad n &gt; 0\]</span></p>
+<p>The factor <span class="math inline">\((1-f)\)</span> is the fraction of ETH that remains <em>unstaked</em>: a natural proxy for the non-staker security margin. Raising it to a power <span class="math inline">\(n\)</span> tunes how sharply rewards are reduced as staking grows.</p>
 </section>
-</section>
-<section id="properties" class="level2">
-<h2 class="anchored" data-anchor-id="properties">Properties</h2>
-<section id="yield" class="level3">
-<h3 class="anchored" data-anchor-id="yield">Yield</h3>
-<div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<style>
-  #yieldcurve-chart { width: 100%; height: 460px; }
-</style>
-
-<div id="yieldcurve-chart"></div>
-
-<script src="yieldcurve.js"></script>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Consensus-layer nominal yield as a function of staking ratio. The proposed curve lies above the current curve below <span class="math inline">\(f \approx 28\%\)</span>, crosses it near <span class="math inline">\(f \approx 28\%\)</span>, and tapers to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="dilution-adjusted-yield" class="level3">
-<h3 class="anchored" data-anchor-id="dilution-adjusted-yield">Dilution-Adjusted Yield</h3>
-<p>New issuance increases the total ETH supply, diluting all holders by the annual inflation rate <span class="math inline">\(I(f)/S = r(f) \cdot f\)</span>. The dilution-adjusted yield — the net return to a staker after accounting for this inflation — is:</p>
-<p><span class="math display">\[r_\text{adj}(f) = r(f)\,(1 - f)\]</span></p>
-<p>As discussed in the <a href="../staking-ratio/">staking ratio post</a>, the gap between the nominal and dilution-adjusted yield is distortive, particularly for solo stakers. The chart below shows both yields for the current curve and the proposed curve: solid lines give the nominal yield; dashed lines give the dilution-adjusted yield. The staking offset reduces this gap at all staking ratios and eliminates it entirely at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.</p>
-<div id="fig-yieldcomparison" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<style>
-  #yieldcomparison-chart { width: 100%; height: 460px; }
-</style>
-
-<div id="yieldcomparison-chart"></div>
-
-<script src="yieldcomparison.js"></script>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yieldcomparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Nominal yield (solid) and dilution-adjusted yield (dashed) for the current curve and the proposed curve. The gap between each pair of lines is the inflation cost borne by stakers. The proposed curve reduces this gap everywhere and eliminates it entirely at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="total-issuance" class="level3">
-<h3 class="anchored" data-anchor-id="total-issuance">Total Issuance</h3>
-<div id="fig-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<style>
-  #lin-issuancecurve-chart { width: 100%; height: 460px; }
-</style>
-
-<div id="lin-issuancecurve-chart"></div>
-
-<script src="issuancecurve.js"></script>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3: Annual ETH issuance as a percentage of total supply. The proposed curve peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
-</figcaption>
-</figure>
-</div>
-</section>
-<section id="anti-discouragement-attacks" class="level3">
-<h3 class="anchored" data-anchor-id="anti-discouragement-attacks">Anti-Discouragement Attacks</h3>
-<p>Resistance to <a href="https://github.com/ethereum/research/blob/master/papers/discouragement/discouragement.pdf">discouragement attacks</a> was an explicit design criterion for the current issuance curve prior to the beacon chain launch. In a discouragement attack, an adversary forces validators offline — at some cost to itself — in order to increase its share of a shrinking reward pool, with the ultimate goal of reducing the honest validator set below the threshold needed for a 51% attack. Under the current curve, total issuance <span class="math inline">\(I(f) \propto \sqrt{f}\)</span> is strictly increasing in <span class="math inline">\(f\)</span>, so exits reduce the total reward pool: the attacker’s relative gain from shrinking the validator set never exceeds its cost.</p>
-<p>Under the proposed curve:</p>
-<p><span class="math display">\[I_\text{new}(f) \propto 2\sqrt{f}\left(1 - (2f)^{3/2}\right) = 2\left(\sqrt{f} - 2\sqrt{2}\,f^2\right)\]</span></p>
-<p>Differentiating:</p>
-<p><span class="math display">\[\frac{dI_\text{new}}{df} \propto \frac{1}{2\sqrt{f}} - 4\sqrt{2}\,f\]</span></p>
-<p>This is positive for <span class="math inline">\(f &lt; f^*\)</span>, where <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span>. The anti-discouragement property is therefore preserved for all staking ratios below approximately one-fifth — comfortably below the current <span class="math inline">\(\sim\!33\%\)</span> level, and well below the threshold needed for a successful discouragement attack. Above <span class="math inline">\(f^*\)</span>, total issuance falls as staking grows, providing a continuous natural disincentive against excessive staking.</p>
-</section>
-<section id="equilibrium-staking-ratio" class="level3">
-<h3 class="anchored" data-anchor-id="equilibrium-staking-ratio">Equilibrium Staking Ratio</h3>
-<p>[Discussion of equilibrium — where the market will settle under the proposed curve vs.&nbsp;current curve. The proposed curve drives equilibrium to the point where net yield equals the marginal staker’s opportunity cost, with a hard ceiling at <span class="math inline">\(f = \tfrac{1}{2}\)</span> where net yield reaches zero.]</p>
-</section>
-</section>
-<section id="consensus-layer-spec" class="level2">
-<h2 class="anchored" data-anchor-id="consensus-layer-spec">Consensus Layer Spec</h2>
-<p>The staking offset translates to two minimal changes to the Ethereum consensus layer spec: <code>BASE_REWARD_FACTOR</code> is updated from 64 to 128, and a single new function <code>get_base_reward_offset_per_increment</code> is added. <code>get_base_reward_per_increment</code> itself is unchanged — it continues to use <code>BASE_REWARD_FACTOR</code>, which now equals 128.</p>
-<section id="updated-constant-and-new-constant" class="level3">
-<h3 class="anchored" data-anchor-id="updated-constant-and-new-constant">Updated Constant and New Constant</h3>
-<p>One existing constant is updated and one new constant is added.</p>
+<section id="properties" class="level3">
+<h3 class="anchored" data-anchor-id="properties">Properties</h3>
+<p>Total annual issuance is <span class="math inline">\(I_n(f) \propto (1-f)^n \sqrt{f}\)</span>. Setting <span class="math inline">\(dI_n/df = 0\)</span>:</p>
+<p><span class="math display">\[\frac{dI_n}{df} \propto \frac{1-f}{2} - nf = 0 \;\Longrightarrow\; f^* = \frac{1}{2n+1}\]</span></p>
+<p>The anti-discouragement property (total issuance increasing in <span class="math inline">\(f\)</span>) holds for all <span class="math inline">\(f &lt; f^*\)</span>; above <span class="math inline">\(f^*\)</span>, total issuance falls as staking grows, providing a continuous natural disincentive.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
+<col style="width: 10%">
+<col style="width: 16%">
+<col style="width: 39%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
-<th>Constant</th>
-<th>Old value</th>
-<th>New value</th>
-<th>Notes</th>
+<th><span class="math inline">\(n\)</span></th>
+<th><span class="math inline">\(f^*\)</span></th>
+<th><span class="math inline">\(m(\tfrac{1}{2})\)</span></th>
+<th>Interpretation</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>BASE_REWARD_FACTOR</code></td>
-<td><code>uint64(64)</code></td>
-<td><code>uint64(128)</code></td>
-<td>Doubles the base reward; also doubles penalties</td>
+<td><span class="math inline">\(1\)</span></td>
+<td><span class="math inline">\(33.3\%\)</span></td>
+<td><span class="math inline">\(50\%\)</span></td>
+<td>Non-staker margin; <span class="math inline">\(f^*\)</span> coincides with current staking level</td>
 </tr>
 <tr class="even">
-<td><code>SATURATION_BALANCE</code></td>
-<td>—</td>
-<td><code>Gwei(60_250_000 * 10**9)</code></td>
-<td>Total active balance at which issuance falls to zero; set at the hard fork to approximately half the current ETH supply</td>
+<td><span class="math inline">\(2\)</span></td>
+<td><span class="math inline">\(20\%\)</span></td>
+<td><span class="math inline">\(25\%\)</span></td>
+<td>Quadratic taper; noticeably stronger above 33%</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(4\)</span></td>
+<td><span class="math inline">\(11.1\%\)</span></td>
+<td><span class="math inline">\(6.25\%\)</span></td>
+<td>Very aggressive; near-zero residual at 50%</td>
 </tr>
 </tbody>
 </table>
-<p><code>SATURATION_BALANCE</code> encodes <span class="math inline">\(f_\mathrm{sat} \cdot S\)</span> in Gwei.</p>
+<p>The <span class="math inline">\(n = 1\)</span> case has a notable interpretation: the modified yield <span class="math inline">\(r(f)(1-f)\)</span> is identical to the dilution-adjusted yield under the <em>current</em> curve. Validators’ nominal reward exactly compensates for the inflation they impose on the supply — no more. For <span class="math inline">\(n = 1\)</span>, <span class="math inline">\(f^* = \tfrac{1}{3}\)</span> coincides with the current staking ratio, so issuance is already at its natural peak today.</p>
 </section>
-<section id="new-function" class="level3">
-<h3 class="anchored" data-anchor-id="new-function">New Function</h3>
-<p>One new function is added to the spec:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_offset_per_increment(state: BeaconState) <span class="op">-&gt;</span> Gwei:</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        EFFECTIVE_BALANCE_INCREMENT <span class="op">*</span> BASE_REWARD_FACTOR <span class="op">*</span> get_total_active_balance(state)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">//</span> (SATURATION_BALANCE <span class="op">*</span> integer_squareroot(SATURATION_BALANCE))</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>This grows linearly with <code>total_active_balance</code> from zero (at zero staking) to <code>get_base_reward_per_increment</code> (at <code>SATURATION_BALANCE</code>). Beyond that point the offset exceeds the base reward, so clamping to zero is handled in the application layer below.</p>
+<section id="yield" class="level3">
+<h3 class="anchored" data-anchor-id="yield">Yield</h3>
+<div id="fig-pl-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pl-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #softcap-pl-yield-chart { width: 100%; height: 460px; }
+</style>
+<div id="softcap-pl-yield-chart"></div>
+<script src="powerlawYield.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pl-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: CL nominal yield as a function of staking ratio for three values of <span class="math inline">\(n\)</span>. At 50% staking, the residual yield is <span class="math inline">\(m(\tfrac{1}{2}) = 2^{-n}\)</span> times the current yield at that ratio: 50%, 25%, and 6.25% for <span class="math inline">\(n = 1, 2, 4\)</span> respectively.
+</figcaption>
+</figure>
+</div>
 </section>
-<section id="application" class="level3">
-<h3 class="anchored" data-anchor-id="application">Application</h3>
-<p>Wherever a positive attestation reward is credited — in <code>get_flag_index_deltas</code> for each duty flag — the per-increment values are combined with the result floored at zero:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each participating validator with n_increments of effective balance:</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>base_reward <span class="op">=</span> n_increments <span class="op">*</span> get_base_reward_per_increment(state)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>offset      <span class="op">=</span> n_increments <span class="op">*</span> get_base_reward_offset_per_increment(state)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>reward      <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, base_reward <span class="op">-</span> offset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>The penalty for non-participation is unchanged in form:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For each non-participating validator:</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>penalty <span class="op">=</span> n_increments <span class="op">*</span> get_base_reward_per_increment(state)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<p>With <code>BASE_REWARD_FACTOR = 128</code>, penalties are twice the pre-fork level, further strengthening the incentive to attest correctly.</p>
+<section id="issuance" class="level3">
+<h3 class="anchored" data-anchor-id="issuance">Issuance</h3>
+<div id="fig-pl-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pl-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #softcap-pl-issuance-chart { width: 100%; height: 460px; }
+</style>
+<div id="softcap-pl-issuance-chart"></div>
+<script src="powerlawIssuance.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pl-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Annual ETH issuance as a percentage of total supply. Each curve peaks at <span class="math inline">\(f^* = 1/(2n+1)\)</span>, marked with dashed verticals. For <span class="math inline">\(n = 1\)</span> the peak coincides with the Today line; for higher <span class="math inline">\(n\)</span> it shifts left, so issuance is already falling at the current staking ratio.
+</figcaption>
+</figure>
+</div>
 </section>
-<section id="verification" class="level3">
-<h3 class="anchored" data-anchor-id="verification">Verification</h3>
-<p>At <code>total_active_balance = SATURATION_BALANCE</code>:</p>
-<p><span class="math display">\[\texttt{offset} = \frac{\texttt{INC} \times \texttt{BRF} \times \texttt{SAT\_BAL}}{\texttt{SAT\_BAL} \times \sqrt{\texttt{SAT\_BAL}}} = \frac{\texttt{INC} \times \texttt{BRF}}{\sqrt{\texttt{SAT\_BAL}}} = \texttt{get\_base\_reward\_per\_increment}\]</span></p>
-<p>The offset exactly equals the gross reward at the saturation point, so net issuance falls to zero there. At lower balances the offset is proportionally smaller; at higher balances the net reward clamps to zero while penalties remain active.</p>
 </section>
+<section id="option-b-exponential-odds-ratio-multiplier" class="level2">
+<h2 class="anchored" data-anchor-id="option-b-exponential-odds-ratio-multiplier">Option B: Exponential Odds-Ratio Multiplier</h2>
+<section id="definition-1" class="level3">
+<h3 class="anchored" data-anchor-id="definition-1">Definition</h3>
+<p><span class="math display">\[m(f) = \exp\!\left(-k\,\frac{f}{1-f}\right), \qquad k &gt; 0\]</span></p>
+<p>The quantity <span class="math inline">\(f/(1-f)\)</span> is the <strong>staking odds ratio</strong>: how much ETH is staked relative to the amount that remains unstaked. It equals 1 at <span class="math inline">\(f = 50\%\)</span>, rises steeply above 50%, and diverges to infinity as <span class="math inline">\(f \to 1\)</span>. The exponential of minus this ratio is therefore nearly 1 at low staking ratios (where the odds ratio is small) but collapses rapidly once staking crosses the 50% mark — precisely where the economic and security arguments against excessive staking are strongest.</p>
+<p>At <span class="math inline">\(f = 0\)</span>: <span class="math inline">\(m(0) = e^0 = 1\)</span> (no modification). As <span class="math inline">\(f \to 1\)</span>: <span class="math inline">\(m(f) \to 0\)</span> (exponentially). At <span class="math inline">\(f = \tfrac{1}{2}\)</span>: <span class="math inline">\(m(\tfrac{1}{2}) = e^{-k}\)</span> — the residual at the 50% threshold.</p>
+</section>
+<section id="properties-1" class="level3">
+<h3 class="anchored" data-anchor-id="properties-1">Properties</h3>
+<p>Total annual issuance is <span class="math inline">\(I_k(f) \propto \exp(-kf/(1-f)) \cdot \sqrt{f}\)</span>. Setting <span class="math inline">\(dI_k/df = 0\)</span> and writing <span class="math inline">\(g = f/(1-f)\)</span> for the odds ratio:</p>
+<p><span class="math display">\[\frac{dI_k}{df} = 0 \;\Longrightarrow\; \frac{k}{(1-f)^2} = \frac{1}{2f} \;\Longrightarrow\; 2kf = (1-f)^2\]</span></p>
+<p>Expanding: <span class="math inline">\(f^2 - (2+2k)f + 1 = 0\)</span>, so <span class="math inline">\(f^* = (1+k) - \sqrt{k(k+2)}\)</span>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(k\)</span></th>
+<th><span class="math inline">\(f^*\)</span></th>
+<th><span class="math inline">\(m(\tfrac{1}{2}) = e^{-k}\)</span></th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(2\)</span></td>
+<td><span class="math inline">\(\approx 17.2\%\)</span></td>
+<td><span class="math inline">\(\approx 13.5\%\)</span></td>
+<td>Moderate taper</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(3\)</span></td>
+<td><span class="math inline">\(\approx 12.7\%\)</span></td>
+<td><span class="math inline">\(\approx 5.0\%\)</span></td>
+<td>Near-zero at 50%</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(4\)</span></td>
+<td><span class="math inline">\(\approx 10.1\%\)</span></td>
+<td><span class="math inline">\(\approx 1.8\%\)</span></td>
+<td>Very aggressive above 50%</td>
+</tr>
+</tbody>
+</table>
+<p>The shape is qualitatively different from the power-law family: the exponential odds-ratio curve is nearly flat for small <span class="math inline">\(f\)</span> (the odds ratio is close to zero, so the multiplier is close to 1) and then drops steeply once staking approaches 50%. This makes it well-suited to a design philosophy that tolerates current staking levels but treats anything significantly above 50% as deeply undesirable.</p>
+</section>
+<section id="yield-1" class="level3">
+<h3 class="anchored" data-anchor-id="yield-1">Yield</h3>
+<div id="fig-exp-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exp-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #softcap-exp-yield-chart { width: 100%; height: 460px; }
+</style>
+<div id="softcap-exp-yield-chart"></div>
+<script src="expoddsYield.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: CL nominal yield for three values of <span class="math inline">\(k\)</span>. At low staking ratios the proposed curves lie close to the current curve; the divergence becomes pronounced above 30–40%.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="issuance-1" class="level3">
+<h3 class="anchored" data-anchor-id="issuance-1">Issuance</h3>
+<div id="fig-exp-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-exp-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #softcap-exp-issuance-chart { width: 100%; height: 460px; }
+</style>
+<div id="softcap-exp-issuance-chart"></div>
+<script src="expoddsIssuance.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-exp-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Annual ETH issuance as a percentage of total supply. The <span class="math inline">\(f^*\)</span> values are appreciably lower than for the power-law family with similar residuals at 50%, reflecting the flat-then-steep shape of the exponential multiplier.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="comparison" class="level2">
+<h2 class="anchored" data-anchor-id="comparison">Comparison</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Power-law <span class="math inline">\(m = (1-f)^n\)</span></th>
+<th>Exp. odds-ratio <span class="math inline">\(m = e^{-kf/(1-f)}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(m(0)\)</span></td>
+<td><span class="math inline">\(1\)</span></td>
+<td><span class="math inline">\(1\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(m(f \to 1)\)</span></td>
+<td><span class="math inline">\(0\)</span></td>
+<td><span class="math inline">\(0\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(m(\tfrac{1}{2})\)</span></td>
+<td><span class="math inline">\(2^{-n}\)</span></td>
+<td><span class="math inline">\(e^{-k}\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(f^*\)</span></td>
+<td><span class="math inline">\(\tfrac{1}{2n+1}\)</span></td>
+<td><span class="math inline">\((1+k) - \sqrt{k(k+2)}\)</span></td>
+</tr>
+<tr class="odd">
+<td>Shape</td>
+<td>Concave decline from <span class="math inline">\(f=0\)</span></td>
+<td>Flat then rapid collapse near 50%</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(n=1\)</span> / <span class="math inline">\(k \approx 0.7\)</span> residual at 50%</td>
+<td><span class="math inline">\(50\%\)</span></td>
+<td><span class="math inline">\(50\%\)</span></td>
+</tr>
+<tr class="odd">
+<td>To get <span class="math inline">\(\approx 5\%\)</span> residual at 50%</td>
+<td><span class="math inline">\(n \approx 4.3\)</span></td>
+<td><span class="math inline">\(k = 3\)</span></td>
+</tr>
+<tr class="even">
+<td>Spec complexity</td>
+<td>Low — single power</td>
+<td>Moderate — exponential of ratio</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Shape trade-off.</strong> The power-law family exerts modest downward pressure across the full range, including at low staking ratios where excess staking is not a concern. The exponential odds-ratio family is more surgical: it leaves the yield nearly unchanged below <span class="math inline">\(\sim\!30\%\)</span> and concentrates its effect above 50%, which maps more directly onto the policy motivation.</p>
+<p><strong>Anti-discouragement.</strong> Both families preserve the anti-discouragement property below <span class="math inline">\(f^*\)</span>. For comparable residuals at 50%, the exponential odds-ratio family has a lower <span class="math inline">\(f^*\)</span>, meaning the anti-discouragement zone is narrower. At the current staking ratio of <span class="math inline">\(\sim\!33\%\)</span>, both families are well within the safe zone for any parameter value shown.</p>
+<p><strong>Consensus safety.</strong> Because neither family modifies <code>get_base_reward_per_increment</code>, attestation penalties remain fully intact at all staking ratios. The incentive to perform consensus duties is unchanged.</p>
 </section>
 <section id="discussion" class="level2">
 <h2 class="anchored" data-anchor-id="discussion">Discussion</h2>
-<p>[Comparison with other proposed curves (e.g., stake-ratio targeting proposals). Trade-offs. Path to an EIP.]</p>
+<p>[Which family better matches the stated design goals? Is the mathematical simplicity of the power-law worth the cost of reduced discrimination near 50%? Does the exponential odds-ratio form have a clean implementation path analogous to the <code>SATURATION_BALANCE</code> constant in the linear tapering proposal? Comparison with the hard-cutoff approaches in the companion articles.]</p>
 
 
 </section>

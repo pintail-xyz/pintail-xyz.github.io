@@ -6,38 +6,38 @@
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
   var F_TODAY = 1 / 3;
-  var FSTAR   = Math.pow(2, -7/3);  // ≈ 19.8% — peak of proposed issuance
   var F_SAT   = 0.5;
-  var K       = 2;
+
+  // f* = 1/(2n+1) for each n
+  var FSTAR_N1 = 1 / 3;   // 33.3%
+  var FSTAR_N2 = 1 / 5;   // 20%
+  var FSTAR_N4 = 1 / 9;   // 11.1%
 
   var N_POINTS = 500;
   var F_MIN    = 0.0;
   var F_MAX    = 1.0;
 
   // ── Issuance functions (% of total ETH supply / year) ───────────────────
-  function annualInflationPct(f) {
+  function annualIssuancePct(f) {
     if (f <= 0) return 0;
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR * Math.sqrt(f / (TOTAL_ETH_SUPPLY * 1e9)) * 100;
   }
 
-  var aprAtSat = BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(F_SAT * TOTAL_ETH_SUPPLY * 1e9);
-
-  function annualInflationPctNew(f) {
-    if (f <= 0) return 0;
-    var aprCurrent = BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
-    var netApr = K * (aprCurrent - (f / F_SAT) * aprAtSat);
-    if (netApr <= 0) return 0;
-    return netApr * f * 100;
+  function annualIssuancePctPL(f, n) {
+    if (f <= 0 || f >= 1) return 0;
+    return annualIssuancePct(f) * Math.pow(1 - f, n);
   }
 
   // ── Build series ─────────────────────────────────────────────────────────
-  var fs = [], yCurrent = [], yNew = [];
+  var fs = [], yCurrent = [], yN1 = [], yN2 = [], yN4 = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
-    yCurrent.push(+annualInflationPct(f).toFixed(4));
-    yNew.push(+annualInflationPctNew(f).toFixed(4));
+    yCurrent.push(+annualIssuancePct(f).toFixed(4));
+    yN1.push(+annualIssuancePctPL(f, 1).toFixed(4));
+    yN2.push(+annualIssuancePctPL(f, 2).toFixed(4));
+    yN4.push(+annualIssuancePctPL(f, 4).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -59,7 +59,7 @@
       zerolinecolor: '#555',
       gridcolor: '#eeeeee',
       showgrid: true,
-      range: [0, 2.0],
+      range: [0, 1.5],
       fixedrange: true,
     },
     shapes: [
@@ -73,13 +73,19 @@
         type: 'line',
         x0: F_SAT * 100, x1: F_SAT * 100,
         yref: 'paper', y0: 0, y1: 1,
-        line: { color: '#e57373', width: 1.5, dash: 'dot' },
+        line: { color: '#888', width: 1.5, dash: 'dot' },
       },
       {
         type: 'line',
-        x0: FSTAR * 100, x1: FSTAR * 100,
+        x0: FSTAR_N2 * 100, x1: FSTAR_N2 * 100,
         yref: 'paper', y0: 0, y1: 1,
-        line: { color: '#888', width: 1.2, dash: 'dash' },
+        line: { color: '#00897b', width: 1.2, dash: 'dash' },
+      },
+      {
+        type: 'line',
+        x0: FSTAR_N4 * 100, x1: FSTAR_N4 * 100,
+        yref: 'paper', y0: 0, y1: 1,
+        line: { color: '#6a1b9a', width: 1.2, dash: 'dash' },
       },
     ],
     annotations: [
@@ -87,7 +93,7 @@
         x: F_TODAY * 100, xanchor: 'left', xshift: 5,
         yref: 'paper', y: 1, yanchor: 'top',
         textangle: -90,
-        text: 'Today (~33%)',
+        text: 'Today (~33%) = f* (n=1)',
         showarrow: false,
         font: { size: 11, color: '#aaa' },
       },
@@ -95,23 +101,31 @@
         x: F_SAT * 100, xanchor: 'left', xshift: 5,
         yref: 'paper', y: 1, yanchor: 'top',
         textangle: -90,
-        text: 'Saturation (50%)',
-        showarrow: false,
-        font: { size: 11, color: '#e57373' },
-      },
-      {
-        x: FSTAR * 100, xanchor: 'left', xshift: 5,
-        yref: 'paper', y: 1, yanchor: 'top',
-        textangle: -90,
-        text: 'Issuance peak (f ≈ 19.8%)',
+        text: '50% staking',
         showarrow: false,
         font: { size: 11, color: '#888' },
       },
+      {
+        x: FSTAR_N2 * 100, xanchor: 'left', xshift: 5,
+        yref: 'paper', y: 0.65, yanchor: 'top',
+        textangle: -90,
+        text: 'f* (n=2, 20%)',
+        showarrow: false,
+        font: { size: 11, color: '#00897b' },
+      },
+      {
+        x: FSTAR_N4 * 100, xanchor: 'left', xshift: 5,
+        yref: 'paper', y: 0.65, yanchor: 'top',
+        textangle: -90,
+        text: 'f* (n=4, 11%)',
+        showarrow: false,
+        font: { size: 11, color: '#6a1b9a' },
+      },
     ],
     showlegend: true,
-    legend: { x: 0.62, y: 0.5, bgcolor: 'rgba(255,255,255,0.8)' },
+    legend: { x: 0.62, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
     dragmode: false,
-    title: { text: 'Annual issuance: current vs. proposed', font: { size: 14 }, x: 0.5, xanchor: 'center' },
+    title: { text: 'Annual issuance: power-law soft cap (m(f) = (1−f)ⁿ)', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 72 },
     hovermode: 'x unified',
     hoverdistance: -1,
@@ -128,11 +142,25 @@
       hovertemplate: 'Current: %{y:.3f}%<extra></extra>',
     },
     {
-      x: fs, y: yNew,
-      name: 'Proposed (staking offset)',
+      x: fs, y: yN1,
+      name: 'n = 1',
+      type: 'scatter', mode: 'lines',
+      line: { color: '#f57c00', width: 2.5 },
+      hovertemplate: 'n=1: %{y:.3f}%<extra></extra>',
+    },
+    {
+      x: fs, y: yN2,
+      name: 'n = 2',
+      type: 'scatter', mode: 'lines',
+      line: { color: '#00897b', width: 2.5 },
+      hovertemplate: 'n=2: %{y:.3f}%<extra></extra>',
+    },
+    {
+      x: fs, y: yN4,
+      name: 'n = 4',
       type: 'scatter', mode: 'lines',
       line: { color: '#6a1b9a', width: 2.5 },
-      hovertemplate: 'Proposed: %{y:.3f}%<extra></extra>',
+      hovertemplate: 'n=4: %{y:.3f}%<extra></extra>',
     },
   ];
 
@@ -155,7 +183,7 @@
 
   // ── Render ───────────────────────────────────────────────────────────────
   var plotConfig = { responsive: true, displayModeBar: false, scrollZoom: false };
-  var el = document.getElementById('lin-issuancecurve-chart');
+  var el = document.getElementById('softcap-pl-issuance-chart');
   Plotly.newPlot(el, traces, layout, plotConfig);
   attachTouchHover(el);
   }

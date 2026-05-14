@@ -8,21 +8,23 @@
   var F0      = 1 / 3;
   var N_POINTS = 600;
   var F_MIN   = 0.0;
-  var F_MAX   = 0.65;
+  var F_MAX   = 1.0;
 
-  // ── Peak staking ratios f* = 1/(4β+2) ───────────────────────────────────
-  var FSTAR_HALF = 1 / 4;   // β = 1/2
-  var FSTAR_ONE  = 1 / 6;   // β = 1
-  var FSTAR_TWO  = 1 / 10;  // β = 2
+  // ── Peak staking ratios f* = 1/(2β+1) ───────────────────────────────────
+  // β = 1/2: f* = 1/2 = 50%
+  // β = 1:   f* = 1/3 ≈ 33.3% — coincides with F0 (Today line)
+  // β = 2:   f* = 1/5 = 20%
+  var FSTAR_HALF = 1 / 2;
+  var FSTAR_TWO  = 1 / 5;
 
   function annualIssuancePct(f) {
     if (f <= 0) return 0;
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR * Math.sqrt(f / (TOTAL_ETH_SUPPLY * 1e9)) * 100;
   }
 
-  function annualIssuancePctBeta(f, beta) {
-    if (f >= 0.5) return 0;
-    return Math.pow((0.5 - f) / (0.5 - F0), beta) * annualIssuancePct(f);
+  function annualIssuancePctFullSat(f, beta) {
+    if (f <= 0 || f >= 1.0) return 0;
+    return Math.pow((1 - f) / (1 - F0), beta) * annualIssuancePct(f);
   }
 
   // ── Build series ─────────────────────────────────────────────────────────
@@ -32,12 +34,13 @@
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
     yCurrent.push(+annualIssuancePct(f).toFixed(4));
-    yHalf.push(+annualIssuancePctBeta(f, 0.5).toFixed(4));
-    yOne.push(+annualIssuancePctBeta(f, 1.0).toFixed(4));
-    yTwo.push(+annualIssuancePctBeta(f, 2.0).toFixed(4));
+    yHalf.push(+annualIssuancePctFullSat(f, 0.5).toFixed(4));
+    yOne.push(+annualIssuancePctFullSat(f, 1.0).toFixed(4));
+    yTwo.push(+annualIssuancePctFullSat(f, 2.0).toFixed(4));
   }
 
   // ── Reference lines ──────────────────────────────────────────────────────
+  // Today line doubles as f* for β = 1; separate f* lines for β = ½ and β = 2
   var shapes = [
     {
       type: 'line', x0: F0 * 100, x1: F0 * 100,
@@ -45,19 +48,9 @@
       line: { color: '#bbb', width: 1.5, dash: 'dot' },
     },
     {
-      type: 'line', x0: 50, x1: 50,
-      yref: 'paper', y0: 0, y1: 1,
-      line: { color: '#e57373', width: 1.5, dash: 'dot' },
-    },
-    {
       type: 'line', x0: FSTAR_HALF * 100, x1: FSTAR_HALF * 100,
       yref: 'paper', y0: 0, y1: 1,
       line: { color: '#f57c00', width: 1, dash: 'dash' },
-    },
-    {
-      type: 'line', x0: FSTAR_ONE * 100, x1: FSTAR_ONE * 100,
-      yref: 'paper', y0: 0, y1: 1,
-      line: { color: '#00897b', width: 1, dash: 'dash' },
     },
     {
       type: 'line', x0: FSTAR_TWO * 100, x1: FSTAR_TWO * 100,
@@ -70,30 +63,18 @@
     {
       x: F0 * 100, xanchor: 'left', xshift: 5,
       yref: 'paper', y: 0.97,
-      text: 'Today (~33%)',
+      text: 'Today (~33%) = f* (β=1)',
       showarrow: false, font: { size: 11, color: '#aaa' },
     },
     {
-      x: 50, xanchor: 'right', xshift: -5,
-      yref: 'paper', y: 0.97,
-      text: 'Cap (50%)',
-      showarrow: false, font: { size: 11, color: '#e57373' },
-    },
-    {
       x: FSTAR_HALF * 100, xanchor: 'left', xshift: 4,
-      yref: 'paper', y: 0.72,
+      yref: 'paper', y: 0.80,
       text: 'f* (β=½)',
       showarrow: false, font: { size: 10, color: '#f57c00' },
     },
     {
-      x: FSTAR_ONE * 100, xanchor: 'left', xshift: 4,
-      yref: 'paper', y: 0.62,
-      text: 'f* (β=1)',
-      showarrow: false, font: { size: 10, color: '#00897b' },
-    },
-    {
       x: FSTAR_TWO * 100, xanchor: 'left', xshift: 4,
-      yref: 'paper', y: 0.52,
+      yref: 'paper', y: 0.62,
       text: 'f* (β=2)',
       showarrow: false, font: { size: 10, color: '#6a1b9a' },
     },
@@ -103,10 +84,10 @@
   var layout = {
     xaxis: {
       title: { text: 'Staking ratio', font: { size: 12 } },
-      range: [0, 65],
+      range: [0, 100],
       fixedrange: true,
-      tickvals: [0, 10, 20, 30, 40, 50, 60],
-      ticktext: ['0%', '10%', '20%', '30%', '40%', '50%', '60%'],
+      tickvals: [0, 20, 40, 60, 80, 100],
+      ticktext: ['0%', '20%', '40%', '60%', '80%', '100%'],
       gridcolor: '#eeeeee', showgrid: true,
     },
     yaxis: {
@@ -114,7 +95,7 @@
       ticksuffix: '%',
       zeroline: true, zerolinewidth: 1.5, zerolinecolor: '#555',
       gridcolor: '#eeeeee', showgrid: true,
-      range: [0, 1.5],
+      range: [0, 2.0],
       fixedrange: true,
     },
     shapes: shapes,
@@ -122,7 +103,7 @@
     showlegend: true,
     legend: { x: 0.98, xanchor: 'right', y: 0.98, yanchor: 'top', bgcolor: 'rgba(255,255,255,0.88)', bordercolor: '#ddd', borderwidth: 1 },
     dragmode: false,
-    title: { text: 'Annual issuance by curve', font: { size: 14 }, x: 0.5, xanchor: 'center' },
+    title: { text: 'Annual issuance — 100%-saturation family', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 72 },
     hovermode: 'x unified',
     hoverdistance: -1,
@@ -174,7 +155,7 @@
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
-  var el = document.getElementById('family-issuancecurve-chart');
+  var el = document.getElementById('family-fullsat-issuancecurve-chart');
   Plotly.newPlot(el, traces, layout, { responsive: true, displayModeBar: false, scrollZoom: false });
   attachTouchHover(el);
   }

@@ -5,10 +5,9 @@
   var BASE_REWARD_FACTOR = 64;
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
-  // ── Proposal constants ───────────────────────────────────────────────────
   var F_TODAY = 1 / 3;
-  var K2 = 2;
-  var K3 = 3;
+  var F_SAT   = 0.5;
+  var K       = 2;
 
   var N_POINTS = 500;
   var F_MIN    = 0.005;
@@ -19,21 +18,23 @@
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
   }
 
-  function clAprNew(f, k) {
-    if (f >= 0.5) return 0;
-    return k * (1 - 2 * f) * clApr(f);
+  var aprAtSat = clApr(F_SAT);
+
+  function clAprNew(f) {
+    var net = K * (clApr(f) - (f / F_SAT) * aprAtSat);
+    return net > 0 ? net : 0;
   }
 
   // ── Build series ─────────────────────────────────────────────────────────
-  var fs = [], yCurNom = [], yCurDil = [], yK2Nom = [], yK2Dil = [];
+  var fs = [], yCurNom = [], yCurDil = [], yNewNom = [], yNewDil = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
     yCurNom.push(+(clApr(f) * 100).toFixed(4));
     yCurDil.push(+(clApr(f) * (1 - f) * 100).toFixed(4));
-    yK2Nom.push(+(clAprNew(f, K2) * 100).toFixed(4));
-    yK2Dil.push(+(clAprNew(f, K2) * (1 - f) * 100).toFixed(4));
+    yNewNom.push(+(clAprNew(f) * 100).toFixed(4));
+    yNewDil.push(+(clAprNew(f) * (1 - f) * 100).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -48,7 +49,7 @@
       showgrid: true,
     },
     yaxis: {
-      title: { text: 'CL dilution-adjusted yield', font: { size: 12 } },
+      title: { text: 'CL nominal / dilution-adjusted yield', font: { size: 12 } },
       ticksuffix: '%',
       zeroline: true,
       zerolinewidth: 1.5,
@@ -68,7 +69,7 @@
         font: { size: 11, color: '#aaa' },
       },
       {
-        x: 50, xanchor: 'left', xshift: 5,
+        x: F_SAT * 100, xanchor: 'left', xshift: 5,
         yref: 'paper', y: 1, yanchor: 'top',
         textangle: -90,
         text: 'Saturation (50%)',
@@ -96,7 +97,7 @@
       showlegend: false, hoverinfo: 'skip',
     },
     {
-      x: [50, 50], y: refY,
+      x: [F_SAT * 100, F_SAT * 100], y: refY,
       type: 'scatter', mode: 'lines',
       line: { color: '#e57373', width: 1.5, dash: 'dot' },
       showlegend: false, hoverinfo: 'skip',
@@ -116,18 +117,18 @@
       hovertemplate: 'Current dilution-adj.: %{y:.2f}%<extra></extra>',
     },
     {
-      x: fs, y: yK2Nom,
-      name: 'k = 2 (nominal)',
+      x: fs, y: yNewNom,
+      name: 'Proposed (nominal)',
       type: 'scatter', mode: 'lines',
       line: { color: '#6a1b9a', width: 2.5 },
-      hovertemplate: 'k=2 nominal: %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Proposed nominal: %{y:.2f}%<extra></extra>',
     },
     {
-      x: fs, y: yK2Dil,
-      name: 'k = 2 (dilution-adj.)',
+      x: fs, y: yNewDil,
+      name: 'Proposed (dilution-adj.)',
       type: 'scatter', mode: 'lines',
       line: { color: '#6a1b9a', width: 1.5, dash: 'dash' },
-      hovertemplate: 'k=2 dilution-adj.: %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Proposed dilution-adj.: %{y:.2f}%<extra></extra>',
     },
   ];
 
