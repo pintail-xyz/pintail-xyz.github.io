@@ -250,9 +250,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
 <li>A staking offset is subtracted from each validator’s attestation reward; it grows linearly from zero to the base reward as total staking grows from 0 to 50%, tapering net issuance to zero at the 50% threshold.</li>
-<li><code>BASE_REWARD_FACTOR</code> is updated from 64 to 128, doubling the gross reward and the offset together. Penalties scale with it too, strengthening the consensus incentive.</li>
 <li>The net yield at the current <span class="math inline">\(\sim\!33\%\)</span> staking ratio is approximately 91% of today’s level — a modest reduction at deployment.</li>
-<li>The effective issuance multiplier is <span class="math inline">\(2\bigl(1 - (2f)^{3/2}\bigr)\)</span>, which gives total issuance a natural peak at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span>.</li>
 <li>Only two spec changes are required: <code>BASE_REWARD_FACTOR</code> is updated to 128, and a single new function <code>get_base_reward_offset_per_increment</code> is added.</li>
 </ul>
 </section>
