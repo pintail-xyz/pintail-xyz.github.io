@@ -385,6 +385,13 @@
     "text": "Posts"
   },
   {
+    "objectID": "drafts.html",
+    "href": "drafts.html",
+    "title": "Drafts",
+    "section": "",
+    "text": "Work in progress — generated automatically from posts marked draft: true.\n\nLinear Issuance Tapering\n2026-05-28\nA minimal modification to Ethereum’s issuance curve that tapers new issuance to zero at a 50% staking ratio while preserving consensus penalties throughout."
+  },
+  {
     "objectID": "posts/2019/uniswap-good-deal/index.html",
     "href": "posts/2019/uniswap-good-deal/index.html",
     "title": "Uniswap: A Good Deal for Liquidity Providers?",
