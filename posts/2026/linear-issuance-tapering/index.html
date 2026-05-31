@@ -250,12 +250,11 @@ window.Quarto = {
 <section id="tldr" class="level2">
 <h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
-<li>Ethereum’s current issuance curve has no equilibrium: staking yield never reaches zero, so the staking ratio is incentivised to grow toward 100%</li>
-<li>This proposal tapers consensus layer issuance linearly to zero at a 50% staking ratio, using a subtractive deduction from the existing curve</li>
+<li>Ethereum’s current issuance curve has no equilibrium: staking yield never reaches zero, so the staking ratio is incentivised to grow towards 100%;</li>
+<li>This proposal tapers consensus layer issuance to zero at a 50% staking ratio, by subtracting a portion of the base reward in a linear fashion</li>
 <li><code>BASE_REWARD_FACTOR</code> is doubled (64 → 128) to compensate, so that the yield at today’s ~31% staking ratio is approximately unchanged at deployment</li>
-<li>Penalties are kept on the unattenuated curve throughout — a new <code>base_penalty_per_increment</code> function separates penalty calculations from the tapered reward — ensuring attestation remains incentivised even as rewards approach zero</li>
+<li>Penalties are kept on the original (unattenuated) curve throughout — a new <code>base_penalty_per_increment</code> function separates penalty calculations from the tapered reward — ensuring attestation remains incentivised even as rewards approach zero</li>
 <li>A new missed proposal penalty, equal to the expected CL proposal reward under the unattenuated curve, is introduced to preserve block proposal incentives</li>
-<li>The proposal requires six small changes to the consensus layer spec</li>
 </ul>
 </section>
 <section id="introduction" class="level2">
@@ -308,6 +307,7 @@ Figure&nbsp;1: CL nominal yield under the current curve (BRF=64), the naive tape
 </figcaption>
 </figure>
 </div>
+<p>Meanwhile peak issuance occurs at around 20% staking ratio, with an issuance level of 1%. This is lower than the maximum issuance rate under the current curve (approximately 1.5%). Moreover, while issuance under the existing curve is expected to continue to grow as the staking ratio increases, under the proposed curve, it settles at the reservation yield which is expected to be significantly below the peak.</p>
 <div id="fig-intuition-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-intuition-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
