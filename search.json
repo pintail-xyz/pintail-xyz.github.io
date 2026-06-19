@@ -312,7 +312,7 @@
     "href": "drafts.html",
     "title": "Drafts",
     "section": "",
-    "text": "Work in progress — generated automatically from posts marked draft: true.\n\nLinear Issuance Tapering\n2026-05-28\nA minimal modification to Ethereum’s issuance curve that tapers new issuance to zero at a 50% staking ratio while preserving consensus penalties throughout.\n\n\nQuadratic Issuance Tapering\n2026-05-28\nA quadratic deduction achieves a smooth, tangential pinch-off to zero issuance at 50% staking, leaving BASE_REWARD_FACTOR as the single free calibration parameter."
+    "text": "Work in progress — generated automatically from posts marked draft: true.\n\nMinimal Issuance Reform: Linear Offset Tapering\n2026-06-18\nThe simplest issuance reform: tapering staking yield linearly to zero at a 50% staking ratio with a per-epoch offset, leaving Ethereum’s existing rewards and penalties entirely untouched.\n\n\nQuadratic Issuance Tapering\n2026-05-28\nA quadratic deduction achieves a smooth, tangential pinch-off to zero issuance at 50% staking, leaving BASE_REWARD_FACTOR as the single free calibration parameter."
   },
   {
     "objectID": "index.html#posts",
