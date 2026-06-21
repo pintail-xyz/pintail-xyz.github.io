@@ -5,59 +5,7 @@
     <lastmod>2026-04-20T19:35:48.000Z</lastmod>
   </url>
   <url>
-    <loc>https://pintail.xyz/posts/2022/post-merge-mev/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2021/modelling-altair-impact/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2021/beacon-chain-validator-rewards/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2020/medalla-4-client-comparison/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2020/medalla-2-validator-taxonomy/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2020/eip1559-fairness/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2019/uniswap-good-deal/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/drafts.html</loc>
-    <lastmod>2026-06-21T19:08:46.645Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/index.html</loc>
-    <lastmod>2026-03-21T10:43:11.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2019/uniswap-returns/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2020/medalla-1-data-prep/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2020/medalla-3-network-stress/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2020/medalla-5-tldr/index.html</loc>
-    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://pintail.xyz/posts/2021/gas-market-analysis/index.html</loc>
+    <loc>https://pintail.xyz/posts/2022/since-the-merge/index.html</loc>
     <lastmod>2026-03-20T20:23:03.000Z</lastmod>
   </url>
   <url>
@@ -65,7 +13,59 @@
     <lastmod>2026-03-20T20:23:03.000Z</lastmod>
   </url>
   <url>
-    <loc>https://pintail.xyz/posts/2022/since-the-merge/index.html</loc>
+    <loc>https://pintail.xyz/posts/2021/gas-market-analysis/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2020/medalla-5-tldr/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2020/medalla-3-network-stress/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2020/medalla-1-data-prep/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2019/uniswap-returns/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/index.html</loc>
+    <lastmod>2026-03-21T10:43:11.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/drafts.html</loc>
+    <lastmod>2026-06-21T21:17:32.874Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2019/uniswap-good-deal/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2020/eip1559-fairness/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2020/medalla-2-validator-taxonomy/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2020/medalla-4-client-comparison/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2021/beacon-chain-validator-rewards/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2021/modelling-altair-impact/index.html</loc>
+    <lastmod>2026-03-20T20:23:03.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://pintail.xyz/posts/2022/post-merge-mev/index.html</loc>
     <lastmod>2026-03-20T20:23:03.000Z</lastmod>
   </url>
 </urlset>
