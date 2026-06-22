@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220">
+  <rect width="400" height="220" fill="#fafafa"/>
+  <!-- axes -->
+  <line x1="50" y1="180" x2="370" y2="180" stroke="#555" stroke-width="1.5"/>
+  <line x1="50" y1="20" x2="50" y2="180" stroke="#555" stroke-width="1.5"/>
+  <!-- saturation line -->
+  <line x1="330" y1="20" x2="330" y2="180" stroke="#e57373" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <!-- quadratic offset fraction q: rises fast then approaches 1 tangentially at x=330 -->
+  <path d="M50,180 C120,120 230,55 330,20" fill="none" stroke="#b71c1c" stroke-width="2.5"/>
+  <!-- retained 1-q: 1 -> 0 tangential at x=330 -->
+  <path d="M50,20 C120,80 230,145 330,180" fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+  <!-- linear q dashed for comparison -->
+  <path d="M50,180 C140,168 250,120 330,20" fill="none" stroke="#90a4ae" stroke-width="1.6" stroke-dasharray="5,3"/>
+  <!-- legend -->
+  <line x1="62" y1="40" x2="82" y2="40" stroke="#b71c1c" stroke-width="2"/>
+  <text x="86" y="44" font-family="sans-serif" font-size="11" fill="#444">quadratic offset q</text>
+  <line x1="62" y1="58" x2="82" y2="58" stroke="#2e7d32" stroke-width="2"/>
+  <text x="86" y="62" font-family="sans-serif" font-size="11" fill="#444">retained 1−q</text>
+  <line x1="62" y1="76" x2="82" y2="76" stroke="#90a4ae" stroke-width="1.6" stroke-dasharray="4,2"/>
+  <text x="86" y="80" font-family="sans-serif" font-size="11" fill="#444">linear q</text>
+  <text x="150" y="205" font-family="sans-serif" font-size="11" fill="#888">staking ratio →</text>
+</svg>

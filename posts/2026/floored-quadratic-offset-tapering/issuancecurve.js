@@ -5,9 +5,9 @@
   var BASE_REWARD_FACTOR = 64;
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
-  var F_TODAY = 1 / 3;
-  var FSTAR   = Math.pow(2, -7/3);  // ≈ 19.8% — peak of compensated issuance
-  var F_SAT   = 0.5;
+  var F_TODAY   = 1 / 3;
+  var F_SAT     = 0.5;
+  var FSTAR_SUB = 0.1300;  // peak of floored quadratic taper issuance
 
   var N_POINTS = 600;
   var F_MIN    = 0.0;
@@ -17,20 +17,22 @@
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
   }
   function clAprComp(f) {
-    return 2 * clApr(f);
+    return 4 * clApr(f);
   }
-  function qLin(f) {
-    return Math.pow(f / F_SAT, 1.5);
+  function q(f) {
+    if (f >= F_SAT) return 1;
+    return 0.5 * Math.pow(2 * f, 1.5) * (5 - 6 * f);
   }
 
-  // Issuance = net yield * f (% of supply); qMax = 1 is the unmodified linear proposal.
+  // Issuance = net yield * f (% of supply); scale = 1 is the zero-floor quadratic
+  // proposal, scale = 63/64 leaves a 1/64 floor reached tangentially at saturation.
   function inflCurrent(f) {
     if (f <= 0) return 0;
     return clApr(f) * f * 100;
   }
   function inflComp(f, scale) {
     if (f <= 0) return 0;
-    var net = (1 - scale * Math.min(qLin(f), 1)) * clAprComp(f);
+    var net = (1 - scale * q(f)) * clAprComp(f);
     if (net <= 0) return 0;
     return net * f * 100;
   }
@@ -42,7 +44,7 @@
     fs.push(+(f * 100).toFixed(3));
     yCurrent.push(+inflCurrent(f).toFixed(4));
     yNoFloor.push(+inflComp(f, 1).toFixed(4));
-    yF32.push(+inflComp(f, 1 - 1 / 32).toFixed(4));
+    yF32.push(+inflComp(f, 1 - 1 / 64).toFixed(4));
   }
 
   var layout = {
@@ -81,7 +83,7 @@
       },
       {
         type: 'line',
-        x0: FSTAR * 100, x1: FSTAR * 100,
+        x0: FSTAR_SUB * 100, x1: FSTAR_SUB * 100,
         yref: 'paper', y0: 0, y1: 1,
         line: { color: '#888', width: 1.2, dash: 'dash' },
       },
@@ -104,10 +106,10 @@
         font: { size: 11, color: '#e57373' },
       },
       {
-        x: FSTAR * 100, xanchor: 'left', xshift: 5,
+        x: FSTAR_SUB * 100, xanchor: 'left', xshift: 5,
         yref: 'paper', y: 1, yanchor: 'top',
         textangle: -90,
-        text: 'Issuance peak (f ≈ 19.8%)',
+        text: 'Issuance peak (~13.0%)',
         showarrow: false,
         font: { size: 11, color: '#888' },
       },
@@ -115,7 +117,7 @@
     showlegend: true,
     legend: { x: 0.6, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
     dragmode: false,
-    title: { text: 'Annual issuance: linear taper with an issuance floor', font: { size: 14 }, x: 0.5, xanchor: 'center' },
+    title: { text: 'Annual issuance: quadratic taper with an issuance floor (B=256)', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 72 },
     hovermode: 'x unified',
     hoverdistance: -1,
@@ -133,17 +135,17 @@
     },
     {
       x: fs, y: yNoFloor,
-      name: 'Zero floor (B=128)',
+      name: 'Zero floor (B=256)',
       type: 'scatter', mode: 'lines',
       line: { color: '#2e7d32', width: 2.5 },
       hovertemplate: 'Zero floor: %{y:.3f}%<extra></extra>',
     },
     {
       x: fs, y: yF32,
-      name: 'Floor 1/32 (B=128)',
+      name: 'Floor 1/64 (B=256)',
       type: 'scatter', mode: 'lines',
       line: { color: '#ef6c00', width: 2.5 },
-      hovertemplate: 'Floor 1/32: %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Floor 1/64: %{y:.3f}%<extra></extra>',
     },
   ];
 
@@ -164,7 +166,7 @@
   }
 
   var plotConfig = { responsive: true, displayModeBar: false, scrollZoom: false };
-  var el = document.getElementById('floor5-issuancecurve-chart');
+  var el = document.getElementById('qfloor5-issuancecurve-chart');
   Plotly.newPlot(el, traces, layout, plotConfig);
   attachTouchHover(el);
   }

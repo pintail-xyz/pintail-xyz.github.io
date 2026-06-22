@@ -6,43 +6,41 @@
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
   var F_TODAY = 1 / 3;
-  var FSTAR   = Math.pow(2, -7/3);  // ≈ 19.8% — peak of compensated issuance
+  var FSTAR   = Math.pow(2, -7/3);  // ≈ 19.8% — peak of tapered issuance
   var F_SAT   = 0.5;
 
-  var N_POINTS = 600;
+  var N_POINTS = 500;
   var F_MIN    = 0.0;
   var F_MAX    = 1.0;
 
   function clApr(f) {
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
   }
-  function clAprComp(f) {
-    return 2 * clApr(f);
-  }
-  function qLin(f) {
+
+  function q(f) {
+    if (f >= F_SAT) return 1;
     return Math.pow(f / F_SAT, 1.5);
   }
 
-  // Issuance = net yield * f (% of supply); qMax = 1 is the unmodified linear proposal.
-  function inflCurrent(f) {
+  // Issuance = net yield * f (% of supply)
+  function annualInflationPct(f) {
     if (f <= 0) return 0;
     return clApr(f) * f * 100;
   }
-  function inflComp(f, scale) {
+  function annualInflationPctTaper(f) {
     if (f <= 0) return 0;
-    var net = (1 - scale * Math.min(qLin(f), 1)) * clAprComp(f);
+    var net = (1 - q(f)) * clApr(f);
     if (net <= 0) return 0;
     return net * f * 100;
   }
 
-  var fs = [], yCurrent = [], yNoFloor = [], yF32 = [];
+  var fs = [], yCurrent = [], yTaper = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
-    yCurrent.push(+inflCurrent(f).toFixed(4));
-    yNoFloor.push(+inflComp(f, 1).toFixed(4));
-    yF32.push(+inflComp(f, 1 - 1 / 32).toFixed(4));
+    yCurrent.push(+annualInflationPct(f).toFixed(4));
+    yTaper.push(+annualInflationPctTaper(f).toFixed(4));
   }
 
   var layout = {
@@ -113,9 +111,9 @@
       },
     ],
     showlegend: true,
-    legend: { x: 0.6, y: 0.95, bgcolor: 'rgba(255,255,255,0.8)' },
+    legend: { x: 0.62, y: 0.5, bgcolor: 'rgba(255,255,255,0.8)' },
     dragmode: false,
-    title: { text: 'Annual issuance: linear taper with an issuance floor', font: { size: 14 }, x: 0.5, xanchor: 'center' },
+    title: { text: 'Annual issuance: current vs. linear taper', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 72 },
     hovermode: 'x unified',
     hoverdistance: -1,
@@ -126,24 +124,17 @@
   var traces = [
     {
       x: fs, y: yCurrent,
-      name: 'Current (B=64)',
+      name: 'Current curve',
       type: 'scatter', mode: 'lines',
       line: { color: '#1565c0', width: 2.5 },
-      hovertemplate: 'Current (B=64): %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Current: %{y:.3f}%<extra></extra>',
     },
     {
-      x: fs, y: yNoFloor,
-      name: 'Zero floor (B=128)',
+      x: fs, y: yTaper,
+      name: 'Linear taper',
       type: 'scatter', mode: 'lines',
-      line: { color: '#2e7d32', width: 2.5 },
-      hovertemplate: 'Zero floor: %{y:.3f}%<extra></extra>',
-    },
-    {
-      x: fs, y: yF32,
-      name: 'Floor 1/32 (B=128)',
-      type: 'scatter', mode: 'lines',
-      line: { color: '#ef6c00', width: 2.5 },
-      hovertemplate: 'Floor 1/32: %{y:.3f}%<extra></extra>',
+      line: { color: '#6a1b9a', width: 2.5 },
+      hovertemplate: 'Linear taper: %{y:.3f}%<extra></extra>',
     },
   ];
 
@@ -164,7 +155,7 @@
   }
 
   var plotConfig = { responsive: true, displayModeBar: false, scrollZoom: false };
-  var el = document.getElementById('floor5-issuancecurve-chart');
+  var el = document.getElementById('lintap-issuancecurve-chart');
   Plotly.newPlot(el, traces, layout, plotConfig);
   attachTouchHover(el);
   }

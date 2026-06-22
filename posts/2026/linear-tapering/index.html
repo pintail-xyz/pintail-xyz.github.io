@@ -6,10 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-06-21">
-<meta name="description" content="A variation on the linear offset taper for those who want issuance never to reach zero: scaling the offset down to 31/32 of its value leaves a small permanent issuance floor — 1/32 of the untapered curve — with everything else in that proposal unchanged.">
+<meta name="dcterms.date" content="2026-06-23">
+<meta name="description" content="A proposal for issuance reform: tapering staking yield linearly to zero at a 50% staking ratio with a per-epoch offset, leaving Ethereum’s existing rewards, penalties, and BASE_REWARD_FACTOR entirely untouched.">
 
-<title>Minimal Issuance Reform: Floored Offset Tapering – pintail’s notes</title>
+<title>Minimal Issuance Reform: Linear Tapering – pintail’s notes</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -141,9 +141,9 @@ window.Quarto = {
 };
 </script>
 
-<meta property="og:title" content="Minimal Issuance Reform: Floored Offset Tapering – pintail’s notes">
-<meta property="og:description" content="A variation on the linear offset taper for those who want issuance never to reach zero: scaling the offset down to 31/32 of its value leaves a small permanent issuance floor — 1/32 of the untapered curve — with everything else in that proposal unchanged.">
-<meta property="og:image" content="https://pintail.xyz/posts/2026/floored-offset-tapering/thumbnail.svg">
+<meta property="og:title" content="Minimal Issuance Reform: Linear Tapering – pintail’s notes">
+<meta property="og:description" content="A proposal for issuance reform: tapering staking yield linearly to zero at a 50% staking ratio with a per-epoch offset, leaving Ethereum’s existing rewards, penalties, and BASE_REWARD_FACTOR entirely untouched.">
+<meta property="og:image" content="https://pintail.xyz/posts/2026/linear-tapering/thumbnail.svg">
 <meta property="og:site_name" content="pintail’s notes">
 </head>
 
@@ -202,14 +202,15 @@ window.Quarto = {
   <ul>
   <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">tl;dr</a></li>
   <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
-  <li><a href="#the-issuance-floor" id="toc-the-issuance-floor" class="nav-link" data-scroll-target="#the-issuance-floor">The Issuance Floor</a></li>
+  <li><a href="#yield-and-issuance-curves" id="toc-yield-and-issuance-curves" class="nav-link" data-scroll-target="#yield-and-issuance-curves">Yield and Issuance Curves</a></li>
   <li><a href="#the-offset-fraction" id="toc-the-offset-fraction" class="nav-link" data-scroll-target="#the-offset-fraction">The Offset Fraction</a></li>
+  <li><a href="#from-staking-fraction-to-absolute-balance" id="toc-from-staking-fraction-to-absolute-balance" class="nav-link" data-scroll-target="#from-staking-fraction-to-absolute-balance">From Staking Fraction to Absolute Balance</a></li>
   <li><a href="#per-duty-implementation" id="toc-per-duty-implementation" class="nav-link" data-scroll-target="#per-duty-implementation">Per-duty implementation</a></li>
   <li><a href="#consensus-layer-spec" id="toc-consensus-layer-spec" class="nav-link" data-scroll-target="#consensus-layer-spec">Consensus Layer Spec</a>
   <ul class="collapse">
-  <li><a href="#updated-constant-and-new-constants" id="toc-updated-constant-and-new-constants" class="nav-link" data-scroll-target="#updated-constant-and-new-constants">Updated Constant and New Constants</a></li>
-  <li><a href="#reused-function-the-offset-helper" id="toc-reused-function-the-offset-helper" class="nav-link" data-scroll-target="#reused-function-the-offset-helper">Reused Function: the offset helper</a></li>
-  <li><a href="#new-step-applying-the-floored-offset" id="toc-new-step-applying-the-floored-offset" class="nav-link" data-scroll-target="#new-step-applying-the-floored-offset">New Step: applying the floored offset</a></li>
+  <li><a href="#new-constant" id="toc-new-constant" class="nav-link" data-scroll-target="#new-constant">New Constant</a></li>
+  <li><a href="#new-function-the-offset-fraction" id="toc-new-function-the-offset-fraction" class="nav-link" data-scroll-target="#new-function-the-offset-fraction">New Function: the offset fraction</a></li>
+  <li><a href="#new-step-applying-the-offset" id="toc-new-step-applying-the-offset" class="nav-link" data-scroll-target="#new-step-applying-the-offset">New Step: applying the offset</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -219,12 +220,12 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Minimal Issuance Reform: Floored Offset Tapering</h1>
+<h1 class="title">Minimal Issuance Reform: Linear Tapering</h1>
 </div>
 
 <div>
   <div class="description">
-    A variation on the linear offset taper for those who want issuance never to reach zero: scaling the offset down to 31/32 of its value leaves a small permanent issuance floor — 1/32 of the untapered curve — with everything else in that proposal unchanged.
+    A proposal for issuance reform: tapering staking yield linearly to zero at a 50% staking ratio with a per-epoch offset, leaving Ethereum’s existing rewards, penalties, and BASE_REWARD_FACTOR entirely untouched.
   </div>
 </div>
 
@@ -235,14 +236,14 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">June 21, 2026</p>
+      <p class="date">June 23, 2026</p>
     </div>
   </div>
   
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">June 21, 2026</p>
+      <p class="date-modified">June 23, 2026</p>
     </div>
   </div>
     
@@ -256,113 +257,118 @@ window.Quarto = {
 <section id="tldr" class="level2">
 <h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
 <ul>
-<li>The <a href="https://pintail.xyz/posts/2026/linear-offset-tapering/">linear offset taper</a> drives staking issuance to zero at a 50% staking ratio and holds it there;</li>
-<li>This variant scales the linear offset down to <span class="math inline">\(\tfrac{31}{32}\)</span> of its value, so a fixed <span class="math inline">\(\tfrac{1}{32}\)</span> slice of every reward always survives — a small permanent issuance floor of <span class="math inline">\(\tfrac{1}{32}\)</span> of the untapered issuance (roughly <span class="math inline">\(0.07\)</span>–<span class="math inline">\(0.1\%\)</span> of supply per year), reached at the saturation ratio;</li>
-<li>The change to the linear proposal is one new constant and a single extra subtraction in the offset step; the offset helper and everything else are untouched.</li>
+<li>Ethereum’s existing issuance curve incentivises growth in the staking ratio to levels which weaken security and make the protocol more open to capture;</li>
+<li>This is a minimal proposal to ensure stake growth beyond 50% is no longer incentivised, by applying a linearly-tapered offset to validator rewards;</li>
+<li>The underlying reward curve and the mechanism of rewards and penalties — including <code>BASE_REWARD_FACTOR</code> — are left entirely unchanged;</li>
+<li>Worst-case issuance is reduced to around 0.5%, and is likely to settle at a much lower value, derived from the market-determined reservation yield.</li>
 </ul>
 </section>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>The <a href="https://pintail.xyz/posts/2026/linear-offset-tapering/">linear offset taper</a> cancels the staking yield entirely at the saturation ratio <span class="math inline">\(f_\text{sat} = 50\%\)</span>: the offset fraction <span class="math inline">\(q\)</span> reaches 1, the full reward is offset, and issuance is zero. Beyond saturation <span class="math inline">\(q\)</span> stays clamped at 1, so issuance remains at a floor of zero.</p>
-<p>One possible modification of this proposal would be to impose a tail emissions condition to ensure that the potential exists for positive issuance at all staking ratios. The linear offset removes a fraction <span class="math inline">\(q_\text{lin}(f)\)</span> of each reward, rising to the whole reward at saturation; in this variant, we simply apply <span class="math inline">\(\tfrac{31}{32}\)</span> of it,</p>
-<p><span class="math display">\[q(f) = \frac{31}{32}\,q_\text{lin}(f).\]</span></p>
-<p>A fixed <span class="math inline">\(\tfrac{1}{32}\)</span> slice of every reward then always escapes the offset, so net yield and issuance level off at a small positive floor rather than reaching zero. Everything else in the linear proposal — the reward curve, the underlying offset fraction, the calibration — is unchanged.</p>
+<p>As <a href="https://pintail.xyz/posts/2026/staking-ratio/">previously noted</a>, Ethereum’s issuance curve incentivises growth in the staking ratio well beyond the point at which additional stake increases Ethereum’s security, and arguably makes it more brittle and vulnerable to capture. The level of issuance grows continuously as more Ether is staked, and even with all Ether staked, the nominal yield never goes below 1.5%. The current issuance curve therefore does not allow the market to reach an equilibrium yield, and we should expect the staking ratio to tend towards 100% over time.</p>
+<p>To prevent Ethereum from reaching a problematic high staking ratio, this proposal introduces the simplest possible change to ensure that the staking market reaches an equilibrium yield at some point before 50% of all Ether has been staked. This is achieved without altering the existing reward curve and micro-incentives, by subtracting a per-epoch offset for each validator duty, with the offset tapered according to the staking ratio.</p>
 </section>
-<section id="the-issuance-floor" class="level2">
-<h2 class="anchored" data-anchor-id="the-issuance-floor">The Issuance Floor</h2>
-<p>Recall the linear offset fraction <span class="math inline">\(q_\text{lin}(f) = \min\!\big((f/f_\text{sat})^{3/2},\,1\big)\)</span>, which rises to 1 at saturation and stays clamped there. Scaling it by <span class="math inline">\(\tfrac{31}{32}\)</span> gives</p>
-<p><span class="math display">\[q(f) = \frac{31}{32}\min\!\left(\left(\tfrac{f}{f_\text{sat}}\right)^{3/2},\; 1\right).\]</span></p>
-<p>This reaches its maximum, <span class="math inline">\(\tfrac{31}{32}\)</span>, at <span class="math inline">\(f=f_\text{sat}\)</span>. For <span class="math inline">\(f \ge f_\text{sat}\)</span> the net yield is the floor fraction times the untapered yield, <span class="math inline">\(\tfrac{1}{32}\,y(f)\)</span>, and issuance is the same fraction of untapered issuance,</p>
-<p><span class="math display">\[\tilde i(f) = \frac{1}{32}\,i(f), \qquad f \ge f_\text{sat}.\]</span></p>
-<p>Because the untapered issuance <span class="math inline">\(i(f) = f\,y(f)\)</span> <em>rises</em> with <span class="math inline">\(f\)</span>, the floor is not flat: issuance reaches its minimum at saturation, then climbs slowly as the staking ratio grows. For the compensated <span class="math inline">\(B = 128\)</span> curve the floor is roughly <span class="math inline">\(0.067\%\)</span> of supply at saturation, rising to <span class="math inline">\(0.095\%\)</span> at full-supply staking.</p>
+<section id="yield-and-issuance-curves" class="level2">
+<h2 class="anchored" data-anchor-id="yield-and-issuance-curves">Yield and Issuance Curves</h2>
+<p>Considering our focus on the staking ratio, here we will express characteristic curves as functions of <span class="math inline">\(f\)</span> (the fraction of total supply staked): the annual <strong>yield</strong> <span class="math inline">\(y(f)\)</span> a validator earns on staked ETH,<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and the <strong>issuance</strong> <span class="math inline">\(i(f)\)</span> — new ETH minted per year, as a fraction of total supply.</p>
+<p>Under Ethereum’s current rules the yield follows</p>
+<p><span class="math display">\[y(f) = \frac{B\,E}{\sqrt{f\,S}},\]</span></p>
+<p>with <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(B\)</span>, epochs per year <span class="math inline">\(E\)</span>, and total ETH supply <span class="math inline">\(S\)</span> in Gwei. Issuance is the yield paid on the staked fraction,</p>
+<p><span class="math display">\[i(f) = B\,E\,\sqrt{\frac{f}{S}}.\]</span></p>
+<p>Linear tapering subtracts from the yield a term that is zero at <span class="math inline">\(f = 0\)</span> and grows linearly to cancel the yield entirely at the saturation ratio <span class="math inline">\(f_\text{sat}\)</span>:</p>
+<p><span class="math display">\[\tilde y(f) = \begin{cases} y(f) - \dfrac{f}{f_\text{sat}}\,y(f_\text{sat}) &amp; f \le f_\text{sat} \\ 0 &amp; f &gt; f_\text{sat} \end{cases}\]</span></p>
+<p>With <code>BASE_REWARD_FACTOR</code> left at its current value of <span class="math inline">\(B = 64\)</span>, the taper reduces the net yield across the whole range, with the reduction growing as the staking ratio rises and reaching the full yield at <span class="math inline">\(f_\text{sat}\)</span>. The tapered curve crosses zero at <span class="math inline">\(f_\text{sat} = 50\%\)</span> and stays there beyond it, removing any incentive to stake past that point.</p>
 <div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <style>
-  #floor5-yieldcurve-chart { width: 100%; height: 460px; }
+  #lintap-yieldcurve-chart { width: 100%; height: 460px; }
 </style>
 
-<div id="floor5-yieldcurve-chart"></div>
+<div id="lintap-yieldcurve-chart"></div>
 
 <script src="yieldcurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Consensus layer net yield: the current curve, the unmodified linear taper (zero-issuance floor), and the <span class="math inline">\(\tfrac{1}{32}\)</span> floored variant, all at <span class="math inline">\(B = 128\)</span>.
+Figure&nbsp;1: Consensus layer net yield under the current curve and the linear taper, both with <span class="math inline">\(B = 64\)</span>.
 </figcaption>
 </figure>
 </div>
+<p>The tapered issuance follows directly,</p>
+<p><span class="math display">\[\tilde i(f) = \begin{cases} f\,\tilde y(f) &amp; f \le f_\text{sat} \\ 0 &amp; f &gt; f_\text{sat} \end{cases}\]</span></p>
+<p>and no longer runs away: it rises, peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span>, and falls back to zero at <span class="math inline">\(f_\text{sat}\)</span>.</p>
 <div id="fig-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <style>
-  #floor5-issuancecurve-chart { width: 100%; height: 460px; }
+  #lintap-issuancecurve-chart { width: 100%; height: 460px; }
 </style>
 
-<div id="floor5-issuancecurve-chart"></div>
+<div id="lintap-issuancecurve-chart"></div>
 
 <script src="issuancecurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Annual ETH issuance for the same curves. The floored variant is indistinguishable from the zero-floor taper until close to saturation, where the zero-floor curve reaches zero and the floored one levels off just above it.
+Figure&nbsp;2: Annual ETH issuance under the current curve and the linear taper, both with <span class="math inline">\(B = 64\)</span>. The tapered curve peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
 </figcaption>
 </figure>
 </div>
 </section>
 <section id="the-offset-fraction" class="level2">
 <h2 class="anchored" data-anchor-id="the-offset-fraction">The Offset Fraction</h2>
-<p>In absolute terms — working, as the linear proposal does, from the total active balance <span class="math inline">\(D = f\,S\)</span> and the fixed constant <span class="math inline">\(D_\text{sat}\)</span> (<code>SATURATION_BALANCE</code>) — the offset fraction is</p>
-<p><span class="math display">\[q = \frac{31}{32}\min\!\left(\left(\tfrac{D}{D_\text{sat}}\right)^{3/2},\; 1\right).\]</span></p>
-<p>Equivalently, each duty’s offset is the linear offset scaled down to <span class="math inline">\(\tfrac{31}{32}\)</span>, so a <span class="math inline">\(\tfrac{1}{32}\)</span> slice of every reward always survives. That surviving slice is the issuance floor; scaling the (square-root-clamped) linear offset is what places its onset exactly at saturation.</p>
+<p>The offset deducts a fraction <span class="math inline">\(q(f)\)</span> of each validator’s ideal reward, leaving net yield <span class="math inline">\((1-q(f))\,y(f)\)</span>. To reproduce the subtractive linear taper <span class="math inline">\(\tilde y(f)\)</span> above, this fraction must be</p>
+<p><span class="math display">\[q(f) = \left(\frac{f}{f_\text{sat}}\right)^{3/2}.\]</span></p>
+<p>The power of <span class="math inline">\(3/2\)</span> rather than <span class="math inline">\(1\)</span> is a consequence of the square-root reward curve: the deduction itself is linear in <span class="math inline">\(f\)</span>, but the reward it is taken from scales as <span class="math inline">\(f^{-1/2}\)</span>, so expressed as a <em>fraction</em> of that reward the offset picks up an extra half power.</p>
+</section>
+<section id="from-staking-fraction-to-absolute-balance" class="level2">
+<h2 class="anchored" data-anchor-id="from-staking-fraction-to-absolute-balance">From Staking Fraction to Absolute Balance</h2>
+<p>Everything up to this point has been expressed in terms of the staking ratio <span class="math inline">\(f\)</span>, which keeps the rationale clear and matches the curves above. The protocol itself, however, cannot observe <span class="math inline">\(f\)</span> directly: it knows the total active balance but not the total ETH supply. The spec below therefore works in absolute terms, using the total active balance <span class="math inline">\(D = f\,S\)</span> in place of <span class="math inline">\(f\)</span>, and a fixed constant <span class="math inline">\(D_\text{sat} = f_\text{sat}\,S\)</span> (<code>SATURATION_BALANCE</code>) in place of <span class="math inline">\(f_\text{sat}\)</span>. The offset fraction is unchanged in form,</p>
+<p><span class="math display">\[q = \left(\frac{D}{D_\text{sat}}\right)^{3/2}.\]</span></p>
+<p>Because <span class="math inline">\(D_\text{sat}\)</span> is fixed at the hard fork rather than tracking the live supply, the effective saturation ratio will drift slowly as the supply changes through issuance and burning. The drift is small, and could be removed by a future fork that makes the protocol aware of the total supply — allowing <span class="math inline">\(D_\text{sat}\)</span> to be recovered from <span class="math inline">\(f_\text{sat}\,S\)</span> directly rather than baked in as a constant.</p>
 </section>
 <section id="per-duty-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="per-duty-implementation">Per-duty implementation</h2>
-<p>The three-part split — an <strong>attestation offset</strong> on every active validator, a <strong>proposer offset</strong> on the epoch’s 32 proposers, and a <strong>sync offset</strong> on the 512 sync-committee members, each deducting <span class="math inline">\(q\)</span> times the ideal reward for that duty — is exactly as in the linear proposal. Scaling each duty’s offset independently means the floor is preserved duty-by-duty: a validator only attesting in a given epoch still retains its <span class="math inline">\(\tfrac{1}{32}\)</span> attestation slice.</p>
+<p>A validator’s assigned duties are attestation (every epoch), and occasional block proposals and sync committee participation. The offset is correspondingly applied at the epoch boundary in three parts, each deducting <span class="math inline">\(q\)</span> times an idealised validator reward for each duty:</p>
+<ul>
+<li><strong>Attestation offset</strong> — a deduction of <span class="math inline">\(q\)</span> times the ideal attestation reward from every active validator;</li>
+<li><strong>Proposer offset</strong> — a deduction of <span class="math inline">\(q\)</span> times an equal share of the epoch’s ideal proposer reward, charged to each of the 32 proposers;</li>
+<li><strong>Sync offset</strong> — a deduction of <span class="math inline">\(q\)</span> times the ideal sync committee reward for the epoch from each of the 512 sync committee members.</li>
+</ul>
+<p>Targeting offsets at individual duties in this way, rather than making a uniform per-validator deduction, reduces the variance between validators due to the rare duties of proposal and sync committee participation.</p>
 </section>
 <section id="consensus-layer-spec" class="level2">
 <h2 class="anchored" data-anchor-id="consensus-layer-spec">Consensus Layer Spec</h2>
-<p>The change to the consensus layer is the linear proposal’s, plus a single new constant <code>ISSUANCE_FLOOR_DENOMINATOR</code> <span class="math inline">\(= 32\)</span> and one extra subtraction per duty. <code>BASE_REWARD_FACTOR</code> is raised and <code>SATURATION_BALANCE</code> is added exactly as before, the <code>get_tapered_offset</code> helper — including its square-root clamp at saturation — is reused <strong>unchanged</strong>, and <code>process_issuance_offsets</code> simply scales each duty’s offset down to <span class="math inline">\(\tfrac{31}{32}\)</span>, removing a <span class="math inline">\(\tfrac{1}{32}\)</span> slice. Because the helper’s clamp already holds the offset at the full reward beyond saturation, scaling it places the floor’s onset exactly at <span class="math inline">\(f_\text{sat}\)</span>. The new step uses the same two lookups as the linear version: <code>get_beacon_proposer_index_at_slot</code><a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and <code>get_validator_index_by_pubkey</code>.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
-<section id="updated-constant-and-new-constants" class="level3">
-<h3 class="anchored" data-anchor-id="updated-constant-and-new-constants">Updated Constant and New Constants</h3>
+<p>The changes below leave the rewards-and-penalties machinery entirely untouched — <code>BASE_REWARD_FACTOR</code> included — adding only the calculation and deduction of issuance offsets during epoch processing: a new <code>SATURATION_BALANCE</code> constant is added, a helper <code>get_tapered_offset</code> computes the offset for a given reward, and a new step <code>process_issuance_offsets</code> applies it. That step also relies on two lookups not in the current spec: <code>get_beacon_proposer_index_at_slot</code><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> and <code>get_validator_index_by_pubkey</code>.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<section id="new-constant" class="level3">
+<h3 class="anchored" data-anchor-id="new-constant">New Constant</h3>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Constant</th>
-<th>Old value</th>
-<th>New value</th>
+<th>Value</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>BASE_REWARD_FACTOR</code></td>
-<td><code>uint64(64)</code></td>
-<td><code>uint64(128)</code></td>
-<td>Calibration, unchanged from the linear proposal (crossover <span class="math inline">\(f \approx 31\%\)</span>)</td>
-</tr>
-<tr class="even">
 <td><code>SATURATION_BALANCE</code></td>
-<td>—</td>
 <td><code>Gwei(60_250_000 * 10**9)</code></td>
 <td>Total staked balance <span class="math inline">\(D_\text{sat}\)</span> at <span class="math inline">\(f_\text{sat} = 50\%\)</span>; set at the hard fork to approximately half the current ETH supply</td>
 </tr>
-<tr class="odd">
-<td><code>ISSUANCE_FLOOR_DENOMINATOR</code></td>
-<td>—</td>
-<td><code>uint64(32)</code></td>
-<td>The floor <span class="math inline">\(\tfrac{1}{32}\)</span>: each duty retains at least this fraction of its ideal reward. A larger power of two gives a thinner floor</td>
-</tr>
 </tbody>
 </table>
+<p><code>SATURATION_BALANCE</code> encodes <span class="math inline">\(D_\text{sat} = f_\text{sat} \cdot S\)</span> in Gwei.</p>
 </section>
-<section id="reused-function-the-offset-helper" class="level3">
-<h3 class="anchored" data-anchor-id="reused-function-the-offset-helper">Reused Function: the offset helper</h3>
-<p>Unchanged from the linear proposal. It applies the cubed square-root ratio <span class="math inline">\((D/D_\text{sat})^{3/2}\)</span> to a reward as three successive <code>uint64</code> multiply-divides:</p>
+<section id="new-function-the-offset-fraction" class="level3">
+<h3 class="anchored" data-anchor-id="new-function-the-offset-fraction">New Function: the offset fraction</h3>
+<p>The offset fraction is</p>
+<p><span class="math display">\[q = \left(\frac{D}{D_\text{sat}}\right)^{3/2} = \left(\frac{\sqrt{D}}{\sqrt{D_\text{sat}}}\right)^{3}.\]</span></p>
+<p>Writing it as the cube of the square-root ratio lets us apply it to a reward as three successive <code>uint64</code> multiply-divides, so every intermediate stays well within <code>uint64</code> — consistent with the rest of the reward machinery, which never forms a value wider than 64 bits. A single helper applies the cubed ratio to a reward, taking the two square roots (computed once per epoch by the caller) as arguments:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_tapered_offset(reward: Gwei, sqrt_active: uint64, sqrt_sat: uint64) <span class="op">-&gt;</span> Gwei:</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># reward * (sqrt_active / sqrt_sat)**3 == reward * (D / SATURATION_BALANCE)**(3/2)</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    offset <span class="op">=</span> uint64(reward)</span>
@@ -370,33 +376,33 @@ Figure&nbsp;2: Annual ETH issuance for the same curves. The floored variant is i
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> offset <span class="op">*</span> sqrt_active <span class="op">//</span> sqrt_sat</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(offset)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="new-step-applying-the-floored-offset" class="level3">
-<h3 class="anchored" data-anchor-id="new-step-applying-the-floored-offset">New Step: applying the floored offset</h3>
-<p>Identical to the linear step, except each duty’s offset is scaled down to <span class="math inline">\(\tfrac{31}{32}\)</span> — <code>offset - offset // ISSUANCE_FLOOR_DENOMINATOR</code> — leaving a <span class="math inline">\(\tfrac{1}{32}\)</span> slice that is always paid out:</p>
+<section id="new-step-applying-the-offset" class="level3">
+<h3 class="anchored" data-anchor-id="new-step-applying-the-offset">New Step: applying the offset</h3>
+<p>As described above, the offset splits by duty, so we apply it in three passes:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_issuance_offsets(state: BeaconState) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># sqrt clamp unchanged from the linear proposal: it holds the offset at the</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># full reward beyond saturation, placing the floor's onset exactly at f_sat</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    sqrt_sat <span class="op">=</span> integer_squareroot(SATURATION_BALANCE)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    sqrt_active <span class="op">=</span> <span class="bu">min</span>(integer_squareroot(get_total_active_balance(state)), sqrt_sat)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    increment <span class="op">=</span> EFFECTIVE_BALANCE_INCREMENT</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    base <span class="op">=</span> get_base_reward_per_increment(state)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    epoch <span class="op">=</span> get_current_epoch(state)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Attester offset — every active validator.</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    attest_weight <span class="op">=</span> TIMELY_SOURCE_WEIGHT <span class="op">+</span> TIMELY_TARGET_WEIGHT <span class="op">+</span> TIMELY_HEAD_WEIGHT</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> index <span class="kw">in</span> get_active_validator_indices(state, epoch):</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        attest_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> attest_weight <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> get_tapered_offset(attest_reward, sqrt_active, sqrt_sat)</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, offset <span class="op">-</span> offset <span class="op">//</span> ISSUANCE_FLOOR_DENOMINATOR)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Proposer offset — the 32 proposers of the epoch.</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    n_total <span class="op">=</span> get_total_active_balance(state) <span class="op">//</span> increment</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    ideal_proposer_reward <span class="op">=</span> Gwei(</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        n_total <span class="op">*</span> base <span class="op">*</span> PROPOSER_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR <span class="op">//</span> SLOTS_PER_EPOCH</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    proposer_offset <span class="op">=</span> get_tapered_offset(ideal_proposer_reward, sqrt_active, sqrt_sat)</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    proposer_offset <span class="op">=</span> proposer_offset <span class="op">-</span> proposer_offset <span class="op">//</span> ISSUANCE_FLOOR_DENOMINATOR</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Clamping sqrt_active to sqrt_sat to prevent negative issuance.</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    sqrt_sat <span class="op">=</span> integer_squareroot(SATURATION_BALANCE)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    sqrt_active <span class="op">=</span> <span class="bu">min</span>(integer_squareroot(get_total_active_balance(state)), sqrt_sat)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    increment <span class="op">=</span> EFFECTIVE_BALANCE_INCREMENT</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    base <span class="op">=</span> get_base_reward_per_increment(state)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    epoch <span class="op">=</span> get_current_epoch(state)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Attester offset — every active validator.</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    attest_weight <span class="op">=</span> TIMELY_SOURCE_WEIGHT <span class="op">+</span> TIMELY_TARGET_WEIGHT <span class="op">+</span> TIMELY_HEAD_WEIGHT</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> index <span class="kw">in</span> get_active_validator_indices(state, epoch):</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        attest_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> attest_weight <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> get_tapered_offset(attest_reward, sqrt_active, sqrt_sat)</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, offset)</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Proposer offset — the 32 proposers of the epoch.</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    n_total <span class="op">=</span> get_total_active_balance(state) <span class="op">//</span> increment</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    ideal_proposer_reward <span class="op">=</span> Gwei(</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        n_total <span class="op">*</span> base <span class="op">*</span> PROPOSER_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR <span class="op">//</span> SLOTS_PER_EPOCH</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    proposer_offset <span class="op">=</span> get_tapered_offset(</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        ideal_proposer_reward, sqrt_active, sqrt_sat</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    start_slot <span class="op">=</span> compute_start_slot_at_epoch(epoch)</span>
 <span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> slot <span class="kw">in</span> <span class="bu">range</span>(start_slot, start_slot <span class="op">+</span> SLOTS_PER_EPOCH):</span>
 <span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>        proposer <span class="op">=</span> get_beacon_proposer_index_at_slot(state, Slot(slot))</span>
@@ -408,9 +414,9 @@ Figure&nbsp;2: Annual ETH issuance for the same curves. The floored variant is i
 <span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
 <span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        sync_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> SYNC_REWARD_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> get_tapered_offset(sync_reward, sqrt_active, sqrt_sat)</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, offset <span class="op">-</span> offset <span class="op">//</span> ISSUANCE_FLOOR_DENOMINATOR)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>process_issuance_offsets</code> is added to <code>process_epoch</code> immediately after <code>process_rewards_and_penalties</code> and before <code>process_effective_balance_updates</code>, so effective balances still hold the epoch’s values and step 2 charges exactly the proposers selected during the epoch.</p>
-<p>The cost is the linear proposal’s: one O(1)-per-validator deduction (the attestation offset), foldable into the existing rewards/penalties pass, plus two fixed passes over the 32 proposers and 512 sync committee members. The added scaling is a single subtraction per duty.</p>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, offset)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>process_issuance_offsets</code> is added to <code>process_epoch</code> immediately after <code>process_rewards_and_penalties</code> and before <code>process_effective_balance_updates</code>. Running it there means effective balances still hold the epoch’s values, so step 2 charges exactly the proposers that were selected during the epoch.</p>
+<p>The dominant new cost is one O(1)-per-validator deduction (the attestation offset) — foldable into the existing rewards/penalties pass — plus two fixed passes over the 32 proposers and 512 sync committee members.</p>
 
 
 </section>
@@ -420,8 +426,9 @@ Figure&nbsp;2: Annual ETH issuance for the same curves. The floored variant is i
 <div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
 
 <ol>
-<li id="fn1"><p>The existing <code>get_beacon_proposer_index</code> generalised to an arbitrary slot in the epoch.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-<li id="fn2"><p>A pubkey→index lookup, which clients already maintain as a cache.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn1"><p>Throughout, <span class="math inline">\(y(f)\)</span> refers to consensus-layer issuance yield only; it does not include execution-layer yield (priority fees and MEV). Execution-layer yield is in any case unpredictable, and there is an expectation that it may eventually be burned rather than passed to the validator.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>The existing <code>get_beacon_proposer_index</code> generalised to an arbitrary slot in the epoch.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>A pubkey→index lookup, which clients already maintain as a cache.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
 </ol>
 </section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

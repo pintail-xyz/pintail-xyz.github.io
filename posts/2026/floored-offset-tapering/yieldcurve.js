@@ -120,10 +120,10 @@
     },
     {
       x: fs, y: yNoFloor,
-      name: 'No floor (B=128)',
+      name: 'Zero floor (B=128)',
       type: 'scatter', mode: 'lines',
       line: { color: '#2e7d32', width: 2.5 },
-      hovertemplate: 'No floor: %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Zero floor: %{y:.3f}%<extra></extra>',
     },
     {
       x: fs, y: yF32,
