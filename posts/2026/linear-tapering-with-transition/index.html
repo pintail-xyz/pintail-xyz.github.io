@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-06-23">
+<meta name="description" content="A variant of the linear-tapering issuance reform that phases the change in gradually: every offset is scaled by a coefficient that ramps from zero to one over a one-year transition, so net yield slides smoothly from today’s curve to the fully tapered curve rather than stepping down at the fork.">
+
+<title>Minimal Issuance Reform: Linear Tapering with a Transition Period – pintail’s notes</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../../">
+<link href="../../../favicon.svg" rel="icon" type="image/svg+xml">
+<script src="../../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../../site_libs/bootstrap/bootstrap-9c2d5a783ba1c500f93f29c997e08025.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script data-goatcounter="https://pintail.goatcounter.com/count" async="" src="//gc.zgo.at/count.js"></script>
+<meta name="quarto:status" content="draft">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta property="og:title" content="Minimal Issuance Reform: Linear Tapering with a Transition Period – pintail’s notes">
+<meta property="og:description" content="A variant of the linear-tapering issuance reform that phases the change in gradually: every offset is scaled by a coefficient that ramps from zero to one over a one-year transition, so net yield slides smoothly from today’s curve to the fully tapered curve rather than stepping down at the fork.">
+<meta property="og:image" content="https://pintail.xyz/posts/2026/linear-tapering-with-transition/thumbnail.svg">
+<meta property="og:site_name" content="pintail’s notes">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><div id="quarto-draft-alert" class="alert alert-warning"><i class="bi bi-pencil-square"></i>Draft</div>
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../../assets/pintail_silhouette.svg" alt="Pintail duck silhouette" class="navbar-logo light-content">
+    <img src="../../../assets/pintail_silhouette.svg" alt="Pintail duck silhouette" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../../index.html">
+    <span class="navbar-title">pintail’s notes</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../../drafts.html"> 
+<span class="menu-text">Drafts</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/pintail_xyz"> <i class="bi bi-twitter" role="img" aria-label="Twitter">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/pintail-xyz"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#tldr" id="toc-tldr" class="nav-link active" data-scroll-target="#tldr">tl;dr</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction">Introduction</a></li>
+  <li><a href="#yield-and-issuance-curves" id="toc-yield-and-issuance-curves" class="nav-link" data-scroll-target="#yield-and-issuance-curves">Yield and Issuance Curves</a></li>
+  <li><a href="#the-offset-fraction" id="toc-the-offset-fraction" class="nav-link" data-scroll-target="#the-offset-fraction">The Offset Fraction</a></li>
+  <li><a href="#phasing-in-the-change" id="toc-phasing-in-the-change" class="nav-link" data-scroll-target="#phasing-in-the-change">Phasing in the Change</a></li>
+  <li><a href="#from-staking-fraction-to-absolute-balance" id="toc-from-staking-fraction-to-absolute-balance" class="nav-link" data-scroll-target="#from-staking-fraction-to-absolute-balance">From Staking Fraction to Absolute Balance</a></li>
+  <li><a href="#per-duty-implementation" id="toc-per-duty-implementation" class="nav-link" data-scroll-target="#per-duty-implementation">Per-duty implementation</a></li>
+  <li><a href="#consensus-layer-spec" id="toc-consensus-layer-spec" class="nav-link" data-scroll-target="#consensus-layer-spec">Consensus Layer Spec</a>
+  <ul class="collapse">
+  <li><a href="#new-constants" id="toc-new-constants" class="nav-link" data-scroll-target="#new-constants">New Constants</a></li>
+  <li><a href="#new-function-the-offset-fraction" id="toc-new-function-the-offset-fraction" class="nav-link" data-scroll-target="#new-function-the-offset-fraction">New Function: the offset fraction</a></li>
+  <li><a href="#new-function-the-transition-ramp" id="toc-new-function-the-transition-ramp" class="nav-link" data-scroll-target="#new-function-the-transition-ramp">New Function: the transition ramp</a></li>
+  <li><a href="#new-step-applying-the-offset" id="toc-new-step-applying-the-offset" class="nav-link" data-scroll-target="#new-step-applying-the-offset">New Step: applying the offset</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Minimal Issuance Reform: Linear Tapering with a Transition Period</h1>
+</div>
+
+<div>
+  <div class="description">
+    A variant of the linear-tapering issuance reform that phases the change in gradually: every offset is scaled by a coefficient that ramps from zero to one over a one-year transition, so net yield slides smoothly from today’s curve to the fully tapered curve rather than stepping down at the fork.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">June 23, 2026</p>
+    </div>
+  </div>
+  
+    <div>
+    <div class="quarto-title-meta-heading">Modified</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date-modified">June 23, 2026</p>
+    </div>
+  </div>
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="tldr" class="level2">
+<h2 class="anchored" data-anchor-id="tldr">tl;dr</h2>
+<ul>
+<li>Ethereum’s existing issuance curve incentivises growth in the staking ratio to levels which weaken security and make the protocol more open to capture;</li>
+<li>This is a minimal proposal to ensure stake growth beyond 50% is no longer incentivised, by applying a linearly-tapered offset to validator rewards;</li>
+<li>The underlying reward curve and the mechanism of rewards and penalties — including <code>BASE_REWARD_FACTOR</code> — are left entirely unchanged;</li>
+<li>To avoid a sudden drop in yield at the fork, the offset is <strong>phased in over a one-year transition</strong>: every deduction is scaled by a coefficient that ramps linearly from zero to one, so net yield slides smoothly from today’s curve to the fully tapered curve;</li>
+<li>Worst-case issuance is reduced to around 0.5%, and is likely to settle at a much lower value, derived from the market-determined reservation yield.</li>
+</ul>
+</section>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>As <a href="https://pintail.xyz/posts/2026/staking-ratio/">previously noted</a>, Ethereum’s issuance curve incentivises growth in the staking ratio well beyond the point at which additional stake increases Ethereum’s security, and arguably makes it more brittle and vulnerable to capture. The level of issuance grows continuously as more Ether is staked, and even with all Ether staked, the nominal yield never goes below 1.5%. The current issuance curve therefore does not allow the market to reach an equilibrium yield, and we should expect the staking ratio to tend towards 100% over time.</p>
+<p>To prevent Ethereum from reaching a problematic high staking ratio, this proposal introduces the simplest possible change to ensure that the staking market reaches an equilibrium yield at some point before 50% of all Ether has been staked. This is achieved without altering the existing reward curve and micro-incentives, by subtracting a per-epoch offset for each validator duty, with the offset tapered according to the staking ratio.</p>
+<p>This variant of the proposal adds one further refinement: rather than applying the full offset the moment the fork activates, it <strong>phases the offset in over a one-year transition period</strong>, so that validators experience a gradual change in yield rather than a step.</p>
+</section>
+<section id="yield-and-issuance-curves" class="level2">
+<h2 class="anchored" data-anchor-id="yield-and-issuance-curves">Yield and Issuance Curves</h2>
+<p>Considering our focus on the staking ratio, here we will express characteristic curves as functions of <span class="math inline">\(f\)</span> (the fraction of total supply staked): the annual <strong>yield</strong> <span class="math inline">\(y(f)\)</span> a validator earns on staked ETH,<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> and the <strong>issuance</strong> <span class="math inline">\(i(f)\)</span> — new ETH minted per year, as a fraction of total supply.</p>
+<p>Under Ethereum’s current rules the yield follows</p>
+<p><span class="math display">\[y(f) = \frac{B\,E}{\sqrt{f\,S}},\]</span></p>
+<p>with <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(B\)</span>, epochs per year <span class="math inline">\(E\)</span>, and total ETH supply <span class="math inline">\(S\)</span> in Gwei. Issuance is the yield paid on the staked fraction,</p>
+<p><span class="math display">\[i(f) = B\,E\,\sqrt{\frac{f}{S}}.\]</span></p>
+<p>Linear tapering subtracts from the yield a term that is zero at <span class="math inline">\(f = 0\)</span> and grows linearly to cancel the yield entirely at the saturation ratio <span class="math inline">\(f_\text{sat}\)</span>:</p>
+<p><span class="math display">\[\tilde y(f) = \begin{cases} y(f) - \dfrac{f}{f_\text{sat}}\,y(f_\text{sat}) &amp; f \le f_\text{sat} \\ 0 &amp; f &gt; f_\text{sat} \end{cases}\]</span></p>
+<p>With <code>BASE_REWARD_FACTOR</code> left at its current value of <span class="math inline">\(B = 64\)</span>, the taper reduces the net yield across the whole range, with the reduction growing as the staking ratio rises and reaching the full yield at <span class="math inline">\(f_\text{sat}\)</span>. The tapered curve crosses zero at <span class="math inline">\(f_\text{sat} = 50\%\)</span> and stays there beyond it, removing any incentive to stake past that point.</p>
+<p>This is the curve the protocol settles on <strong>once the transition is complete</strong>. During the transition the net yield lies between today’s curve and this one; the slider on the chart below sweeps through that one-year journey, from the current curve (month 0) to the fully tapered curve (month 12).</p>
+<div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #lintaptrans-yieldcurve-chart { width: 100%; height: 460px; }
+  .lintaptrans-controls {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin: 0.1rem 0 0.6rem; font-size: 0.85rem;
+  }
+  .lintaptrans-controls button {
+    cursor: pointer; border: 1px solid #6a1b9a; background: #6a1b9a; color: #fff;
+    border-radius: 4px; padding: 0.25rem 0.7rem; font-size: 0.85rem; min-width: 5.5rem;
+  }
+  .lintaptrans-controls button:hover { background: #581580; }
+  .lintaptrans-controls input[type=range] { flex: 1; accent-color: #6a1b9a; }
+  .lintaptrans-controls .lintaptrans-label { color: #6a1b9a; min-width: 6rem; text-align: right; }
+</style>
+
+<div id="lintaptrans-yieldcurve-chart"></div>
+
+<script src="yieldcurve.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Consensus layer net yield: the current curve, and the linear taper as it phases in over the one-year transition. Drag the slider or press play to sweep from month 0 (no taper) to month 12 (full taper). Both curves use <span class="math inline">\(B = 64\)</span>.
+</figcaption>
+</figure>
+</div>
+<p>The tapered issuance follows directly,</p>
+<p><span class="math display">\[\tilde i(f) = \begin{cases} f\,\tilde y(f) &amp; f \le f_\text{sat} \\ 0 &amp; f &gt; f_\text{sat} \end{cases}\]</span></p>
+<p>and no longer runs away: it rises, peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span>, and falls back to zero at <span class="math inline">\(f_\text{sat}\)</span>.</p>
+<div id="fig-issuance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  #lintaptrans-issuancecurve-chart { width: 100%; height: 460px; }
+  .lintaptrans-controls {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin: 0.1rem 0 0.6rem; font-size: 0.85rem;
+  }
+  .lintaptrans-controls button {
+    cursor: pointer; border: 1px solid #6a1b9a; background: #6a1b9a; color: #fff;
+    border-radius: 4px; padding: 0.25rem 0.7rem; font-size: 0.85rem; min-width: 5.5rem;
+  }
+  .lintaptrans-controls button:hover { background: #581580; }
+  .lintaptrans-controls input[type=range] { flex: 1; accent-color: #6a1b9a; }
+  .lintaptrans-controls .lintaptrans-label { color: #6a1b9a; min-width: 6rem; text-align: right; }
+</style>
+
+<div id="lintaptrans-issuancecurve-chart"></div>
+
+<script src="issuancecurve.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Annual ETH issuance: the current curve, and the linear taper as it phases in over the one-year transition. At month 12 the tapered curve peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>. Both curves use <span class="math inline">\(B = 64\)</span>.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="the-offset-fraction" class="level2">
+<h2 class="anchored" data-anchor-id="the-offset-fraction">The Offset Fraction</h2>
+<p>The offset deducts a fraction <span class="math inline">\(q(f)\)</span> of each validator’s ideal reward, leaving net yield <span class="math inline">\((1-q(f))\,y(f)\)</span>. To reproduce the subtractive linear taper <span class="math inline">\(\tilde y(f)\)</span> above, this fraction must be</p>
+<p><span class="math display">\[q(f) = \left(\frac{f}{f_\text{sat}}\right)^{3/2}.\]</span></p>
+<p>The power of <span class="math inline">\(3/2\)</span> rather than <span class="math inline">\(1\)</span> is a consequence of the square-root reward curve: the deduction itself is linear in <span class="math inline">\(f\)</span>, but the reward it is taken from scales as <span class="math inline">\(f^{-1/2}\)</span>, so expressed as a <em>fraction</em> of that reward the offset picks up an extra half power.</p>
+</section>
+<section id="phasing-in-the-change" class="level2">
+<h2 class="anchored" data-anchor-id="phasing-in-the-change">Phasing in the Change</h2>
+<p>Applying the full fraction <span class="math inline">\(q(f)\)</span> from the first epoch after the fork would step the net yield down discontinuously — at today’s ratio of roughly a third, the deduction is already a substantial fraction of the reward. To smooth this out we scale every offset by a <strong>transition coefficient</strong> <span class="math inline">\(c(t)\)</span> that ramps linearly from zero to one over a transition period of length <span class="math inline">\(T\)</span> beginning at the fork:</p>
+<p><span class="math display">\[c(t) = \operatorname{clamp}\!\left(\frac{t - t_0}{T},\, 0,\, 1\right),\]</span></p>
+<p>where <span class="math inline">\(t_0\)</span> is the fork epoch and <span class="math inline">\(T \approx 1\text{ year}\)</span>. The effective offset fraction is then</p>
+<p><span class="math display">\[q_\text{eff}(f, t) = c(t)\,q(f),\]</span></p>
+<p>so the net yield during the transition is</p>
+<p><span class="math display">\[\tilde y(f, t) = \bigl(1 - c(t)\,q(f)\bigr)\,y(f).\]</span></p>
+<p>At <span class="math inline">\(t = t_0\)</span> we have <span class="math inline">\(c = 0\)</span> and <span class="math inline">\(\tilde y = y\)</span> — exactly today’s curve, so the fork itself changes nothing. As <span class="math inline">\(c\)</span> rises to one over the year, the curve slides down to the fully tapered <span class="math inline">\(\tilde y(f)\)</span> of the previous section. Because the same coefficient multiplies every duty’s offset uniformly, the entire family of intermediate curves is just a scaled blend of the two endpoints, which is precisely what the chart sliders interpolate.</p>
+<p>A linear ramp is the simplest choice and is what the spec below implements; a smoother (e.g.&nbsp;cosine) ramp would remove the slight kinks in yield at the start and end of the transition, at the cost of a less transparent specification.</p>
+</section>
+<section id="from-staking-fraction-to-absolute-balance" class="level2">
+<h2 class="anchored" data-anchor-id="from-staking-fraction-to-absolute-balance">From Staking Fraction to Absolute Balance</h2>
+<p>Everything up to this point has been expressed in terms of the staking ratio <span class="math inline">\(f\)</span>, which keeps the rationale clear and matches the curves above. The protocol itself, however, cannot observe <span class="math inline">\(f\)</span> directly: it knows the total active balance but not the total ETH supply. The spec below therefore works in absolute terms, using the total active balance <span class="math inline">\(D = f\,S\)</span> in place of <span class="math inline">\(f\)</span>, and a fixed constant <span class="math inline">\(D_\text{sat} = f_\text{sat}\,S\)</span> (<code>SATURATION_BALANCE</code>) in place of <span class="math inline">\(f_\text{sat}\)</span>. The offset fraction is unchanged in form,</p>
+<p><span class="math display">\[q = \left(\frac{D}{D_\text{sat}}\right)^{3/2}.\]</span></p>
+<p>Because <span class="math inline">\(D_\text{sat}\)</span> is fixed at the hard fork rather than tracking the live supply, the effective saturation ratio will drift slowly as the supply changes through issuance and burning. The drift is small, and could be removed by a future fork that makes the protocol aware of the total supply — allowing <span class="math inline">\(D_\text{sat}\)</span> to be recovered from <span class="math inline">\(f_\text{sat}\,S\)</span> directly rather than baked in as a constant.</p>
+<p>The transition coefficient <span class="math inline">\(c(t)\)</span> is likewise expressed in epochs rather than abstract time: with <span class="math inline">\(t_0\)</span> a fixed <code>TRANSITION_START_EPOCH</code> and <span class="math inline">\(T\)</span> a fixed <code>TRANSITION_DURATION_EPOCHS</code>, the coefficient at epoch <span class="math inline">\(e\)</span> is</p>
+<p><span class="math display">\[c(e) = \operatorname{clamp}\!\left(\frac{e - t_0}{T},\, 0,\, 1\right).\]</span></p>
+</section>
+<section id="per-duty-implementation" class="level2">
+<h2 class="anchored" data-anchor-id="per-duty-implementation">Per-duty implementation</h2>
+<p>A validator’s assigned duties are attestation (every epoch), and occasional block proposals and sync committee participation. The offset is correspondingly applied at the epoch boundary in three parts, each deducting <span class="math inline">\(c(e)\,q\)</span> times an idealised validator reward for each duty:</p>
+<ul>
+<li><strong>Attestation offset</strong> — a deduction of <span class="math inline">\(c(e)\,q\)</span> times the ideal attestation reward from every active validator;</li>
+<li><strong>Proposer offset</strong> — a deduction of <span class="math inline">\(c(e)\,q\)</span> times an equal share of the epoch’s ideal proposer reward, charged to each of the 32 proposers;</li>
+<li><strong>Sync offset</strong> — a deduction of <span class="math inline">\(c(e)\,q\)</span> times the ideal sync committee reward for the epoch from each of the 512 sync committee members.</li>
+</ul>
+<p>Targeting offsets at individual duties in this way, rather than making a uniform per-validator deduction, reduces the variance between validators due to the rare duties of proposal and sync committee participation.</p>
+</section>
+<section id="consensus-layer-spec" class="level2">
+<h2 class="anchored" data-anchor-id="consensus-layer-spec">Consensus Layer Spec</h2>
+<p>The changes below leave the rewards-and-penalties machinery entirely untouched — <code>BASE_REWARD_FACTOR</code> included — adding only the calculation and deduction of issuance offsets during epoch processing: three new constants (<code>SATURATION_BALANCE</code> plus the two transition parameters) are added, a helper <code>get_tapered_offset</code> computes the offset for a given reward, a helper <code>get_transition_ramp</code> computes the transition coefficient, and a new step <code>process_issuance_offsets</code> applies it. That step also relies on two lookups not in the current spec: <code>get_beacon_proposer_index_at_slot</code><a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> and <code>get_validator_index_by_pubkey</code>.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a></p>
+<section id="new-constants" class="level3">
+<h3 class="anchored" data-anchor-id="new-constants">New Constants</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Constant</th>
+<th>Value</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>SATURATION_BALANCE</code></td>
+<td><code>Gwei(60_250_000 * 10**9)</code></td>
+<td>Total staked balance <span class="math inline">\(D_\text{sat}\)</span> at <span class="math inline">\(f_\text{sat} = 50\%\)</span>; set at the hard fork to approximately half the current ETH supply</td>
+</tr>
+<tr class="even">
+<td><code>TRANSITION_START_EPOCH</code></td>
+<td><code>Epoch(...)</code></td>
+<td>Epoch <span class="math inline">\(t_0\)</span> at which tapering begins; set at the hard fork to the fork’s activation epoch</td>
+</tr>
+<tr class="odd">
+<td><code>TRANSITION_DURATION_EPOCHS</code></td>
+<td><code>Epoch(82_125)</code></td>
+<td>Transition length <span class="math inline">\(T\)</span>; <span class="math inline">\(82{,}125 = 365 \times 225\)</span> epochs <span class="math inline">\(\approx 1\)</span> year</td>
+</tr>
+</tbody>
+</table>
+<p><code>SATURATION_BALANCE</code> encodes <span class="math inline">\(D_\text{sat} = f_\text{sat} \cdot S\)</span> in Gwei. There are <span class="math inline">\(225\)</span> epochs per day, so <code>TRANSITION_DURATION_EPOCHS</code> spans 365 days.</p>
+</section>
+<section id="new-function-the-offset-fraction" class="level3">
+<h3 class="anchored" data-anchor-id="new-function-the-offset-fraction">New Function: the offset fraction</h3>
+<p>The offset fraction, scaled by the transition coefficient, is</p>
+<p><span class="math display">\[q_\text{eff} = c(e)\left(\frac{D}{D_\text{sat}}\right)^{3/2} = c(e)\left(\frac{\sqrt{D}}{\sqrt{D_\text{sat}}}\right)^{3}.\]</span></p>
+<p>Writing it as the cube of the square-root ratio lets us apply it to a reward as three successive <code>uint64</code> multiply-divides, with the transition coefficient applied as a fourth, so every intermediate stays well within <code>uint64</code> — consistent with the rest of the reward machinery, which never forms a value wider than 64 bits. The transition coefficient enters as an integer ramp numerator over the fixed duration denominator (both supplied by the caller, computed once per epoch), and is applied last so it scales the already-reduced offset:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_tapered_offset(</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    reward: Gwei,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    sqrt_active: uint64,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    sqrt_sat: uint64,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    ramp: uint64,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    ramp_denominator: uint64,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> Gwei:</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># reward * (sqrt_active / sqrt_sat)**3 * (ramp / ramp_denominator)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="co">#   == reward * (D / SATURATION_BALANCE)**(3/2) * c(epoch)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    offset <span class="op">=</span> uint64(reward)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3</span>):</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> offset <span class="op">*</span> sqrt_active <span class="op">//</span> sqrt_sat</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(offset <span class="op">*</span> ramp <span class="op">//</span> ramp_denominator)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="new-function-the-transition-ramp" class="level3">
+<h3 class="anchored" data-anchor-id="new-function-the-transition-ramp">New Function: the transition ramp</h3>
+<p>The ramp numerator climbs by one each epoch from the start of the transition, capped at <code>TRANSITION_DURATION_EPOCHS</code>; dividing by that same duration yields the coefficient <span class="math inline">\(c(e)\)</span> ramping from <span class="math inline">\(0\)</span> to <span class="math inline">\(1\)</span>. Before the transition begins the numerator is zero, so no offset is applied:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_transition_ramp(epoch: Epoch) <span class="op">-&gt;</span> uint64:</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Returns the numerator of c(epoch) = ramp / TRANSITION_DURATION_EPOCHS,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># which ramps linearly from 0 (at TRANSITION_START_EPOCH) to 1</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># (after TRANSITION_DURATION_EPOCHS epochs have elapsed).</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> epoch <span class="op">&lt;=</span> TRANSITION_START_EPOCH:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> uint64(<span class="dv">0</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    elapsed <span class="op">=</span> epoch <span class="op">-</span> TRANSITION_START_EPOCH</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">min</span>(uint64(elapsed), TRANSITION_DURATION_EPOCHS)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="new-step-applying-the-offset" class="level3">
+<h3 class="anchored" data-anchor-id="new-step-applying-the-offset">New Step: applying the offset</h3>
+<p>As described above, the offset splits by duty, so we apply it in three passes. The square roots and the transition ramp are computed once for the epoch and passed to every offset calculation:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_issuance_offsets(state: BeaconState) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Clamping sqrt_active to sqrt_sat to prevent negative issuance.</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    sqrt_sat <span class="op">=</span> integer_squareroot(SATURATION_BALANCE)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    sqrt_active <span class="op">=</span> <span class="bu">min</span>(integer_squareroot(get_total_active_balance(state)), sqrt_sat)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    increment <span class="op">=</span> EFFECTIVE_BALANCE_INCREMENT</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    base <span class="op">=</span> get_base_reward_per_increment(state)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    epoch <span class="op">=</span> get_current_epoch(state)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Transition coefficient c(epoch) = ramp / TRANSITION_DURATION_EPOCHS.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    ramp <span class="op">=</span> get_transition_ramp(epoch)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    ramp_denominator <span class="op">=</span> uint64(TRANSITION_DURATION_EPOCHS)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Attester offset — every active validator.</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    attest_weight <span class="op">=</span> TIMELY_SOURCE_WEIGHT <span class="op">+</span> TIMELY_TARGET_WEIGHT <span class="op">+</span> TIMELY_HEAD_WEIGHT</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> index <span class="kw">in</span> get_active_validator_indices(state, epoch):</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        attest_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> attest_weight <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> get_tapered_offset(attest_reward, sqrt_active, sqrt_sat, ramp, ramp_denominator)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, offset)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Proposer offset — the 32 proposers of the epoch.</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    n_total <span class="op">=</span> get_total_active_balance(state) <span class="op">//</span> increment</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    ideal_proposer_reward <span class="op">=</span> Gwei(</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        n_total <span class="op">*</span> base <span class="op">*</span> PROPOSER_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR <span class="op">//</span> SLOTS_PER_EPOCH</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    proposer_offset <span class="op">=</span> get_tapered_offset(</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        ideal_proposer_reward, sqrt_active, sqrt_sat, ramp, ramp_denominator</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    start_slot <span class="op">=</span> compute_start_slot_at_epoch(epoch)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> slot <span class="kw">in</span> <span class="bu">range</span>(start_slot, start_slot <span class="op">+</span> SLOTS_PER_EPOCH):</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        proposer <span class="op">=</span> get_beacon_proposer_index_at_slot(state, Slot(slot))</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, proposer, proposer_offset)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Sync offset — the 512 sync committee members.</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> pubkey <span class="kw">in</span> state.current_sync_committee.pubkeys:</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        index <span class="op">=</span> get_validator_index_by_pubkey(state, pubkey)</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        sync_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> SYNC_REWARD_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        offset <span class="op">=</span> get_tapered_offset(sync_reward, sqrt_active, sqrt_sat, ramp, ramp_denominator)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, offset)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>process_issuance_offsets</code> is added to <code>process_epoch</code> immediately after <code>process_rewards_and_penalties</code> and before <code>process_effective_balance_updates</code>. Running it there means effective balances still hold the epoch’s values, so step 2 charges exactly the proposers that were selected during the epoch.</p>
+<p>Once <code>epoch - TRANSITION_START_EPOCH</code> reaches <code>TRANSITION_DURATION_EPOCHS</code>, the ramp saturates at its denominator, the coefficient is permanently one, and the behaviour is identical to the non-transitioned proposal — the transition logic adds only a single <code>min</code> and one extra multiply-divide per offset, and falls away entirely thereafter.</p>
+<p>The dominant new cost is one O(1)-per-validator deduction (the attestation offset) — foldable into the existing rewards/penalties pass — plus two fixed passes over the 32 proposers and 512 sync committee members.</p>
+
+
+</section>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>Throughout, <span class="math inline">\(y(f)\)</span> refers to consensus-layer issuance yield only; it does not include execution-layer yield (priority fees and MEV). Execution-layer yield is in any case unpredictable, and there is an expectation that it may eventually be burned rather than passed to the validator.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>The existing <code>get_beacon_proposer_index</code> generalised to an arbitrary slot in the epoch.<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>A pubkey→index lookup, which clients already maintain as a cache.<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/pintail\.xyz");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<input type="hidden" id="giscus-base-theme" value="light">
+<input type="hidden" id="giscus-alt-theme" value="dark">
+<script>
+  function loadGiscus() {
+    // Function to get the theme based on body class
+    const getTheme = () => {
+      let baseTheme = document.getElementById('giscus-base-theme').value;
+      let altTheme = document.getElementById('giscus-alt-theme').value;
+      return document.body.classList.contains('quarto-dark') ? altTheme : baseTheme;
+    };
+    const script = document.createElement("script");
+    script.src = "https://giscus.app/client.js";
+    script.async = true;
+    script.dataset.repo = "pintail-xyz/pintail-xyz.github.io";
+    script.dataset.repoId = "MDEwOlJlcG9zaXRvcnkzMDUwNjk1MTY=";
+    script.dataset.category = "General";
+    script.dataset.categoryId = "DIC_kwDOEi79zM4C47Ma";
+    script.dataset.mapping = "title";
+    script.dataset.reactionsEnabled = "1";
+    script.dataset.emitMetadata = "0";
+    script.dataset.inputPosition = "top";
+    script.dataset.theme = getTheme();
+    script.dataset.lang = "en";
+    script.crossOrigin = "anonymous";
+    // Append the script to the desired div instead of at the end of the body
+    document.getElementById("quarto-content").appendChild(script);
+  }
+  loadGiscus();
+</script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+      &nbsp;
+    </div>   
+    <div class="nav-footer-center">
+<p>© Pintail</p>
+</div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
