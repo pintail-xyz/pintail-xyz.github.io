@@ -1,0 +1,9 @@
+```{=html}
+<style>
+  #eipburn-yieldcurve-chart { width: 100%; height: 460px; }
+</style>
+
+<div id="eipburn-yieldcurve-chart"></div>
+
+<script src="yieldcurve.js"></script>
+```

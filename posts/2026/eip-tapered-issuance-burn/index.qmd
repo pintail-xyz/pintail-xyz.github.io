@@ -1,0 +1,228 @@
+---
+title: "EIP Draft: Tapered Issuance Burn"
+date: 2026-07-14
+date-modified: 2026-07-14
+image: thumbnail.svg
+description: "An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, without altering Ethereum's existing reward curve."
+toc: true
+draft: true
+
+comments:
+  giscus:
+    repo: pintail-xyz/pintail-xyz.github.io
+    repo-id: MDEwOlJlcG9zaXRvcnkzMDUwNjk1MTY=
+    category: General
+    category-id: DIC_kwDOEi79zM4C47Ma
+---
+
+```
+eip: <to be assigned>
+title: Tapered Issuance Burn
+description: Remove the issuance incentive for stake growth beyond a 50% staking ratio by deducting and burning a linearly-tapered fraction of idealised validator rewards
+author: pintail (@pintail-xyz), pa7x1 (@pa7x1)
+discussions-to: <to be assigned>
+status: Draft
+type: Standards Track
+category: Core
+created: 2026-07-14
+```
+
+## Abstract
+
+This EIP introduces a **tapered issuance burn**: at each epoch boundary, immediately after the existing rewards-and-penalties calculation runs, a deduction is applied to each validator for its assigned duties (attestation, block proposal, and sync committee participation), and the deducted ETH is destroyed. Each deduction is sized as a fraction of the idealised reward for the duty. The burn fraction is zero when the staking ratio is zero and rises to 100% at a fixed *saturation balance*, tapering linearly in between. In aggregate, the deductions burn a tapered fraction of consensus issuance: net issuance yield reaches zero at a 50% staking ratio, so the issuance mechanism no longer incentivises stake growth beyond that point. The issuance burn is applied completely separately to the rewards and penalties machinery, which is left unchanged by this proposal.
+
+## Motivation
+
+As set out in [The Shape of Issuance Curves to Come](https://github.com/pa7x1/ethereum-issuance), the choice between staking and simply holding ETH is made on the gap between the yields the two options offer and the risks each carries. For staking these include liquidity, slashing, operational, and regulatory risks; liquid staking exchanges some of these for risks attaching to the token issuer, whether smart-contract risk for an on-chain protocol or counterparty risk for a centralised provider. Stake should therefore be expected to keep flowing in for as long as the net incentive to stake, given by the nominal yield, exceeds the premium the marginal staker demands for bearing those risks. The staking market reaches equilibrium only if the nominal yield falls to the level of the staking risk premium.
+
+Under the current issuance curve there is no point at which this incentive switches off: the yield falls only as $1/\sqrt{f}$ in the staking ratio $f$ and never drops below roughly 1.5%, even with all ETH staked. Whether stake growth stops short of 100% therefore depends entirely on how many holders keep demanding more than the yield as compensation for staking's risks — and that number only shrinks, because staking grows progressively less risky, while ETH itself drifts into the hands of those most willing to stake it, for whom the yield is free money. The staking ratio should therefore be expected to ratchet upward indefinitely.
+
+A drift toward a very high staking ratio is undesirable for two distinct reasons, examined in more detail in [Ethereum's Staking Ratio: The Tipping Point](https://pintail.xyz/posts/2026/staking-ratio/).
+
+### Security, neutrality, and resistance to capture
+
+Beyond a certain level, additional stake makes Ethereum *less* secure, not more: the marginal contribution of new stake to economic security falls as the ratio rises, while several risks compound.
+
+- **Slashing loses credibility.** An ever-larger share of stake accrues to a small number of custodial and liquid-staking providers. A dominant provider that crosses consensus thresholds (1/3, 1/2, 2/3), or simply becomes "too big to slash", undermines the credibility of the slashing mechanism on which Ethereum's economic security rests.
+- **The social layer loses its backstop.** The risk extends beyond the validator set to the ETH supply itself: since few holders can run their own validators, an incentive for universal staking pushes most of the supply into custody with a small number of exchanges, ETFs, and staking providers. Ethereum's last line of defence, the social layer's ability to coordinate a fork on which a misbehaving validator cartel is slashed, is only credible while an economic majority of holders is independent of the cartel; once ETH is held custodially it is not ("not your keys, not your coins").
+- **Solo stakers are forced out.** Dilution erodes everyone's real return as the ratio climbs, but solo stakers, who in most jurisdictions pay income tax on their *nominal* yield, cross into negative dilution-adjusted returns well before large operators and liquid-staking-token (LST) holders do. Once the most independent and uncorrelated participants have exited, there is no mechanism to bring them back, and the validator set slides toward a concentrated, capturable state.
+
+### ETH as money
+
+Issuance is yield paid on the staked base, so under the current curve the ETH issued per year grows without bound as the ratio rises. This excess issuance operates as a continuous dilution tax on holders of unstaked ETH, eroding the scarcity and monetary premium that underpin ETH's moneyness. At high staking ratios the damage is compounded: yield-bearing LSTs come to dominate raw ETH as collateral and medium of exchange within the Ethereum economy, displacing the most neutral, permissionless, trustless asset available with intermediated claims on staking providers. Bounding issuance-driven stake growth keeps issuance itself bounded (indeed, past its peak, falling), complementing the fee burn of [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) on the supply side of the ledger, and protecting the central monetary role of unstaked ETH.
+
+### Restoring an equilibrium
+
+This EIP proposes the minimal change needed to ensure that the issuance mechanism no longer drives stake growth beyond a 50% staking ratio: after computing rewards exactly as today, deduct from each validator a fraction of the idealised reward for each assigned duty — destroying the deducted ETH — with that fraction tapering linearly in the staking ratio up to a fixed saturation point. Because the post-burn issuance yield falls to zero at the 50% saturation ratio, it crosses any positive risk premium at some ratio strictly below 50%, giving the staking market an equilibrium wherever the market sets that premium.
+
+## Specification
+
+Let $D$ denote `get_total_active_balance(state)` in Gwei, and let `SATURATION_BALANCE` (Gwei, $D_\text{sat}$) be a fixed constant set at the hard fork to approximately half the ETH supply. Define the **burn fraction**
+
+$$b = \left(\frac{D}{D_\text{sat}}\right)^{3/2}, \qquad \text{clamped to } b \le 1.$$
+
+For each validator duty, a deduction of $b$ times the idealised reward for that duty is applied (via `decrease_balance`) to every validator assigned the duty, immediately after rewards and penalties are applied for the epoch; the deducted ETH is destroyed. The deduction is a function of effective balance and total active balance only — it is charged whether or not the duty was performed. No other part of `process_epoch`, and no part of `process_rewards_and_penalties`, is modified.
+
+### Constants
+
+| Name | Value | Notes |
+|---|---|---|
+| `SATURATION_BALANCE` | `Gwei(60_250_000 * 10**9)` | Total active balance $D_\text{sat}$ at which the burn fraction reaches 100%; set at the hard fork to approximately half the current ETH supply |
+
+### Helper functions
+
+`get_issuance_burn` applies the burn fraction to a reward. It is expressed as the cube of a square-root ratio so that it can be computed as three successive `uint64` multiply-divides, keeping every intermediate value within `uint64` — consistent with the rest of the reward machinery, which never forms a value wider than 64 bits. The two square roots are computed once per epoch by the caller and passed in.
+
+```python
+def get_issuance_burn(reward: Gwei, sqrt_active: uint64, sqrt_sat: uint64) -> Gwei:
+    # reward * (sqrt_active / sqrt_sat)**3 == reward * (D / SATURATION_BALANCE)**(3/2)
+    burn = uint64(reward)
+    for _ in range(3):
+        burn = burn * sqrt_active // sqrt_sat
+    return Gwei(burn)
+```
+
+This EIP also relies on two lookups not present in the current specification: `get_beacon_proposer_index_at_slot` (the existing `get_beacon_proposer_index` generalised to an arbitrary slot in the epoch) and `get_validator_index_by_pubkey` (a pubkey→index lookup, which clients already maintain as a cache).
+
+### Beacon chain state transition
+
+A new step, `process_issuance_burn`, is added to `process_epoch` immediately after `process_rewards_and_penalties` and before `process_effective_balance_updates`. Running it there means effective balances still hold the epoch's values, so the proposer burn below charges exactly the proposers that were selected during the epoch. The burn is applied per duty, in three passes:
+
+- **Attestation burn** — a burn of $b$ times the ideal attestation reward, applied to every active validator;
+- **Proposer burn** — a burn of $b$ times an equal share of the epoch's ideal proposer reward, charged to each of the 32 proposers;
+- **Sync committee burn** — a burn of $b$ times the ideal sync committee reward for the epoch, charged to each of the 512 sync committee members.
+
+Splitting the burn by duty, rather than applying a single uniform per-validator deduction, keeps the variance between validators low despite the rare duties of proposal and sync committee participation.
+
+```python
+def process_issuance_burn(state: BeaconState) -> None:
+    # Clamping sqrt_active to sqrt_sat keeps the burn fraction at or below 1.
+    sqrt_sat = integer_squareroot(SATURATION_BALANCE)
+    sqrt_active = min(integer_squareroot(get_total_active_balance(state)), sqrt_sat)
+    increment = EFFECTIVE_BALANCE_INCREMENT
+    base = get_base_reward_per_increment(state)
+    epoch = get_current_epoch(state)
+
+    # 1. Attestation burn — every active validator.
+    attest_weight = TIMELY_SOURCE_WEIGHT + TIMELY_TARGET_WEIGHT + TIMELY_HEAD_WEIGHT
+    for index in get_active_validator_indices(state, epoch):
+        n = state.validators[index].effective_balance // increment
+        attest_reward = Gwei(n * base * attest_weight // WEIGHT_DENOMINATOR)
+        burn = get_issuance_burn(attest_reward, sqrt_active, sqrt_sat)
+        decrease_balance(state, index, burn)
+
+    # 2. Proposer burn — the 32 proposers of the epoch.
+    n_total = get_total_active_balance(state) // increment
+    ideal_proposer_reward = Gwei(
+        n_total * base * PROPOSER_WEIGHT // WEIGHT_DENOMINATOR // SLOTS_PER_EPOCH
+    )
+    proposer_burn = get_issuance_burn(
+        ideal_proposer_reward, sqrt_active, sqrt_sat
+    )
+    start_slot = compute_start_slot_at_epoch(epoch)
+    for slot in range(start_slot, start_slot + SLOTS_PER_EPOCH):
+        proposer = get_beacon_proposer_index_at_slot(state, Slot(slot))
+        decrease_balance(state, proposer, proposer_burn)
+
+    # 3. Sync committee burn — the 512 sync committee members.
+    for pubkey in state.current_sync_committee.pubkeys:
+        index = get_validator_index_by_pubkey(state, pubkey)
+        n = state.validators[index].effective_balance // increment
+        sync_reward = Gwei(n * base * SYNC_REWARD_WEIGHT // WEIGHT_DENOMINATOR)
+        burn = get_issuance_burn(sync_reward, sqrt_active, sqrt_sat)
+        decrease_balance(state, index, burn)
+```
+
+The dominant new cost is one O(1)-per-validator deduction (the attestation burn) — foldable into the existing rewards/penalties pass — plus two fixed passes over the 32 proposers and 512 sync committee members.
+
+## Rationale
+
+### Deriving the burn fraction
+
+Expressed as a function of the staking ratio $f = D/S$ (with $S$ the total ETH supply), the current consensus-layer yield is
+
+$$y(f) = \frac{B\,E}{\sqrt{f\,S}},$$
+
+with `BASE_REWARD_FACTOR` $B$ and epochs per year $E$. Issuance is the yield paid on the staked fraction, $i(f) = B\,E\sqrt{f/S}$.
+
+The goal is to subtract from the yield a term that is zero at $f = 0$ and grows linearly to cancel the yield entirely at a saturation ratio $f_\text{sat}$, so that the net yield reaches zero there:
+
+$$\tilde y(f) = \begin{cases} y(f) - \dfrac{f}{f_\text{sat}}\,y(f_\text{sat}) & f \le f_\text{sat} \\ 0 & f > f_\text{sat} \end{cases}$$
+
+::: {#fig-yield}
+
+{{< include _yieldcurve.qmd >}}
+
+Consensus layer net yield under the current curve and with the tapered issuance burn applied.
+
+:::
+
+Writing $\tilde y(f) = (1 - b(f))\,y(f)$ and solving for the burn fraction $b(f)$ that reproduces this linear taper gives
+
+$$b(f) = \left(\frac{f}{f_\text{sat}}\right)^{3/2}.$$
+
+The exponent of $3/2$ rather than $1$ follows from the reward curve's $f^{-1/2}$ shape: the *absolute* deduction needed is linear in $f$, but expressed as a fraction of a reward that itself scales as $f^{-1/2}$, it picks up an extra half power. With $f_\text{sat} = 50\%$, the resulting issuance curve
+
+$$\tilde i(f) = \begin{cases} f\,\tilde y(f) & f \le f_\text{sat} \\ 0 & f > f_\text{sat} \end{cases}$$
+
+no longer runs away with $f$: it rises, peaks at $f^* = 2^{-7/3} \approx 19.8\%$, and falls back to zero at $f_\text{sat}$.
+
+::: {#fig-issuance}
+
+{{< include _issuancecurve.qmd >}}
+
+Annual ETH issuance under the current curve and with the tapered issuance burn applied. The post-burn curve peaks at $f^* = 2^{-7/3} \approx 19.8\%$ and falls to zero at $f = \tfrac{1}{2}$.
+
+:::
+
+### Why a burn, and not a change to the reward curve
+
+An alternative route to lower issuance would be to redesign the reward curve itself, and well-developed proposals for this exist, notably from Anders Elowsson (see his [issuance reduction FAQ](https://ethresear.ch/t/faq-ethereum-issuance-reduction/19675)), including designs that scale all rewards and penalties together so that the balance between micro-incentives is preserved. This EIP nonetheless prefers a burn, for three reasons.
+
+- **A single parameter, with a natural value.** Reward curves engineered to exhibit several desirable properties at once (a cap on total issuance, a yield floor, a target ratio) tend to introduce several new parameters, each of which must be set and defended. The burn introduces exactly one, `SATURATION_BALANCE`, and its value has a natural focal point: half the ETH supply.
+- **A market-determined yield.** In a workable reward curve, rewards and penalties must remain matched: schedules that taper rewards to zero while retaining penalties to compel participation are vulnerable to griefing attacks. With matched incentives, a performing validator always earns a positive yield, so any reshaped reward curve still imposes a floor on the yield, and stake growth stops only if the market's risk premium happens to sit above that floor. A deduction removes the floor: the staking ratio settles at the point where the yield meets the premium stakers demand, so the equilibrium yield is positive, and set by the market rather than by the shape of the curve.
+- **Micro-incentives at full strength.** Reaching a low yield by scaling the reward and penalty schedule down weakens the per-duty incentives for correct and timely participation exactly where they are needed most. With substantial execution-layer income and MEV available, consensus rewards and penalties must remain large relative to the external incentives to misbehave (through block-timing games or reorgs, for example), or chain stability is put at risk. The burn leaves the entire schedule at full magnitude and nets yield off afterwards.
+
+### Why the deducted ETH is destroyed rather than redirected
+
+Any redirection of the deducted ETH, whether to other validators, a treasury, or any other recipient, would leave total issuance unchanged and so defeat the proposal's monetary purpose, while creating a new claimant whose incentives must be analysed and whose share can be lobbied over. Burning the ETH, as established by the base-fee burn of [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559), is the credibly neutral alternative: the value removed accrues pro rata to all ETH holders.
+
+### Why the deduction is computed from idealised rather than actual rewards
+
+Each deduction is sized from the *idealised* reward for a duty, not from the reward the validator actually earned. This leaves every micro-incentive exactly as strong as it is today. If the deduction scaled with the reward actually earned, each duty's marginal payoff would be multiplied by $(1-b)$, progressively weakening the incentive to perform duties correctly. Computed from the idealised reward instead, the deduction is fixed with respect to the validator's behaviour in the epoch: performing a duty improves a validator's balance by exactly as much as it does under current rules.
+
+It follows that "issuance burn" describes the mechanism's aggregate effect rather than a withholding of any individual payment: for a well-performing validator the deduction nets against rewards actually received, and across the whole validator set the deductions reduce net issuance by the tapered fraction $b$.
+
+### Why the saturation point is expressed as a fixed balance
+
+The protocol observes `get_total_active_balance(state)` directly but has no notion of total ETH supply, so $f$ itself is not something the state transition can compute. `SATURATION_BALANCE` fixes $D_\text{sat} = f_\text{sat}\,S$ as a constant at the hard fork, using the supply at that time. Because `SATURATION_BALANCE` does not track the live supply, the effective saturation ratio will drift slowly as supply changes through ongoing issuance and burning after the fork. This drift is expected to be small over any reasonable time horizon, and could be eliminated by a future EIP that makes the protocol aware of total supply, allowing $D_\text{sat}$ to be recovered from $f_\text{sat}\,S$ directly.
+
+### Why the burn is split by duty
+
+Applying $b$ as a single, uniform per-validator deduction each epoch would be simpler to specify, but every validator only proposes and joins a sync committee rarely. A uniform deduction sized to also cover those infrequent, larger rewards would exceed a typical epoch's attestation reward as the burn fraction grows, leaving even a perfectly performing validator with a negative balance change in every epoch spent waiting for a rare duty assignment. As Anders Elowsson observes in [Properties of Issuance Offsets and Increased Penalties](https://ethresear.ch/t/properties-of-issuance-offsets-and-increased-penalties-under-low-zero-negative-issuance-policies/25292), allocating the deduction by assigned duty avoids this: a validator that performs its attestation duties is never pushed into a negative balance change merely for lack of a proposal or sync-committee assignment, and each deduction stays proportionate to the reward on offer at each opportunity.
+
+## Backwards Compatibility
+
+This EIP introduces a backwards-incompatible change to the consensus-layer state transition and must be accompanied by a hard fork. No changes are required to the execution layer or to existing on-chain contracts.
+
+## Test Cases
+
+Test vectors are not yet included in this draft. On progressing toward implementation, test cases would be added to the `epoch_processing` test suite in [consensus-specs](https://github.com/ethereum/consensus-specs), following the existing format for `process_rewards_and_penalties`, covering: zero active balance below saturation, active balance at and above `SATURATION_BALANCE`, and the boundary behaviour of `get_issuance_burn` at `sqrt_active == sqrt_sat`.
+
+## Reference Implementation
+
+The Python pseudocode in the [Specification](#specification) section constitutes the reference implementation, in the same style used throughout the beacon chain consensus specification. No client implementation exists yet, as this is presented here as a draft for discussion.
+
+## Security Considerations
+
+**Incentive compatibility.** The burn fraction $b(f)$ is a deterministic, publicly computable function of total active balance; it cannot be targeted at, or avoided by, any individual validator or subset of validators, so it introduces no new griefing or discrimination vector. Because each deduction is computed from the idealised duty reward rather than the reward actually earned, it is independent of the validator's behaviour within the epoch, leaving every marginal performance incentive unchanged. And because $b(f) \le 1$ for all $f$ (clamped via `sqrt_active = min(..., sqrt_sat)`), no deduction ever exceeds the idealised reward it is derived from: a validator performing its duties correctly retains a non-negative net reward for the epoch, and the burn cannot by itself drive aggregate net issuance negative. A validator that misses duties still pays the deduction, by design: it cannot be avoided by abstaining from participation, and is experienced as a bounded addition to the existing penalties for non-participation.
+
+**Effect on economic security.** This EIP deliberately results in a lower equilibrium quantity of stake than the current curve. In proof of stake with slashing, the cost of attack is set by the stock of slashable stake an attacker must acquire and forfeit, and at any staking ratio in the tens of percent that stock remains vast relative to any plausible attack reward. Nor does economic security increase monotonically with stake: as set out in the Motivation, beyond a certain level the accompanying concentration of stake and supply makes the network less secure, not more. To the extent the proposal protects ETH's monetary premium, it also supports the real value of the stake securing the chain.
+
+**Computational cost.** The additional per-epoch cost is one O(1) deduction per active validator (foldable into the existing rewards/penalties pass) plus two fixed-size passes over the 32 proposers and 512 sync committee members, so this EIP does not introduce a new DoS surface. `get_validator_index_by_pubkey`, used for the sync committee burn, should reuse the same pubkey→index cache clients already maintain for sync committee processing, rather than a linear scan.
+
+**Constant drift.** As noted in [Rationale](#why-the-saturation-point-is-expressed-as-a-fixed-balance), `SATURATION_BALANCE` is fixed at the fork and does not track live supply, so the effective saturation ratio will drift slowly over time. This drift changes only the location of the equilibrium point, not any safety property of the mechanism, and is not expected to be security-relevant on the timescale of a single fork's lifetime.
+
+## Copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
