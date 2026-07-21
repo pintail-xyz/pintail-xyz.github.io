@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2026-07-14">
-<meta name="description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, without altering Ethereum’s existing reward curve.">
+<meta name="description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, with BASE_REWARD_FACTOR doubled to compensate the yield at transition. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while preserving the shape and balance of Ethereum’s existing reward curve.">
 
 <title>EIP Draft: Tapered Issuance Burn – pintail’s notes</title>
 <style>
@@ -142,7 +142,7 @@ window.Quarto = {
 </script>
 
 <meta property="og:title" content="EIP Draft: Tapered Issuance Burn – pintail’s notes">
-<meta property="og:description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, without altering Ethereum’s existing reward curve.">
+<meta property="og:description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, with BASE_REWARD_FACTOR doubled to compensate the yield at transition. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while preserving the shape and balance of Ethereum’s existing reward curve.">
 <meta property="og:image" content="https://pintail.xyz/posts/2026/eip-tapered-issuance-burn/thumbnail.svg">
 <meta property="og:site_name" content="pintail’s notes">
 </head>
@@ -210,8 +210,9 @@ window.Quarto = {
   <li><a href="#rationale" id="toc-rationale" class="nav-link" data-scroll-target="#rationale">Rationale</a>
   <ul class="collapse">
   <li><a href="#deriving-the-burn-fraction" id="toc-deriving-the-burn-fraction" class="nav-link" data-scroll-target="#deriving-the-burn-fraction">Deriving the burn fraction</a></li>
+  <li><a href="#why-base_reward_factor-is-doubled" id="toc-why-base_reward_factor-is-doubled" class="nav-link" data-scroll-target="#why-base_reward_factor-is-doubled">Why <code>BASE_REWARD_FACTOR</code> is doubled</a></li>
   <li><a href="#why-a-burn-and-not-a-change-to-the-reward-curve" id="toc-why-a-burn-and-not-a-change-to-the-reward-curve" class="nav-link" data-scroll-target="#why-a-burn-and-not-a-change-to-the-reward-curve">Why a burn, and not a change to the reward curve</a></li>
-  <li><a href="#why-the-deducted-eth-is-destroyed-rather-than-redirected" id="toc-why-the-deducted-eth-is-destroyed-rather-than-redirected" class="nav-link" data-scroll-target="#why-the-deducted-eth-is-destroyed-rather-than-redirected">Why the deducted ETH is destroyed rather than redirected</a></li>
+  <li><a href="#why-the-deducted-eth-is-burned-rather-than-redirected" id="toc-why-the-deducted-eth-is-burned-rather-than-redirected" class="nav-link" data-scroll-target="#why-the-deducted-eth-is-burned-rather-than-redirected">Why the deducted ETH is burned rather than redirected</a></li>
   <li><a href="#why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards" id="toc-why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards" class="nav-link" data-scroll-target="#why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards">Why the deduction is computed from idealised rather than actual rewards</a></li>
   <li><a href="#why-the-saturation-point-is-expressed-as-a-fixed-balance" id="toc-why-the-saturation-point-is-expressed-as-a-fixed-balance" class="nav-link" data-scroll-target="#why-the-saturation-point-is-expressed-as-a-fixed-balance">Why the saturation point is expressed as a fixed balance</a></li>
   <li><a href="#why-the-burn-is-split-by-duty" id="toc-why-the-burn-is-split-by-duty" class="nav-link" data-scroll-target="#why-the-burn-is-split-by-duty">Why the burn is split by duty</a></li>
@@ -234,7 +235,7 @@ window.Quarto = {
 
 <div>
   <div class="description">
-    An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, without altering Ethereum’s existing reward curve.
+    An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, with BASE_REWARD_FACTOR doubled to compensate the yield at transition. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while preserving the shape and balance of Ethereum’s existing reward curve.
   </div>
 </div>
 
@@ -252,7 +253,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">July 14, 2026</p>
+      <p class="date-modified">July 21, 2026</p>
     </div>
   </div>
     
@@ -265,8 +266,8 @@ window.Quarto = {
 
 <pre><code>eip: &lt;to be assigned&gt;
 title: Tapered Issuance Burn
-description: Remove the issuance incentive for stake growth beyond a 50% staking ratio by deducting and burning a linearly-tapered fraction of idealised validator rewards
-author: pintail (@pintail-xyz), pa7x1 (@pa7x1)
+description: Remove the issuance incentive for stake growth beyond a 50% staking ratio by deducting and burning a linearly-tapered fraction of idealised validator rewards, with the base reward factor doubled to compensate the yield at transition
+author: pintail (@pintail-xyz), pa7x1 (@pa7x1), Jérôme de Tychey (@jdetychey), Justin Drake (@justindrake), Ladislaus von Daniels (@ladidan)
 discussions-to: &lt;to be assigned&gt;
 status: Draft
 type: Standards Track
@@ -274,54 +275,67 @@ category: Core
 created: 2026-07-14</code></pre>
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
-<p>This EIP introduces a <strong>tapered issuance burn</strong>: at each epoch boundary, immediately after the existing rewards-and-penalties calculation runs, a deduction is applied to each validator for its assigned duties (attestation, block proposal, and sync committee participation), and the deducted ETH is destroyed. Each deduction is sized as a fraction of the idealised reward for the duty. The burn fraction is zero when the staking ratio is zero and rises to 100% at a fixed <em>saturation balance</em>, tapering linearly in between. In aggregate, the deductions burn a tapered fraction of consensus issuance: net issuance yield reaches zero at a 50% staking ratio, so the issuance mechanism no longer incentivises stake growth beyond that point. The issuance burn is applied completely separately to the rewards and penalties machinery, which is left unchanged by this proposal.</p>
+<p>This EIP introduces a <strong>tapered issuance burn</strong>: at each epoch boundary a deduction is applied to each validator for its assigned duties in that epoch (attestation, block proposal, and sync committee participation), and the deducted ETH is burned. Each deduction is sized as a fraction of the idealised reward for the duty. The burn fraction is zero when the staking ratio is zero and rises to 100% at a fixed <em>saturation balance</em>, tapering linearly in between. In aggregate, the deductions burn a tapered fraction of consensus issuance that grows with the staking ratio, so the net staking yield declines as more ETH is staked. This removes the yield floor implicit in the current curve, letting the staking market settle at an equilibrium yield set according to the risk premium that stakers demand. For a positive yield, that equilibrium is reached at a staking ratio below 50%, beyond which the issuance mechanism no longer incentivises further stake growth.</p>
+<p>Applying tapered issuance burn without any other adjustment would result in a large drop in yield at the point the policy goes into effect. Therefore, to compensate for the reduction in yield, <code>BASE_REWARD_FACTOR</code> is doubled from 64 to 128, scaling all rewards and penalties together and lifting the net yield curve so that it crosses the current curve at a staking ratio of about 31% — close to today’s level. The issuance burn is applied completely separately to the rewards and penalties machinery, which this proposal leaves unchanged, except for the uniform rescaling from the <code>BASE_REWARD_FACTOR</code> increase.</p>
 </section>
 <section id="motivation" class="level2">
 <h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
-<p>As set out in <a href="https://github.com/pa7x1/ethereum-issuance">The Shape of Issuance Curves to Come</a>, the choice between staking and simply holding ETH is made on the gap between the yields the two options offer and the risks each carries. For staking these include liquidity, slashing, operational, and regulatory risks; liquid staking exchanges some of these for risks attaching to the token issuer, whether smart-contract risk for an on-chain protocol or counterparty risk for a centralised provider. Stake should therefore be expected to keep flowing in for as long as the net incentive to stake, given by the nominal yield, exceeds the premium the marginal staker demands for bearing those risks. The staking market reaches equilibrium only if the nominal yield falls to the level of the staking risk premium.</p>
-<p>Under the current issuance curve there is no point at which this incentive switches off: the yield falls only as <span class="math inline">\(1/\sqrt{f}\)</span> in the staking ratio <span class="math inline">\(f\)</span> and never drops below roughly 1.5%, even with all ETH staked. Whether stake growth stops short of 100% therefore depends entirely on how many holders keep demanding more than the yield as compensation for staking’s risks — and that number only shrinks, because staking grows progressively less risky, while ETH itself drifts into the hands of those most willing to stake it, for whom the yield is free money. The staking ratio should therefore be expected to ratchet upward indefinitely.</p>
-<p>A drift toward a very high staking ratio is undesirable for two distinct reasons, examined in more detail in <a href="https://pintail.xyz/posts/2026/staking-ratio/">Ethereum’s Staking Ratio: The Tipping Point</a>.</p>
+<p>The choice between staking and simply holding ETH is made on the gap between the yields the two options offer and the risks each carries<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. For staking these include liquidity, slashing, operational, and regulatory risks; liquid staking exchanges some of these for risks attaching to the token issuer, whether smart-contract risk for an on-chain protocol or counterparty risk for a centralised provider. Stake is therefore expected to keep flowing in for as long as the net incentive to stake, given by the nominal yield, exceeds the premium the marginal staker demands for bearing those risks. The staking market reaches equilibrium only if the nominal yield falls to the level of the staking risk premium. This risk premium is trending down owing to the maturity of staking setups at the infrastructure, smartcontract and software level. Furthermore, the credibility of slashing is negatively impacted by large amounts of ETH at stake, further weighing on the staking risk premium.</p>
+<p>Under the current issuance curve there is no point at which the incentive to stake switches off: the yield falls only as <span class="math inline">\(1/\sqrt{f}\)</span> in the staking ratio <span class="math inline">\(f\)</span> and never drops below roughly 1.5%, even with all ETH staked. Whether stake growth halts short of 100% therefore rests entirely on the marginal staker’s risk premium staying above this yield floor; however, the protocol neither observes nor controls this premium. There is reason to think the premium may tend to fall rather than hold: as the staking ecosystem matures, trusted low-friction custodians such as ETF providers emerge, and tooling and liquid staking reduce the costs and risks that justify it. Meanwhile, since issuance currently increases with staking ratio, dilution costs to unstaked ETH holders increase, adding greater incentive to stake to avoid this dilution.</p>
+<p>A drift toward a very high staking ratio is undesirable for two distinct reasons.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
 <section id="security-neutrality-and-resistance-to-capture" class="level3">
 <h3 class="anchored" data-anchor-id="security-neutrality-and-resistance-to-capture">Security, neutrality, and resistance to capture</h3>
 <p>Beyond a certain level, additional stake makes Ethereum <em>less</em> secure, not more: the marginal contribution of new stake to economic security falls as the ratio rises, while several risks compound.</p>
 <ul>
-<li><strong>Slashing loses credibility.</strong> An ever-larger share of stake accrues to a small number of custodial and liquid-staking providers. A dominant provider that crosses consensus thresholds (1/3, 1/2, 2/3), or simply becomes “too big to slash”, undermines the credibility of the slashing mechanism on which Ethereum’s economic security rests.</li>
-<li><strong>The social layer loses its backstop.</strong> The risk extends beyond the validator set to the ETH supply itself: since few holders can run their own validators, an incentive for universal staking pushes most of the supply into custody with a small number of exchanges, ETFs, and staking providers. Ethereum’s last line of defence, the social layer’s ability to coordinate a fork on which a misbehaving validator cartel is slashed, is only credible while an economic majority of holders is independent of the cartel; once ETH is held custodially it is not (“not your keys, not your coins”).</li>
-<li><strong>Solo stakers are forced out.</strong> Dilution erodes everyone’s real return as the ratio climbs, but solo stakers, who in most jurisdictions pay income tax on their <em>nominal</em> yield, cross into negative dilution-adjusted returns well before large operators and liquid-staking-token (LST) holders do. Once the most independent and uncorrelated participants have exited, there is no mechanism to bring them back, and the validator set slides toward a concentrated, capturable state.</li>
+<li><strong>Delegation risk goes unpriced.</strong> Delegated staking is a principal–agent relationship: the larger the share of stake an operator controls, the greater its opportunity to degrade consensus for its own profit, with the delegator bearing the loss if slashing ever follows. That risk is only priced while the worst case remains credible — and past examples, notably The DAO, made apparent that once the proportion of the circulating supply affected by an outcome grows large enough, the social layer may waver in its commitment to the intended consensus process. A dominant operator at a high staking ratio can therefore expect to be treated as “too big to fail”: its delegators (and any party able to inject itself into that relationship), anticipating rescue rather than ruin, stop demanding compensation for tail risk, and the resulting discount on delegated stake accelerates the very concentration that created it. At a lower equilibrium staking ratio the implicit guarantee dissolves. No operator or staking derivative is too big to fail in the eyes of the social layer and delegators must continuously assess their agent’s security guarantees, knowing they may lose everything if the worst case ever comes to pass.</li>
+<li><strong>The social layer loses its backstop.</strong> The risk extends beyond the validator set to the ETH supply itself: since few holders can run their own validators, due to capital and technical/operational requirements, an incentive for universal staking pushes most of the supply into custody with a small number of exchanges, ETFs, and staking providers. Ethereum’s last line of defence, the social layer’s ability to coordinate a fork on which a misbehaving validator cartel is slashed, is only credible while an economic majority of holders is independent of the cartel; once ETH is held custodially it is not (“not your keys, not your coins”).</li>
+<li><strong>Solo stakers are forced out.</strong> Dilution erodes everyone’s real return as the ratio climbs, but solo stakers, who in most jurisdictions pay income tax on their <em>nominal</em> yield, cross into negative dilution-adjusted returns well before large operators and liquid-staking-token (LST) holders do. Once the most independent and uncorrelated participants have exited, there is no mechanism to bring them back, and the validator set slides toward a concentrated state, more vulnerable to capture.</li>
 </ul>
 </section>
 <section id="eth-as-money" class="level3">
 <h3 class="anchored" data-anchor-id="eth-as-money">ETH as money</h3>
-<p>Issuance is yield paid on the staked base, so under the current curve the ETH issued per year grows without bound as the ratio rises. This excess issuance operates as a continuous dilution tax on holders of unstaked ETH, eroding the scarcity and monetary premium that underpin ETH’s moneyness. At high staking ratios the damage is compounded: yield-bearing LSTs come to dominate raw ETH as collateral and medium of exchange within the Ethereum economy, displacing the most neutral, permissionless, trustless asset available with intermediated claims on staking providers. Bounding issuance-driven stake growth keeps issuance itself bounded (indeed, past its peak, falling), complementing the fee burn of <a href="https://eips.ethereum.org/EIPS/eip-1559">EIP-1559</a> on the supply side of the ledger, and protecting the central monetary role of unstaked ETH.</p>
+<p>Issuance is yield paid on the staked base, so under the current curve the ETH issued per year grows without bound as the staking ratio rises. This excess issuance operates as a continuous dilution tax on holders of unstaked ETH, eroding the scarcity and monetary premium that underpin ETH’s moneyness and forcing on every holder an artificial choice: accept dilution, or take on the costs and risks of staking merely to avoid it.</p>
+<p>At high staking ratios the damage is compounded. Yield-bearing LSTs and other staking derivatives come to dominate raw ETH as collateral and medium of exchange within the Ethereum economy, displacing the most neutral, permissionless, trustless asset available with intermediated claims on staking providers. For a staking provider this displacement is a rational profit-maximising strategy pursued by embedding the derivative across every layer and application until it, rather than ETH, is the ecosystem’s working money. The costs of that substitution are concrete: if ETH is progressively displaced as the reserve asset, liquidity fragments across competing derivatives and slippage rises on decentralised exchanges, while every application that settles in a staking derivative inherits its issuer’s smart-contract, counterparty, and governance risk.</p>
+<p>By moderating issuance, each staking derivative faces stronger competition from non-staked ETH, promoting a trustless asset at the foundation of the ecosystem. This reduces the risk that the social layer becomes co-dependent on an outside organization, its issued derivative of ETH, and its governance processes. Without that mitigation, applications that power the money could gain outsized influence over applications that use the money, making Ethereum a less desirable blockchain to build and develop on.</p>
+<p>Bounding issuance-driven stake growth keeps issuance itself bounded. Under this proposal it peaks at a staking ratio of roughly 20% and falls to zero at the 50% saturation ratio — complementing the fee burn of <a href="https://eips.ethereum.org/EIPS/eip-1559">EIP-1559</a> on the supply side of the ledger and protecting the central monetary role of unstaked ETH.</p>
 </section>
 <section id="restoring-an-equilibrium" class="level3">
 <h3 class="anchored" data-anchor-id="restoring-an-equilibrium">Restoring an equilibrium</h3>
-<p>This EIP proposes the minimal change needed to ensure that the issuance mechanism no longer drives stake growth beyond a 50% staking ratio: after computing rewards exactly as today, deduct from each validator a fraction of the idealised reward for each assigned duty — destroying the deducted ETH — with that fraction tapering linearly in the staking ratio up to a fixed saturation point. Because the post-burn issuance yield falls to zero at the 50% saturation ratio, it crosses any positive risk premium at some ratio strictly below 50%, giving the staking market an equilibrium wherever the market sets that premium.</p>
+<p>This EIP proposes the minimal change needed to ensure that the issuance mechanism no longer drives stake growth beyond a 50% staking ratio: after computing rewards exactly as today, deduct from each validator a fraction of the idealised reward for each assigned duty — destroying the deducted ETH — with that fraction tapering linearly in the staking ratio up to a fixed saturation point. At the same time, <code>BASE_REWARD_FACTOR</code> is doubled, so that the net yield at today’s staking ratio is only modestly reduced and the transition’s impact on existing stakers is limited. Because the post-burn issuance yield falls to zero at the 50% saturation ratio, it crosses any positive risk premium at some ratio strictly below 50%, giving the staking market an equilibrium wherever the market sets that premium.</p>
 </section>
 </section>
 <section id="specification" class="level2">
 <h2 class="anchored" data-anchor-id="specification">Specification</h2>
 <p>Let <span class="math inline">\(D\)</span> denote <code>get_total_active_balance(state)</code> in Gwei, and let <code>SATURATION_BALANCE</code> (Gwei, <span class="math inline">\(D_\text{sat}\)</span>) be a fixed constant set at the hard fork to approximately half the ETH supply. Define the <strong>burn fraction</strong></p>
 <p><span class="math display">\[b = \left(\frac{D}{D_\text{sat}}\right)^{3/2}, \qquad \text{clamped to } b \le 1.\]</span></p>
-<p>For each validator duty, a deduction of <span class="math inline">\(b\)</span> times the idealised reward for that duty is applied (via <code>decrease_balance</code>) to every validator assigned the duty, immediately after rewards and penalties are applied for the epoch; the deducted ETH is destroyed. The deduction is a function of effective balance and total active balance only — it is charged whether or not the duty was performed. No other part of <code>process_epoch</code>, and no part of <code>process_rewards_and_penalties</code>, is modified.</p>
+<p>For each validator duty, a deduction of <span class="math inline">\(b\)</span> times the idealised reward for that duty is applied (via <code>decrease_balance</code>) to every validator assigned the duty, immediately after rewards and penalties are applied for the epoch; the deducted ETH is destroyed. The deduction is a function of effective balance and total active balance only — it is charged whether or not the duty was performed. In addition, <code>BASE_REWARD_FACTOR</code> is raised from 64 to 128, uniformly scaling all rewards and penalties. Apart from that change of constant, no other part of <code>process_epoch</code>, and no part of <code>process_rewards_and_penalties</code>, is modified.</p>
 <section id="constants" class="level3">
 <h3 class="anchored" data-anchor-id="constants">Constants</h3>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
-<th>Value</th>
+<th>Old value</th>
+<th>New value</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
+<td><code>BASE_REWARD_FACTOR</code></td>
+<td><code>uint64(64)</code></td>
+<td><code>uint64(128)</code></td>
+<td>Uniformly scales rewards and penalties so that net yield at deployment is approximately unchanged</td>
+</tr>
+<tr class="even">
 <td><code>SATURATION_BALANCE</code></td>
+<td>—</td>
 <td><code>Gwei(60_250_000 * 10**9)</code></td>
 <td>Total active balance <span class="math inline">\(D_\text{sat}\)</span> at which the burn fraction reaches 100%; set at the hard fork to approximately half the current ETH supply</td>
 </tr>
@@ -393,7 +407,7 @@ created: 2026-07-14</code></pre>
 <h3 class="anchored" data-anchor-id="deriving-the-burn-fraction">Deriving the burn fraction</h3>
 <p>Expressed as a function of the staking ratio <span class="math inline">\(f = D/S\)</span> (with <span class="math inline">\(S\)</span> the total ETH supply), the current consensus-layer yield is</p>
 <p><span class="math display">\[y(f) = \frac{B\,E}{\sqrt{f\,S}},\]</span></p>
-<p>with <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(B\)</span> and epochs per year <span class="math inline">\(E\)</span>. Issuance is the yield paid on the staked fraction, <span class="math inline">\(i(f) = B\,E\sqrt{f/S}\)</span>.</p>
+<p>with <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(B\)</span> and epochs per year <span class="math inline">\(E\)</span>. Issuance is the yield paid on the staked fraction, <span class="math inline">\(i(f) = B\,E\sqrt{f/S}\)</span>. The derivation below holds for any value of <span class="math inline">\(B\)</span>; under this proposal <span class="math inline">\(y(f)\)</span> is the curve with <span class="math inline">\(B = 128\)</span>.</p>
 <p>The goal is to subtract from the yield a term that is zero at <span class="math inline">\(f = 0\)</span> and grows linearly to cancel the yield entirely at a saturation ratio <span class="math inline">\(f_\text{sat}\)</span>, so that the net yield reaches zero there:</p>
 <p><span class="math display">\[\tilde y(f) = \begin{cases} y(f) - \dfrac{f}{f_\text{sat}}\,y(f_\text{sat}) &amp; f \le f_\text{sat} \\ 0 &amp; f &gt; f_\text{sat} \end{cases}\]</span></p>
 <div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -408,7 +422,7 @@ created: 2026-07-14</code></pre>
 <script src="yieldcurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Consensus layer net yield under the current curve and with the tapered issuance burn applied.
+Figure&nbsp;1: Consensus layer net yield under the current curve (B=64), the burn without compensation (B=64), and this proposal (B=128 with the tapered issuance burn).
 </figcaption>
 </figure>
 </div>
@@ -429,28 +443,32 @@ Figure&nbsp;1: Consensus layer net yield under the current curve and with the ta
 <script src="issuancecurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Annual ETH issuance under the current curve and with the tapered issuance burn applied. The post-burn curve peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
+Figure&nbsp;2: Annual ETH issuance under the current curve (B=64), the burn without compensation (B=64), and this proposal (B=128 with the tapered issuance burn). The post-burn curves peak at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and fall to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
 </figcaption>
 </figure>
 </div>
 </section>
+<section id="why-base_reward_factor-is-doubled" class="level3">
+<h3 class="anchored" data-anchor-id="why-base_reward_factor-is-doubled">Why <code>BASE_REWARD_FACTOR</code> is doubled</h3>
+<p>Applied with <code>BASE_REWARD_FACTOR</code> left at 64, the burn would cut the net yield at today’s staking ratio (<span class="math inline">\(f \approx 33\%\)</span>) by more than half, from about 2.6% to 1.2% — a dramatic change for existing stakers, and one that would be expected to trigger a substantial exit of stake on activation. Doubling <code>BASE_REWARD_FACTOR</code> to 128 lifts the whole net yield curve so that it crosses the current curve at <span class="math inline">\(f \approx 31\%\)</span>, close to today’s ratio: at deployment, stakers would see a yield very close to what they receive now, and the transition’s impact on existing stakers is small.</p>
+<p>The compensation does not reintroduce runaway issuance. Post-burn issuance still peaks at <span class="math inline">\(f^* \approx 19.8\%\)</span> — at roughly 1% of supply per year — and falls to zero at 50%. For any staking ratio above about 31.5% it sits below the current curve, which grows without bound in stake and reaches about 1.5% of supply per year with all ETH staked. And because doubling <span class="math inline">\(B\)</span> scales rewards and penalties together, the balance between micro-incentives is preserved.</p>
+</section>
 <section id="why-a-burn-and-not-a-change-to-the-reward-curve" class="level3">
 <h3 class="anchored" data-anchor-id="why-a-burn-and-not-a-change-to-the-reward-curve">Why a burn, and not a change to the reward curve</h3>
-<p>An alternative route to lower issuance would be to redesign the reward curve itself, and well-developed proposals for this exist, notably from Anders Elowsson (see his <a href="https://ethresear.ch/t/faq-ethereum-issuance-reduction/19675">issuance reduction FAQ</a>), including designs that scale all rewards and penalties together so that the balance between micro-incentives is preserved. This EIP nonetheless prefers a burn, for three reasons.</p>
+<p>An alternative route to lower issuance would be to redesign the reward curve itself, and proposals for this exist.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> This EIP nonetheless prefers a burn, for three reasons.</p>
 <ul>
-<li><strong>A single parameter, with a natural value.</strong> Reward curves engineered to exhibit several desirable properties at once (a cap on total issuance, a yield floor, a target ratio) tend to introduce several new parameters, each of which must be set and defended. The burn introduces exactly one, <code>SATURATION_BALANCE</code>, and its value has a natural focal point: half the ETH supply.</li>
-<li><strong>A market-determined yield.</strong> In a workable reward curve, rewards and penalties must remain matched: schedules that taper rewards to zero while retaining penalties to compel participation are vulnerable to griefing attacks. With matched incentives, a performing validator always earns a positive yield, so any reshaped reward curve still imposes a floor on the yield, and stake growth stops only if the market’s risk premium happens to sit above that floor. A deduction removes the floor: the staking ratio settles at the point where the yield meets the premium stakers demand, so the equilibrium yield is positive, and set by the market rather than by the shape of the curve.</li>
-<li><strong>Micro-incentives at full strength.</strong> Reaching a low yield by scaling the reward and penalty schedule down weakens the per-duty incentives for correct and timely participation exactly where they are needed most. With substantial execution-layer income and MEV available, consensus rewards and penalties must remain large relative to the external incentives to misbehave (through block-timing games or reorgs, for example), or chain stability is put at risk. The burn leaves the entire schedule at full magnitude and nets yield off afterwards.</li>
+<li><strong>A single parameter, with a natural value.</strong> Reward curves engineered to exhibit several desirable properties at once (a cap on total issuance, a yield floor, a target ratio) tend to introduce several new parameters, each of which must be set and defended. The burn introduces exactly one, <code>SATURATION_BALANCE</code>, and its value has a natural focal point: half the ETH supply. (The accompanying doubling of <code>BASE_REWARD_FACTOR</code> adjusts an existing constant, with a similarly natural calibration: leaving the net yield at today’s staking ratio approximately unchanged.)</li>
+<li><strong>A market-determined yield.</strong> In a workable reward curve, rewards and penalties must remain matched: schedules that taper rewards to zero while retaining penalties to compel participation are vulnerable to griefing attacks. With matched incentives, a performing validator always earns a positive yield, so any reshaped reward curve without burn still imposes a floor on the yield, and stake growth stops only if the market’s risk premium happens to sit above that floor. A deduction removes the floor: the staking ratio settles at the point where the yield meets the premium stakers demand, so the equilibrium yield is set by the market rather than by the shape of the curve.</li>
+<li><strong>Micro-incentives at full strength.</strong> Reaching a low yield by scaling the reward and penalty schedule down weakens the per-duty incentives for correct and timely participation. With substantial execution-layer income and MEV available, consensus rewards and penalties must remain large relative to the external incentives to misbehave (through block-timing games or reorgs, for example), or chain stability is put at risk. The burn leaves the entire schedule at full magnitude — indeed, the doubling of <code>BASE_REWARD_FACTOR</code> strengthens it — and nets macro yield off afterwards.</li>
 </ul>
 </section>
-<section id="why-the-deducted-eth-is-destroyed-rather-than-redirected" class="level3">
-<h3 class="anchored" data-anchor-id="why-the-deducted-eth-is-destroyed-rather-than-redirected">Why the deducted ETH is destroyed rather than redirected</h3>
-<p>Any redirection of the deducted ETH, whether to other validators, a treasury, or any other recipient, would leave total issuance unchanged and so defeat the proposal’s monetary purpose, while creating a new claimant whose incentives must be analysed and whose share can be lobbied over. Burning the ETH, as established by the base-fee burn of <a href="https://eips.ethereum.org/EIPS/eip-1559">EIP-1559</a>, is the credibly neutral alternative: the value removed accrues pro rata to all ETH holders.</p>
+<section id="why-the-deducted-eth-is-burned-rather-than-redirected" class="level3">
+<h3 class="anchored" data-anchor-id="why-the-deducted-eth-is-burned-rather-than-redirected">Why the deducted ETH is burned rather than redirected</h3>
+<p>Any redirection of the deducted ETH, whether to other validators, a treasury, or any other recipient, would leave total issuance unchanged and so defeat the proposal’s monetary purpose, while creating a new claimant whose incentives must be analysed and whose share can be lobbied over. Burning the ETH, as established by the base-fee burn of EIP-1559,<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> is the credibly neutral alternative: the value removed accrues pro rata to all ETH holders.</p>
 </section>
 <section id="why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards" class="level3">
 <h3 class="anchored" data-anchor-id="why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards">Why the deduction is computed from idealised rather than actual rewards</h3>
 <p>Each deduction is sized from the <em>idealised</em> reward for a duty, not from the reward the validator actually earned. This leaves every micro-incentive exactly as strong as it is today. If the deduction scaled with the reward actually earned, each duty’s marginal payoff would be multiplied by <span class="math inline">\((1-b)\)</span>, progressively weakening the incentive to perform duties correctly. Computed from the idealised reward instead, the deduction is fixed with respect to the validator’s behaviour in the epoch: performing a duty improves a validator’s balance by exactly as much as it does under current rules.</p>
-<p>It follows that “issuance burn” describes the mechanism’s aggregate effect rather than a withholding of any individual payment: for a well-performing validator the deduction nets against rewards actually received, and across the whole validator set the deductions reduce net issuance by the tapered fraction <span class="math inline">\(b\)</span>.</p>
 </section>
 <section id="why-the-saturation-point-is-expressed-as-a-fixed-balance" class="level3">
 <h3 class="anchored" data-anchor-id="why-the-saturation-point-is-expressed-as-a-fixed-balance">Why the saturation point is expressed as a fixed balance</h3>
@@ -458,7 +476,7 @@ Figure&nbsp;2: Annual ETH issuance under the current curve and with the tapered 
 </section>
 <section id="why-the-burn-is-split-by-duty" class="level3">
 <h3 class="anchored" data-anchor-id="why-the-burn-is-split-by-duty">Why the burn is split by duty</h3>
-<p>Applying <span class="math inline">\(b\)</span> as a single, uniform per-validator deduction each epoch would be simpler to specify, but every validator only proposes and joins a sync committee rarely. A uniform deduction sized to also cover those infrequent, larger rewards would exceed a typical epoch’s attestation reward as the burn fraction grows, leaving even a perfectly performing validator with a negative balance change in every epoch spent waiting for a rare duty assignment. As Anders Elowsson observes in <a href="https://ethresear.ch/t/properties-of-issuance-offsets-and-increased-penalties-under-low-zero-negative-issuance-policies/25292">Properties of Issuance Offsets and Increased Penalties</a>, allocating the deduction by assigned duty avoids this: a validator that performs its attestation duties is never pushed into a negative balance change merely for lack of a proposal or sync-committee assignment, and each deduction stays proportionate to the reward on offer at each opportunity.</p>
+<p>Applying <span class="math inline">\(b\)</span> as a single, uniform per-validator deduction each epoch would be simpler to specify, but every validator only proposes and joins a sync committee rarely. A uniform deduction sized to also cover those infrequent, larger rewards would exceed a typical epoch’s attestation reward as the burn fraction grows, leaving even a perfectly performing validator with a negative balance change in every epoch spent waiting for a rare duty assignment. Allocating the deduction by assigned duty avoids this: a validator that performs its attestation duties is never pushed into a negative balance change merely for lack of a proposal or sync-committee assignment, and each deduction stays proportionate to the reward on offer at each opportunity.<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a></p>
 </section>
 </section>
 <section id="backwards-compatibility" class="level2">
@@ -467,27 +485,39 @@ Figure&nbsp;2: Annual ETH issuance under the current curve and with the tapered 
 </section>
 <section id="test-cases" class="level2">
 <h2 class="anchored" data-anchor-id="test-cases">Test Cases</h2>
-<p>Test vectors are not yet included in this draft. On progressing toward implementation, test cases would be added to the <code>epoch_processing</code> test suite in <a href="https://github.com/ethereum/consensus-specs">consensus-specs</a>, following the existing format for <code>process_rewards_and_penalties</code>, covering: zero active balance below saturation, active balance at and above <code>SATURATION_BALANCE</code>, and the boundary behaviour of <code>get_issuance_burn</code> at <code>sqrt_active == sqrt_sat</code>.</p>
+<p>Test vectors are not yet included in this draft. On progressing toward implementation, test cases would be added to the <code>epoch_processing</code> test suite in the <code>consensus-specs</code> repository,<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> following the existing format for <code>process_rewards_and_penalties</code>, covering: zero active balance below saturation, active balance at and above <code>SATURATION_BALANCE</code>, and the boundary behaviour of <code>get_issuance_burn</code> at <code>sqrt_active == sqrt_sat</code>.</p>
 </section>
 <section id="reference-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="reference-implementation">Reference Implementation</h2>
-<p>The Python pseudocode in the <a href="#specification">Specification</a> section constitutes the reference implementation, in the same style used throughout the beacon chain consensus specification. No client implementation exists yet, as this is presented here as a draft for discussion.</p>
+<p>The Python in the <a href="#specification">Specification</a> section constitutes the reference implementation, in the same style used throughout the beacon chain consensus specification. No client implementation exists yet, as this is presented here as a draft for discussion.</p>
 </section>
 <section id="security-considerations" class="level2">
 <h2 class="anchored" data-anchor-id="security-considerations">Security Considerations</h2>
-<p><strong>Incentive compatibility.</strong> The burn fraction <span class="math inline">\(b(f)\)</span> is a deterministic, publicly computable function of total active balance; it cannot be targeted at, or avoided by, any individual validator or subset of validators, so it introduces no new griefing or discrimination vector. Because each deduction is computed from the idealised duty reward rather than the reward actually earned, it is independent of the validator’s behaviour within the epoch, leaving every marginal performance incentive unchanged. And because <span class="math inline">\(b(f) \le 1\)</span> for all <span class="math inline">\(f\)</span> (clamped via <code>sqrt_active = min(..., sqrt_sat)</code>), no deduction ever exceeds the idealised reward it is derived from: a validator performing its duties correctly retains a non-negative net reward for the epoch, and the burn cannot by itself drive aggregate net issuance negative. A validator that misses duties still pays the deduction, by design: it cannot be avoided by abstaining from participation, and is experienced as a bounded addition to the existing penalties for non-participation.</p>
-<p><strong>Effect on economic security.</strong> This EIP deliberately results in a lower equilibrium quantity of stake than the current curve. In proof of stake with slashing, the cost of attack is set by the stock of slashable stake an attacker must acquire and forfeit, and at any staking ratio in the tens of percent that stock remains vast relative to any plausible attack reward. Nor does economic security increase monotonically with stake: as set out in the Motivation, beyond a certain level the accompanying concentration of stake and supply makes the network less secure, not more. To the extent the proposal protects ETH’s monetary premium, it also supports the real value of the stake securing the chain.</p>
+<p><strong>Incentive compatibility.</strong> The burn fraction <span class="math inline">\(b(f)\)</span> is a deterministic, publicly computable function of total active balance, and applies identically to every validator. No validator or coalition can shift a larger share onto another, nor reduce its own, so it introduces no new griefing or discrimination vector. Because each deduction is computed from the idealised duty reward rather than the reward actually earned, it is independent of the validator’s behaviour within the epoch, leaving every marginal performance incentive intact — indeed strengthened, since doubling <code>BASE_REWARD_FACTOR</code> doubles the reward and penalty schedule together, preserving the balance between them. And because <span class="math inline">\(b(f) \le 1\)</span> for all <span class="math inline">\(f\)</span> (clamped via <code>sqrt_active = min(..., sqrt_sat)</code>), no deduction ever exceeds the idealised reward it is derived from: a validator performing its duties correctly retains a non-negative net reward for the epoch, and the burn cannot by itself drive aggregate net issuance negative.</p>
+<p><strong>Effect on economic security.</strong> This EIP deliberately results in a lower equilibrium quantity of stake than the current curve. In proof-of-stake with slashing, the cost of attack is set by the stock of slashable stake an attacker must acquire and forfeit, and at any staking ratio in the tens of percent that stock remains vast relative to any plausible attack reward. Nor does economic security increase monotonically with stake: as set out in the Motivation, beyond a certain level the accompanying concentration of stake and supply makes the network less secure, not more. To the extent the proposal protects ETH’s monetary premium, it also supports the real value of the stake securing the chain.</p>
 <p><strong>Computational cost.</strong> The additional per-epoch cost is one O(1) deduction per active validator (foldable into the existing rewards/penalties pass) plus two fixed-size passes over the 32 proposers and 512 sync committee members, so this EIP does not introduce a new DoS surface. <code>get_validator_index_by_pubkey</code>, used for the sync committee burn, should reuse the same pubkey→index cache clients already maintain for sync committee processing, rather than a linear scan.</p>
 <p><strong>Constant drift.</strong> As noted in <a href="#why-the-saturation-point-is-expressed-as-a-fixed-balance">Rationale</a>, <code>SATURATION_BALANCE</code> is fixed at the fork and does not track live supply, so the effective saturation ratio will drift slowly over time. This drift changes only the location of the equilibrium point, not any safety property of the mechanism, and is not expected to be security-relevant on the timescale of a single fork’s lifetime.</p>
 </section>
 <section id="copyright" class="level2">
 <h2 class="anchored" data-anchor-id="copyright">Copyright</h2>
-<p>Copyright and related rights waived via <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.</p>
+<p>Copyright and related rights waived via CC0.<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a></p>
 
 
 </section>
 
-</main> <!-- /main -->
+
+<div id="quarto-appendix" class="default"><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>pa7x1, <em>The Shape of Issuance Curves to Come</em>. <a href="https://github.com/pa7x1/ethereum-issuance" class="uri">https://github.com/pa7x1/ethereum-issuance</a><a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>pintail, <em>Ethereum’s Staking Ratio: The Tipping Point</em>. <a href="https://pintail.xyz/posts/2026/staking-ratio/" class="uri">https://pintail.xyz/posts/2026/staking-ratio/</a><a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>Anders Elowsson, <em>FAQ: Ethereum issuance reduction</em>. <a href="https://ethresear.ch/t/faq-ethereum-issuance-reduction/19675" class="uri">https://ethresear.ch/t/faq-ethereum-issuance-reduction/19675</a><a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p><a href="https://eips.ethereum.org/EIPS/eip-1559" class="uri">https://eips.ethereum.org/EIPS/eip-1559</a><a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>Anders Elowsson, <em>Properties of Issuance Offsets and Increased Penalties under Low/Zero/Negative Issuance Policies</em>. <a href="https://ethresear.ch/t/properties-of-issuance-offsets-and-increased-penalties-under-low-zero-negative-issuance-policies/25292" class="uri">https://ethresear.ch/t/properties-of-issuance-offsets-and-increased-penalties-under-low-zero-negative-issuance-policies/25292</a><a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p><a href="https://github.com/ethereum/consensus-specs" class="uri">https://github.com/ethereum/consensus-specs</a><a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p><a href="https://creativecommons.org/publicdomain/zero/1.0/" class="uri">https://creativecommons.org/publicdomain/zero/1.0/</a><a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol>
+</section></div></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

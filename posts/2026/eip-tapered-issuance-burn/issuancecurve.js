@@ -33,14 +33,19 @@
     if (net <= 0) return 0;
     return net * f * 100;
   }
+  // This proposal (compensated): B = 128 (factor of 2).
+  function annualInflationPctComp(f) {
+    return 2 * annualInflationPctBurn(f);
+  }
 
-  var fs = [], yCurrent = [], yBurn = [];
+  var fs = [], yCurrent = [], yBurn = [], yComp = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
     yCurrent.push(+annualInflationPct(f).toFixed(4));
     yBurn.push(+annualInflationPctBurn(f).toFixed(4));
+    yComp.push(+annualInflationPctComp(f).toFixed(4));
   }
 
   var layout = {
@@ -111,7 +116,7 @@
       },
     ],
     showlegend: true,
-    legend: { x: 0.55, y: 0.5, bgcolor: 'rgba(255,255,255,0.8)' },
+    legend: { x: 0.62, y: 0.5, bgcolor: 'rgba(255,255,255,0.8)' },
     dragmode: false,
     title: { text: 'Annual issuance: current vs. tapered issuance burn', font: { size: 14 }, x: 0.5, xanchor: 'center' },
     margin: { t: 40, r: 12, b: 56, l: 72 },
@@ -124,17 +129,24 @@
   var traces = [
     {
       x: fs, y: yCurrent,
-      name: 'Current curve',
+      name: 'Current (B=64)',
       type: 'scatter', mode: 'lines',
       line: { color: '#1565c0', width: 2.5 },
-      hovertemplate: 'Current: %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Current (B=64): %{y:.3f}%<extra></extra>',
     },
     {
       x: fs, y: yBurn,
-      name: 'With tapered issuance burn',
+      name: 'Burn only (B=64)',
       type: 'scatter', mode: 'lines',
       line: { color: '#6a1b9a', width: 2.5 },
-      hovertemplate: 'With burn: %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Burn only (B=64): %{y:.3f}%<extra></extra>',
+    },
+    {
+      x: fs, y: yComp,
+      name: 'This proposal (B=128)',
+      type: 'scatter', mode: 'lines',
+      line: { color: '#2e7d32', width: 2.5 },
+      hovertemplate: 'This proposal (B=128): %{y:.3f}%<extra></extra>',
     },
   ];
 
