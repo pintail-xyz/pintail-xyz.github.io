@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2026-07-14">
-<meta name="description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, with BASE_REWARD_FACTOR doubled to compensate the yield at transition. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while preserving the shape and balance of Ethereum’s existing reward curve.">
+<meta name="description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, phased in over a two-year transition that temporarily raises the base reward factor so yields fall gradually rather than at once. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while leaving Ethereum’s existing reward curve — including BASE_REWARD_FACTOR — unchanged once the transition completes.">
 
 <title>EIP Draft: Tapered Issuance Burn – pintail’s notes</title>
 <style>
@@ -142,7 +142,7 @@ window.Quarto = {
 </script>
 
 <meta property="og:title" content="EIP Draft: Tapered Issuance Burn – pintail’s notes">
-<meta property="og:description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, with BASE_REWARD_FACTOR doubled to compensate the yield at transition. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while preserving the shape and balance of Ethereum’s existing reward curve.">
+<meta property="og:description" content="An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, phased in over a two-year transition that temporarily raises the base reward factor so yields fall gradually rather than at once. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while leaving Ethereum’s existing reward curve — including BASE_REWARD_FACTOR — unchanged once the transition completes.">
 <meta property="og:image" content="https://pintail.xyz/posts/2026/eip-tapered-issuance-burn/thumbnail.svg">
 <meta property="og:site_name" content="pintail’s notes">
 </head>
@@ -205,12 +205,13 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#constants" id="toc-constants" class="nav-link" data-scroll-target="#constants">Constants</a></li>
   <li><a href="#helper-functions" id="toc-helper-functions" class="nav-link" data-scroll-target="#helper-functions">Helper functions</a></li>
+  <li><a href="#the-base-reward-factor-transition" id="toc-the-base-reward-factor-transition" class="nav-link" data-scroll-target="#the-base-reward-factor-transition">The base reward factor transition</a></li>
   <li><a href="#beacon-chain-state-transition" id="toc-beacon-chain-state-transition" class="nav-link" data-scroll-target="#beacon-chain-state-transition">Beacon chain state transition</a></li>
   </ul></li>
   <li><a href="#rationale" id="toc-rationale" class="nav-link" data-scroll-target="#rationale">Rationale</a>
   <ul class="collapse">
   <li><a href="#deriving-the-burn-fraction" id="toc-deriving-the-burn-fraction" class="nav-link" data-scroll-target="#deriving-the-burn-fraction">Deriving the burn fraction</a></li>
-  <li><a href="#why-base_reward_factor-is-doubled" id="toc-why-base_reward_factor-is-doubled" class="nav-link" data-scroll-target="#why-base_reward_factor-is-doubled">Why <code>BASE_REWARD_FACTOR</code> is doubled</a></li>
+  <li><a href="#the-transition-period" id="toc-the-transition-period" class="nav-link" data-scroll-target="#the-transition-period">The transition period</a></li>
   <li><a href="#why-a-burn-and-not-a-change-to-the-reward-curve" id="toc-why-a-burn-and-not-a-change-to-the-reward-curve" class="nav-link" data-scroll-target="#why-a-burn-and-not-a-change-to-the-reward-curve">Why a burn, and not a change to the reward curve</a></li>
   <li><a href="#why-the-deducted-eth-is-burned-rather-than-redirected" id="toc-why-the-deducted-eth-is-burned-rather-than-redirected" class="nav-link" data-scroll-target="#why-the-deducted-eth-is-burned-rather-than-redirected">Why the deducted ETH is burned rather than redirected</a></li>
   <li><a href="#why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards" id="toc-why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards" class="nav-link" data-scroll-target="#why-the-deduction-is-computed-from-idealised-rather-than-actual-rewards">Why the deduction is computed from idealised rather than actual rewards</a></li>
@@ -226,7 +227,7 @@ window.Quarto = {
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content page-columns page-full" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
@@ -235,7 +236,7 @@ window.Quarto = {
 
 <div>
   <div class="description">
-    An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, with BASE_REWARD_FACTOR doubled to compensate the yield at transition. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while preserving the shape and balance of Ethereum’s existing reward curve.
+    An EIP-formatted draft proposing a tapered issuance burn, deducted per validator duty and tapered linearly with the staking ratio, phased in over a two-year transition that temporarily raises the base reward factor so yields fall gradually rather than at once. Under this proposal, issuance no longer incentivises stake growth beyond a 50% staking ratio, while leaving Ethereum’s existing reward curve — including BASE_REWARD_FACTOR — unchanged once the transition completes.
   </div>
 </div>
 
@@ -253,7 +254,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Modified</div>
     <div class="quarto-title-meta-contents">
-      <p class="date-modified">July 21, 2026</p>
+      <p class="date-modified">July 23, 2026</p>
     </div>
   </div>
     
@@ -266,7 +267,7 @@ window.Quarto = {
 
 <pre><code>eip: &lt;to be assigned&gt;
 title: Tapered Issuance Burn
-description: Remove the issuance incentive for stake growth beyond a 50% staking ratio by deducting and burning a linearly-tapered fraction of idealised validator rewards, with the base reward factor doubled to compensate the yield at transition
+description: Remove the issuance incentive for stake growth beyond a 50% staking ratio by deducting and burning a linearly-tapered fraction of idealised validator rewards, phased in over a two-year transition that temporarily raises the base reward factor to soften the yield reduction
 author: pintail (@pintail-xyz), pa7x1 (@pa7x1), Jérôme de Tychey (@jdetychey), Justin Drake (@justindrake), Ladislaus von Daniels (@ladidan)
 discussions-to: &lt;to be assigned&gt;
 status: Draft
@@ -276,13 +277,13 @@ created: 2026-07-14</code></pre>
 <section id="abstract" class="level2">
 <h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
 <p>This EIP introduces a <strong>tapered issuance burn</strong>: at each epoch boundary a deduction is applied to each validator for its assigned duties in that epoch (attestation, block proposal, and sync committee participation), and the deducted ETH is burned. Each deduction is sized as a fraction of the idealised reward for the duty. The burn fraction is zero when the staking ratio is zero and rises to 100% at a fixed <em>saturation balance</em>, tapering linearly in between. In aggregate, the deductions burn a tapered fraction of consensus issuance that grows with the staking ratio, so the net staking yield declines as more ETH is staked. This removes the yield floor implicit in the current curve, letting the staking market settle at an equilibrium yield set according to the risk premium that stakers demand. For a positive yield, that equilibrium is reached at a staking ratio below 50%, beyond which the issuance mechanism no longer incentivises further stake growth.</p>
-<p>Applying tapered issuance burn without any other adjustment would result in a large drop in yield at the point the policy goes into effect. Therefore, to compensate for the reduction in yield, <code>BASE_REWARD_FACTOR</code> is doubled from 64 to 128, scaling all rewards and penalties together and lifting the net yield curve so that it crosses the current curve at a staking ratio of about 31% — close to today’s level. The issuance burn is applied completely separately to the rewards and penalties machinery, which this proposal leaves unchanged, except for the uniform rescaling from the <code>BASE_REWARD_FACTOR</code> increase.</p>
+<p>Given the current staking ratio, applying the burn at the fork without any other change would result in an immediate reduction in yield for stakers. To enable a smooth adjustment, the reduction is phased in over a two-year transition. This is done by temporarily raising the <code>BASE_REWARD_FACTOR</code>, which scales rewards, penalties, and the corresponding issuance burn together. As a result, net yield begins close to today’s level and transitions smoothly back to today’s reward curve, with tapered issuance burn applied, and the balance between micro-incentives preserved throughout. The taper’s <em>shape</em>, however, is in full effect from activation: from day one the issuance mechanism no longer rewards growth in the staking ratio beyond 50%, allowing the market to settle at its equilibrium yield.</p>
 </section>
 <section id="motivation" class="level2">
 <h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
-<p>The choice between staking and simply holding ETH is made on the gap between the yields the two options offer and the risks each carries.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> For staking these include liquidity, slashing, operational, and regulatory risks; liquid staking exchanges some of these for risks attaching to the token issuer, whether smart-contract risk for an on-chain protocol or counterparty risk for a centralised provider. Stake is therefore expected to keep flowing in for as long as the net incentive to stake, given by the nominal yield, exceeds the premium the marginal staker demands for bearing those risks. The staking market reaches equilibrium only if the nominal yield falls to the level of the staking risk premium. This risk premium is trending down owing to the maturity of staking setups at the infrastructure, smartcontract and software level. Furthermore, the credibility of slashing is negatively impacted by large amounts of ETH at stake, further weighing on the staking risk premium.</p>
-<p>Under the current issuance curve there is no point at which the incentive to stake switches off: the yield falls only as <span class="math inline">\(1/\sqrt{f}\)</span> in the staking ratio <span class="math inline">\(f\)</span> and never drops below roughly 1.5%, even with all ETH staked. Whether stake growth halts short of 100% therefore rests entirely on the marginal staker’s risk premium staying above this yield floor; however, the protocol neither observes nor controls this premium. There is reason to think the premium may tend to fall rather than hold: as the staking ecosystem matures, trusted low-friction custodians such as ETF providers emerge, and tooling and liquid staking reduce the costs and risks that justify it. Meanwhile, since issuance currently increases with staking ratio, dilution costs to unstaked ETH holders increase, adding greater incentive to stake to avoid this dilution.</p>
-<p>A drift toward a very high staking ratio is undesirable for two distinct reasons.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+<p>The choice between staking and simply holding ETH is made on the gap between the yields the two options offer and the risks each carries.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> For staking these include liquidity, slashing, operational, and regulatory risks; liquid staking exchanges some of these for risks attaching to the token issuer, whether smart-contract and governance risks for on-chain protocols or counterparty risk for a centralised provider. Stake is therefore expected to keep flowing in for as long as the net incentive to stake, given by the nominal yield, exceeds the premium the marginal staker demands for bearing those risks. The staking market reaches equilibrium only if the nominal yield falls to the level of the staking risk premium. This risk premium is trending down owing to the maturity of staking setups at the infrastructure, smartcontract and software level. Furthermore, the credibility of slashing is negatively impacted by large amounts of ETH at stake, further weighing on the staking risk premium.</p>
+<p>Under the current issuance curve there is no point at which the incentive to stake switches off: the yield falls only as <span class="math inline">\(1/\sqrt{f}\)</span> in the staking ratio <span class="math inline">\(f\)</span> and never drops below roughly 1.5%, even with all ETH staked. Whether stake growth halts short of 100% therefore rests entirely on the marginal staker’s risk premium staying above this yield floor; however, the protocol neither observes nor controls this premium. There is reason to think the premium may continue to fall: as the staking ecosystem matures, trusted low-friction custodians such as ETF providers emerge, and tooling and liquid staking reduce the costs and risks that justify it. Meanwhile, since issuance increases with staking ratio, dilution costs to unstaked ETH holders increase, adding greater incentive to stake to avoid this dilution.</p>
+<p>A drift toward a very high staking ratio is undesirable for two distinct reasons, which correspond to the two goals of this proposal: preserving Ethereum’s security and resistance to capture, and protecting ETH’s role as money.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
 <section id="security-neutrality-and-resistance-to-capture" class="level3">
 <h3 class="anchored" data-anchor-id="security-neutrality-and-resistance-to-capture">Security, neutrality, and resistance to capture</h3>
 <p>Beyond a certain level, additional stake makes Ethereum <em>less</em> secure, not more: the marginal contribution of new stake to economic security falls as the ratio rises, while several risks compound.</p>
@@ -294,50 +295,60 @@ created: 2026-07-14</code></pre>
 </section>
 <section id="eth-as-money" class="level3">
 <h3 class="anchored" data-anchor-id="eth-as-money">ETH as money</h3>
-<p>Issuance is yield paid on the staked base, so under the current curve the ETH issued per year grows without bound as the staking ratio rises. This excess issuance operates as a continuous dilution tax on holders of unstaked ETH, eroding the scarcity and monetary premium that underpin ETH’s moneyness and forcing on every holder an artificial choice: accept dilution, or take on the costs and risks of staking merely to avoid it.</p>
+<p>Issuance is yield paid on the staked base, so under the current curve the ETH issued per year grows without bound as the staking ratio rises. This excess issuance operates as a continuous dilution tax on holders of unstaked ETH, eroding the scarcity and monetary premium that underpin ETH’s value as money and forcing on every holder an artificial choice: accept dilution, or take on the costs and risks of staking merely to avoid it.</p>
 <p>At high staking ratios the damage is compounded. Yield-bearing LSTs and other staking derivatives come to dominate raw ETH as collateral and medium of exchange within the Ethereum economy, displacing the most neutral, permissionless, trustless asset available with intermediated claims on staking providers. For a staking provider this displacement is a rational profit-maximising strategy pursued by embedding the derivative across every layer and application until it, rather than ETH, is the ecosystem’s working money. The costs of that substitution are concrete: if ETH is progressively displaced as the reserve asset, liquidity fragments across competing derivatives and slippage rises on decentralised exchanges, while every application that settles in a staking derivative inherits its issuer’s smart-contract, counterparty, and governance risk.</p>
 <p>By moderating issuance, each staking derivative faces stronger competition from non-staked ETH, promoting a trustless asset at the foundation of the ecosystem. This reduces the risk that the social layer becomes co-dependent on an outside organization, its issued derivative of ETH, and its governance processes. Without that mitigation, applications that power the money could gain outsized influence over applications that use the money, making Ethereum a less desirable blockchain to build and develop on.</p>
 <p>Bounding issuance-driven stake growth keeps issuance itself bounded. Under this proposal it peaks at a staking ratio of roughly 20% and falls to zero at the 50% saturation ratio — complementing the fee burn of <a href="https://eips.ethereum.org/EIPS/eip-1559">EIP-1559</a> on the supply side of the ledger and protecting the central monetary role of unstaked ETH.</p>
 </section>
 <section id="restoring-an-equilibrium" class="level3">
 <h3 class="anchored" data-anchor-id="restoring-an-equilibrium">Restoring an equilibrium</h3>
-<p>This EIP proposes the minimal change needed to ensure that the issuance mechanism no longer drives stake growth beyond a 50% staking ratio: after computing rewards exactly as today, deduct from each validator a fraction of the idealised reward for each assigned duty — destroying the deducted ETH — with that fraction tapering linearly in the staking ratio up to a fixed saturation point. At the same time, <code>BASE_REWARD_FACTOR</code> is doubled, so that the net yield at today’s staking ratio is only modestly reduced and the transition’s impact on existing stakers is limited. Because the post-burn issuance yield falls to zero at the 50% saturation ratio, it crosses any positive risk premium at some ratio strictly below 50%, giving the staking market an equilibrium wherever the market sets that premium.</p>
+<p>This EIP proposes the minimal change needed to ensure that the issuance mechanism no longer drives stake growth beyond a 50% staking ratio: after computing rewards exactly as today, deduct from each validator a fraction of the idealised reward for each assigned duty — destroying the deducted ETH — with that fraction tapering linearly in the staking ratio up to a fixed saturation point. Because the post-burn issuance yield falls to zero at the 50% saturation ratio, it crosses any positive risk premium at some ratio strictly below 50%, giving the staking market an equilibrium wherever the market sets that premium.</p>
+<p>The two goals are served by different aspects of this change. The <strong>security and capture-resistance</strong> goal is met by the <em>shape</em> of the tapered curve: with net issuance yield falling to zero at 50%, issuance no longer rewards staking beyond that ratio. The <strong>ETH-as-money</strong> goal is served additionally by the <em>level</em> of issuance — bounding it well below today’s trajectory, so that holders of ETH do not overpay for security through dilution.</p>
+<p>Because the shape and the level are controlled independently, the two goals are realised on different timescales. To avoid a sharp fall in yield at the fork, the reduction is phased in over a two-year transition, during which the effective base reward factor decays from twice its current value back to today’s, limiting the impact on existing stakers at activation. The tapered <em>shape</em> is nonetheless in full effect from the moment the transition begins: from day one the issuance mechanism no longer rewards growth in the staking ratio beyond 50%, so the market has an equilibrium below that point and the security goal is achieved immediately. The transition scales only the overall <em>level</em> of issuance, which declines to its permanent low as the two years elapse; the ETH-as-money goal therefore strengthens across the transition and reaches full strength once it completes.</p>
 </section>
 </section>
 <section id="specification" class="level2">
 <h2 class="anchored" data-anchor-id="specification">Specification</h2>
 <p>Let <span class="math inline">\(D\)</span> denote <code>get_total_active_balance(state)</code> in Gwei, and let <code>SATURATION_BALANCE</code> (Gwei, <span class="math inline">\(D_\text{sat}\)</span>) be a fixed constant set at the hard fork to approximately half the ETH supply. Define the <strong>burn fraction</strong></p>
 <p><span class="math display">\[b = \left(\frac{D}{D_\text{sat}}\right)^{3/2}, \qquad \text{clamped to } b \le 1.\]</span></p>
-<p>For each validator duty, a deduction of <span class="math inline">\(b\)</span> times the idealised reward for that duty is applied (via <code>decrease_balance</code>) to every validator assigned the duty, immediately after rewards and penalties are applied for the epoch; the deducted ETH is destroyed. The deduction is a function of effective balance and total active balance only — it is charged whether or not the duty was performed. In addition, <code>BASE_REWARD_FACTOR</code> is raised from 64 to 128, uniformly scaling all rewards and penalties. Apart from that change of constant, no other part of <code>process_epoch</code>, and no part of <code>process_rewards_and_penalties</code>, is modified.</p>
+<p>For each validator duty, a deduction of <span class="math inline">\(b\)</span> times the idealised reward for that duty is applied (via <code>decrease_balance</code>) to every validator assigned the duty, immediately after rewards and penalties are applied for the epoch; the deducted ETH is destroyed. The deduction is a function of effective balance and total active balance only — it is charged whether or not the duty was performed.</p>
+<p><code>BASE_REWARD_FACTOR</code> itself is left unchanged at its current value of 64. The only modification to the existing rewards machinery is temporary: to avoid a sudden drop in yield when the burn activates, <code>get_base_reward_per_increment</code> reads a time-varying <em>effective</em> base reward factor that starts at <code>TRANSITION_BASE_REWARD_FACTOR</code> (128) and decays linearly to <code>BASE_REWARD_FACTOR</code> (64) over <code>TRANSITION_DURATION_EPOCHS</code> (≈ 2 years). Because both rewards and the burn’s reference rewards derive from <code>get_base_reward_per_increment</code>, this elevation scales the whole schedule — rewards, penalties, and burn — uniformly, so the balance between them is preserved. Once the transition completes the effective factor is permanently 64, and <code>process_rewards_and_penalties</code> behaves exactly as it does today.</p>
 <section id="constants" class="level3">
 <h3 class="anchored" data-anchor-id="constants">Constants</h3>
+<p><code>BASE_REWARD_FACTOR</code> is left unchanged at <code>uint64(64)</code>. The following constants are added:</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Name</th>
-<th>Old value</th>
-<th>New value</th>
+<th>Value</th>
 <th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>BASE_REWARD_FACTOR</code></td>
-<td><code>uint64(64)</code></td>
-<td><code>uint64(128)</code></td>
-<td>Uniformly scales rewards and penalties so that net yield at deployment is approximately unchanged</td>
-</tr>
-<tr class="even">
 <td><code>SATURATION_BALANCE</code></td>
-<td>—</td>
 <td><code>Gwei(60_250_000 * 10**9)</code></td>
 <td>Total active balance <span class="math inline">\(D_\text{sat}\)</span> at which the burn fraction reaches 100%; set at the hard fork to approximately half the current ETH supply</td>
+</tr>
+<tr class="even">
+<td><code>TRANSITION_BASE_REWARD_FACTOR</code></td>
+<td><code>uint64(128)</code></td>
+<td>Effective base reward factor at the start of the transition — twice <code>BASE_REWARD_FACTOR</code> — decaying linearly to <code>BASE_REWARD_FACTOR</code> over the transition</td>
+</tr>
+<tr class="odd">
+<td><code>TRANSITION_START_EPOCH</code></td>
+<td><code>Epoch(...)</code></td>
+<td>Epoch at which the transition begins; set at the hard fork to the activation epoch</td>
+</tr>
+<tr class="even">
+<td><code>TRANSITION_DURATION_EPOCHS</code></td>
+<td><code>Epoch(164_250)</code></td>
+<td>Transition length; <span class="math inline">\(164{,}250 = 730 \times 225\)</span> epochs <span class="math inline">\(\approx 2\)</span> years (225 epochs per day)</td>
 </tr>
 </tbody>
 </table>
@@ -353,6 +364,29 @@ created: 2026-07-14</code></pre>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(burn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This EIP also relies on two lookups not present in the current specification: <code>get_beacon_proposer_index_at_slot</code> (the existing <code>get_beacon_proposer_index</code> generalised to an arbitrary slot in the epoch) and <code>get_validator_index_by_pubkey</code> (a pubkey→index lookup, which clients already maintain as a cache).</p>
 </section>
+<section id="the-base-reward-factor-transition" class="level3">
+<h3 class="anchored" data-anchor-id="the-base-reward-factor-transition">The base reward factor transition</h3>
+<p><code>get_base_reward_factor</code> returns the effective base reward factor for an epoch: <code>TRANSITION_BASE_REWARD_FACTOR</code> at the start of the transition, decaying linearly to <code>BASE_REWARD_FACTOR</code> over <code>TRANSITION_DURATION_EPOCHS</code>, and permanently <code>BASE_REWARD_FACTOR</code> thereafter.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_factor(epoch: Epoch) <span class="op">-&gt;</span> uint64:</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Elevated during the transition to cushion the yield reduction, decaying</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># linearly from TRANSITION_BASE_REWARD_FACTOR at TRANSITION_START_EPOCH to</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># BASE_REWARD_FACTOR after TRANSITION_DURATION_EPOCHS. Permanently</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="co"># BASE_REWARD_FACTOR — today's value — once the transition completes.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> epoch <span class="op">&lt;=</span> TRANSITION_START_EPOCH:</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> TRANSITION_BASE_REWARD_FACTOR</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    elapsed <span class="op">=</span> epoch <span class="op">-</span> TRANSITION_START_EPOCH</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> elapsed <span class="op">&gt;=</span> TRANSITION_DURATION_EPOCHS:</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> BASE_REWARD_FACTOR</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    remaining <span class="op">=</span> TRANSITION_DURATION_EPOCHS <span class="op">-</span> elapsed</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    boost <span class="op">=</span> TRANSITION_BASE_REWARD_FACTOR <span class="op">-</span> BASE_REWARD_FACTOR</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> BASE_REWARD_FACTOR <span class="op">+</span> uint64(boost) <span class="op">*</span> uint64(remaining) <span class="op">//</span> uint64(TRANSITION_DURATION_EPOCHS)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>get_base_reward_per_increment</code> is modified to use this factor in place of the <code>BASE_REWARD_FACTOR</code> constant; this is the sole change to the existing rewards machinery, and it reverts to today’s behaviour once the transition completes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_base_reward_per_increment(state: BeaconState) <span class="op">-&gt;</span> Gwei:</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    factor <span class="op">=</span> get_base_reward_factor(get_current_epoch(state))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Gwei(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        EFFECTIVE_BALANCE_INCREMENT <span class="op">*</span> factor <span class="op">//</span> integer_squareroot(get_total_active_balance(state))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="beacon-chain-state-transition" class="level3">
 <h3 class="anchored" data-anchor-id="beacon-chain-state-transition">Beacon chain state transition</h3>
 <p>A new step, <code>process_issuance_burn</code>, is added to <code>process_epoch</code> immediately after <code>process_rewards_and_penalties</code> and before <code>process_effective_balance_updates</code>. Running it there means effective balances still hold the epoch’s values, so the proposer burn below charges exactly the proposers that were selected during the epoch. The burn is applied per duty, in three passes:</p>
@@ -361,53 +395,53 @@ created: 2026-07-14</code></pre>
 <li><strong>Proposer burn</strong> — a burn of <span class="math inline">\(b\)</span> times an equal share of the epoch’s ideal proposer reward, charged to each of the 32 proposers;</li>
 <li><strong>Sync committee burn</strong> — a burn of <span class="math inline">\(b\)</span> times the ideal sync committee reward for the epoch, charged to each of the 512 sync committee members.</li>
 </ul>
-<p>Splitting the burn by duty, rather than applying a single uniform per-validator deduction, keeps the variance between validators low despite the rare duties of proposal and sync committee participation.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_issuance_burn(state: BeaconState) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Clamping sqrt_active to sqrt_sat keeps the burn fraction at or below 1.</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    sqrt_sat <span class="op">=</span> integer_squareroot(SATURATION_BALANCE)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    sqrt_active <span class="op">=</span> <span class="bu">min</span>(integer_squareroot(get_total_active_balance(state)), sqrt_sat)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    increment <span class="op">=</span> EFFECTIVE_BALANCE_INCREMENT</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    base <span class="op">=</span> get_base_reward_per_increment(state)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    epoch <span class="op">=</span> get_current_epoch(state)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Attestation burn — every active validator.</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    attest_weight <span class="op">=</span> TIMELY_SOURCE_WEIGHT <span class="op">+</span> TIMELY_TARGET_WEIGHT <span class="op">+</span> TIMELY_HEAD_WEIGHT</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> index <span class="kw">in</span> get_active_validator_indices(state, epoch):</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        attest_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> attest_weight <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        burn <span class="op">=</span> get_issuance_burn(attest_reward, sqrt_active, sqrt_sat)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, burn)</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Proposer burn — the 32 proposers of the epoch.</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    n_total <span class="op">=</span> get_total_active_balance(state) <span class="op">//</span> increment</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    ideal_proposer_reward <span class="op">=</span> Gwei(</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        n_total <span class="op">*</span> base <span class="op">*</span> PROPOSER_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR <span class="op">//</span> SLOTS_PER_EPOCH</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    proposer_burn <span class="op">=</span> get_issuance_burn(</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        ideal_proposer_reward, sqrt_active, sqrt_sat</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    start_slot <span class="op">=</span> compute_start_slot_at_epoch(epoch)</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> slot <span class="kw">in</span> <span class="bu">range</span>(start_slot, start_slot <span class="op">+</span> SLOTS_PER_EPOCH):</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        proposer <span class="op">=</span> get_beacon_proposer_index_at_slot(state, Slot(slot))</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, proposer, proposer_burn)</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Sync committee burn — the 512 sync committee members.</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> pubkey <span class="kw">in</span> state.current_sync_committee.pubkeys:</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        index <span class="op">=</span> get_validator_index_by_pubkey(state, pubkey)</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        sync_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> SYNC_REWARD_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        burn <span class="op">=</span> get_issuance_burn(sync_reward, sqrt_active, sqrt_sat)</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, burn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Splitting the burn by duty, rather than applying a single uniform per-validator deduction, keeps the variance between validators low despite the rare duties of proposal and sync committee participation. The burn reads <code>base</code> from <code>get_base_reward_per_increment</code>, so during the transition it scales with the elevated effective factor automatically; the step below needs no further change.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> process_issuance_burn(state: BeaconState) <span class="op">-&gt;</span> <span class="va">None</span>:</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Clamping sqrt_active to sqrt_sat keeps the burn fraction at or below 1.</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    sqrt_sat <span class="op">=</span> integer_squareroot(SATURATION_BALANCE)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    sqrt_active <span class="op">=</span> <span class="bu">min</span>(integer_squareroot(get_total_active_balance(state)), sqrt_sat)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    increment <span class="op">=</span> EFFECTIVE_BALANCE_INCREMENT</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    base <span class="op">=</span> get_base_reward_per_increment(state)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    epoch <span class="op">=</span> get_current_epoch(state)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Attestation burn — every active validator.</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    attest_weight <span class="op">=</span> TIMELY_SOURCE_WEIGHT <span class="op">+</span> TIMELY_TARGET_WEIGHT <span class="op">+</span> TIMELY_HEAD_WEIGHT</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> index <span class="kw">in</span> get_active_validator_indices(state, epoch):</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>        attest_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> attest_weight <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        burn <span class="op">=</span> get_issuance_burn(attest_reward, sqrt_active, sqrt_sat)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, burn)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Proposer burn — the 32 proposers of the epoch.</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    n_total <span class="op">=</span> get_total_active_balance(state) <span class="op">//</span> increment</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    ideal_proposer_reward <span class="op">=</span> Gwei(</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        n_total <span class="op">*</span> base <span class="op">*</span> PROPOSER_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR <span class="op">//</span> SLOTS_PER_EPOCH</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    proposer_burn <span class="op">=</span> get_issuance_burn(</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        ideal_proposer_reward, sqrt_active, sqrt_sat</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    start_slot <span class="op">=</span> compute_start_slot_at_epoch(epoch)</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> slot <span class="kw">in</span> <span class="bu">range</span>(start_slot, start_slot <span class="op">+</span> SLOTS_PER_EPOCH):</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        proposer <span class="op">=</span> get_beacon_proposer_index_at_slot(state, Slot(slot))</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, proposer, proposer_burn)</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Sync committee burn — the 512 sync committee members.</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> pubkey <span class="kw">in</span> state.current_sync_committee.pubkeys:</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        index <span class="op">=</span> get_validator_index_by_pubkey(state, pubkey)</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        n <span class="op">=</span> state.validators[index].effective_balance <span class="op">//</span> increment</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>        sync_reward <span class="op">=</span> Gwei(n <span class="op">*</span> base <span class="op">*</span> SYNC_REWARD_WEIGHT <span class="op">//</span> WEIGHT_DENOMINATOR)</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>        burn <span class="op">=</span> get_issuance_burn(sync_reward, sqrt_active, sqrt_sat)</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>        decrease_balance(state, index, burn)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The dominant new cost is one O(1)-per-validator deduction (the attestation burn) — foldable into the existing rewards/penalties pass — plus two fixed passes over the 32 proposers and 512 sync committee members.</p>
 </section>
 </section>
-<section id="rationale" class="level2">
+<section id="rationale" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="rationale">Rationale</h2>
 <section id="deriving-the-burn-fraction" class="level3">
 <h3 class="anchored" data-anchor-id="deriving-the-burn-fraction">Deriving the burn fraction</h3>
 <p>Expressed as a function of the staking ratio <span class="math inline">\(f = D/S\)</span> (with <span class="math inline">\(S\)</span> the total ETH supply), the current consensus-layer yield is</p>
 <p><span class="math display">\[y(f) = \frac{B\,E}{\sqrt{f\,S}},\]</span></p>
-<p>with <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(B\)</span> and epochs per year <span class="math inline">\(E\)</span>. Issuance is the yield paid on the staked fraction, <span class="math inline">\(i(f) = B\,E\sqrt{f/S}\)</span>. The derivation below holds for any value of <span class="math inline">\(B\)</span>; under this proposal <span class="math inline">\(y(f)\)</span> is the curve with <span class="math inline">\(B = 128\)</span>.</p>
+<p>with <code>BASE_REWARD_FACTOR</code> <span class="math inline">\(B\)</span> and epochs per year <span class="math inline">\(E\)</span>. Issuance is the yield paid on the staked fraction, <span class="math inline">\(i(f) = B\,E\sqrt{f/S}\)</span>. The burn fraction derived below is independent of <span class="math inline">\(B\)</span>: it scales the reward whatever its magnitude. The permanent policy uses today’s <span class="math inline">\(B = 64\)</span>; during the transition <span class="math inline">\(B\)</span> is temporarily elevated, which lifts <span class="math inline">\(y(f)\)</span> uniformly without changing <span class="math inline">\(b(f)\)</span>.</p>
 <p>The goal is to subtract from the yield a term that is zero at <span class="math inline">\(f = 0\)</span> and grows linearly to cancel the yield entirely at a saturation ratio <span class="math inline">\(f_\text{sat}\)</span>, so that the net yield reaches zero there:</p>
 <p><span class="math display">\[\tilde y(f) = \begin{cases} y(f) - \dfrac{f}{f_\text{sat}}\,y(f_\text{sat}) &amp; f \le f_\text{sat} \\ 0 &amp; f &gt; f_\text{sat} \end{cases}\]</span></p>
 <div id="fig-yield" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -422,7 +456,7 @@ created: 2026-07-14</code></pre>
 <script src="yieldcurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yield-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;1: Consensus layer net yield under the current curve (B=64), the burn without compensation (B=64), and this proposal (B=128 with the tapered issuance burn).
+Figure&nbsp;1: Consensus layer net yield under the current curve and under the tapered issuance burn in its permanent (post-transition) state, both with <code>BASE_REWARD_FACTOR</code> at today’s value of 64. The tapered curve reaches zero at the 50% saturation ratio.
 </figcaption>
 </figure>
 </div>
@@ -443,23 +477,63 @@ Figure&nbsp;1: Consensus layer net yield under the current curve (B=64), the bur
 <script src="issuancecurve.js"></script>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-issuance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2: Annual ETH issuance under the current curve (B=64), the burn without compensation (B=64), and this proposal (B=128 with the tapered issuance burn). The post-burn curves peak at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and fall to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
+Figure&nbsp;2: Annual ETH issuance under the current curve and under the tapered issuance burn in its permanent (post-transition) state, both with <code>BASE_REWARD_FACTOR</code> at today’s value of 64. The tapered curve peaks at <span class="math inline">\(f^* = 2^{-7/3} \approx 19.8\%\)</span> and falls to zero at <span class="math inline">\(f = \tfrac{1}{2}\)</span>.
 </figcaption>
 </figure>
 </div>
 </section>
-<section id="why-base_reward_factor-is-doubled" class="level3">
-<h3 class="anchored" data-anchor-id="why-base_reward_factor-is-doubled">Why <code>BASE_REWARD_FACTOR</code> is doubled</h3>
-<p>Applied with <code>BASE_REWARD_FACTOR</code> left at 64, the burn would cut the net yield at today’s staking ratio (<span class="math inline">\(f \approx 33\%\)</span>) by more than half, from about 2.6% to 1.2% — a dramatic change for existing stakers, and one that would be expected to trigger a substantial exit of stake on activation. Doubling <code>BASE_REWARD_FACTOR</code> to 128 lifts the whole net yield curve so that it crosses the current curve at <span class="math inline">\(f \approx 31\%\)</span>, close to today’s ratio: at deployment, stakers would see a yield very close to what they receive now, and the transition’s impact on existing stakers is small.</p>
-<p>The compensation does not reintroduce runaway issuance. Post-burn issuance still peaks at <span class="math inline">\(f^* \approx 19.8\%\)</span> — at roughly 1% of supply per year — and falls to zero at 50%. For any staking ratio above about 31.5% it sits below the current curve, which grows without bound in stake and reaches about 1.5% of supply per year with all ETH staked. And because doubling <span class="math inline">\(B\)</span> scales rewards and penalties together, the balance between micro-incentives is preserved.</p>
+<section id="the-transition-period" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="the-transition-period">The transition period</h3>
+<p>Imposed in full at the fork, the burn would cut the net yield at today’s staking ratio (<span class="math inline">\(f \approx 33\%\)</span>) by more than half, from about 2.6% to 1.2% — a dramatic change for existing stakers, and one that would be expected to trigger a substantial exit of stake on activation. Rather than reach that curve immediately, or change <code>BASE_REWARD_FACTOR</code> permanently, the proposal phases the reduction in over two years. At activation the effective base reward factor is 128 (twice today’s value), lifting the whole net yield curve so that it crosses the current curve at <span class="math inline">\(f \approx 31\%\)</span>, close to today’s ratio: stakers see a yield very close to what they receive now. Over the following two years the effective factor decays linearly to 64, and the net yield slides down to the permanent tapered curve. The fork itself therefore changes yields very little; the reduction arrives gradually, giving stakers time to adjust.</p>
+<div id="fig-transition" class="column-page quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-transition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<style>
+  .eipburn-transition-charts {
+    display: flex; flex-wrap: wrap; gap: 0.75rem;
+  }
+  .eipburn-transition-charts > div {
+    flex: 1 1 340px; min-width: min(100%, 340px); height: 380px;
+  }
+  .eipburn-transition-controls {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin: 0.5rem 0 0.2rem; font-size: 0.85rem;
+  }
+  .eipburn-transition-controls button {
+    cursor: pointer; border: 1px solid #6a1b9a; background: #6a1b9a; color: #fff;
+    border-radius: 4px; padding: 0.25rem 0.7rem; font-size: 0.85rem; min-width: 5.5rem;
+  }
+  .eipburn-transition-controls button:hover { background: #581580; }
+  .eipburn-transition-controls input[type=range] { flex: 1; accent-color: #6a1b9a; }
+  .eipburn-transition-controls .eipburn-transition-label {
+    color: #6a1b9a; min-width: 6rem; text-align: right;
+  }
+</style>
+
+<div class="eipburn-transition-charts">
+  <div id="eipburn-transition-yield-chart"></div>
+  <div id="eipburn-transition-issuance-chart"></div>
+</div>
+<div class="eipburn-transition-controls" id="eipburn-transition-controls"></div>
+
+<script src="transition.js"></script>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-transition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Net yield (left) and annual issuance (right) as the tapered issuance burn phases in, driven together by a single control. Drag the slider or press play to sweep the two-year transition: at month 0 the effective base reward factor is 128, so net yield starts close to today’s; by month 24 it has decayed to 64 and both curves reach their permanent shape. Throughout, net yield falls to zero at the 50% saturation ratio.
+</figcaption>
+</figure>
+</div>
+<p>Because the effective factor multiplies <code>get_base_reward_per_increment</code>, it scales rewards, penalties, and the burn’s reference rewards together, so the balance between micro-incentives is preserved throughout the transition — and the schedule is left exactly as it is today once the transition completes.</p>
+<p>Phasing the change in this way does not defer the security benefit. The burn fraction reaches 100% at the saturation balance whatever the base reward factor, so from the first epoch after activation the issuance mechanism no longer rewards growth in the staking ratio beyond 50%: the market can settle at an equilibrium below that point at once, and the security and capture-resistance goal is met immediately. What the transition phases in is only the <em>level</em> of issuance — and with it the full benefit to ETH’s role as money, which arrives as the effective factor completes its decay to 64.</p>
+<p>The transition does not reintroduce runaway issuance. The permanent (post-transition) issuance peaks at <span class="math inline">\(f^* \approx 19.8\%\)</span> — at roughly 0.5% of supply per year — and falls to zero at 50%, sitting below the current curve, which grows without bound in stake and reaches about 1.5% of supply per year with all ETH staked. During the transition, issuance begins near today’s level and declines toward that curve.</p>
 </section>
 <section id="why-a-burn-and-not-a-change-to-the-reward-curve" class="level3">
 <h3 class="anchored" data-anchor-id="why-a-burn-and-not-a-change-to-the-reward-curve">Why a burn, and not a change to the reward curve</h3>
 <p>An alternative route to lower issuance would be to redesign the reward curve itself, and proposals for this exist.<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> This EIP nonetheless prefers a burn, for three reasons.</p>
 <ul>
-<li><strong>A single parameter, with a natural value.</strong> Reward curves engineered to exhibit several desirable properties at once (a cap on total issuance, a yield floor, a target ratio) tend to introduce several new parameters, each of which must be set and defended. The burn introduces exactly one, <code>SATURATION_BALANCE</code>, and its value has a natural focal point: half the ETH supply. (The accompanying doubling of <code>BASE_REWARD_FACTOR</code> adjusts an existing constant, with a similarly natural calibration: leaving the net yield at today’s staking ratio approximately unchanged.)</li>
+<li><strong>A single parameter, with a natural value.</strong> Reward curves engineered to exhibit several desirable properties at once (a cap on total issuance, a yield floor, a target ratio) tend to introduce several new parameters, each of which must be set and defended. The burn introduces exactly one, <code>SATURATION_BALANCE</code>, and its value has a natural focal point: half the ETH supply. (The permanent policy adds only this one constant and leaves <code>BASE_REWARD_FACTOR</code> untouched; the transition parameters are temporary, and fall away once it completes.)</li>
 <li><strong>A market-determined yield.</strong> In a workable reward curve, rewards and penalties must remain matched: schedules that taper rewards to zero while retaining penalties to compel participation are vulnerable to griefing attacks. With matched incentives, a performing validator always earns a positive yield, so any reshaped reward curve without burn still imposes a floor on the yield, and stake growth stops only if the market’s risk premium happens to sit above that floor. A deduction removes the floor: the staking ratio settles at the point where the yield meets the premium stakers demand, so the equilibrium yield is set by the market rather than by the shape of the curve.</li>
-<li><strong>Micro-incentives at full strength.</strong> Reaching a low yield by scaling the reward and penalty schedule down weakens the per-duty incentives for correct and timely participation. With substantial execution-layer income and MEV available, consensus rewards and penalties must remain large relative to the external incentives to misbehave (through block-timing games or reorgs, for example), or chain stability is put at risk. The burn leaves the entire schedule at full magnitude — indeed, the doubling of <code>BASE_REWARD_FACTOR</code> strengthens it — and nets macro yield off afterwards.</li>
+<li><strong>Micro-incentives at full strength.</strong> Reaching a low yield by scaling the reward and penalty schedule down weakens the per-duty incentives for correct and timely participation. With substantial execution-layer income and MEV available, consensus rewards and penalties must remain large relative to the external incentives to misbehave (through block-timing games or reorgs, for example), or chain stability is put at risk. The burn leaves the entire schedule at its current magnitude — indeed, during the transition the elevated base reward factor temporarily strengthens it — and nets macro yield off afterwards.</li>
 </ul>
 </section>
 <section id="why-the-deducted-eth-is-burned-rather-than-redirected" class="level3">
@@ -485,7 +559,7 @@ Figure&nbsp;2: Annual ETH issuance under the current curve (B=64), the burn with
 </section>
 <section id="test-cases" class="level2">
 <h2 class="anchored" data-anchor-id="test-cases">Test Cases</h2>
-<p>Test vectors are not yet included in this draft. On progressing toward implementation, test cases would be added to the <code>epoch_processing</code> test suite in the <code>consensus-specs</code> repository,<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> following the existing format for <code>process_rewards_and_penalties</code>, covering: zero active balance below saturation, active balance at and above <code>SATURATION_BALANCE</code>, and the boundary behaviour of <code>get_issuance_burn</code> at <code>sqrt_active == sqrt_sat</code>.</p>
+<p>Test vectors are not yet included in this draft. On progressing toward implementation, test cases would be added to the <code>epoch_processing</code> test suite in the <code>consensus-specs</code> repository,<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a> following the existing format for <code>process_rewards_and_penalties</code>, covering: zero active balance below saturation, active balance at and above <code>SATURATION_BALANCE</code>, the boundary behaviour of <code>get_issuance_burn</code> at <code>sqrt_active == sqrt_sat</code>, and the value of <code>get_base_reward_factor</code> at the transition boundaries (<code>TRANSITION_START_EPOCH</code>, its midpoint, and <code>TRANSITION_START_EPOCH + TRANSITION_DURATION_EPOCHS</code>).</p>
 </section>
 <section id="reference-implementation" class="level2">
 <h2 class="anchored" data-anchor-id="reference-implementation">Reference Implementation</h2>
@@ -493,7 +567,7 @@ Figure&nbsp;2: Annual ETH issuance under the current curve (B=64), the burn with
 </section>
 <section id="security-considerations" class="level2">
 <h2 class="anchored" data-anchor-id="security-considerations">Security Considerations</h2>
-<p><strong>Incentive compatibility.</strong> The burn fraction <span class="math inline">\(b(f)\)</span> is a deterministic, publicly computable function of total active balance, and applies identically to every validator. No validator or coalition can shift a larger share onto another, nor reduce its own, so it introduces no new griefing or discrimination vector. Because each deduction is computed from the idealised duty reward rather than the reward actually earned, it is independent of the validator’s behaviour within the epoch, leaving every marginal performance incentive intact — indeed strengthened, since doubling <code>BASE_REWARD_FACTOR</code> doubles the reward and penalty schedule together, preserving the balance between them. And because <span class="math inline">\(b(f) \le 1\)</span> for all <span class="math inline">\(f\)</span> (clamped via <code>sqrt_active = min(..., sqrt_sat)</code>), no deduction ever exceeds the idealised reward it is derived from: a validator performing its duties correctly retains a non-negative net reward for the epoch, and the burn cannot by itself drive aggregate net issuance negative.</p>
+<p><strong>Incentive compatibility.</strong> The burn fraction <span class="math inline">\(b(f)\)</span> is a deterministic, publicly computable function of total active balance, and applies identically to every validator. No validator or coalition can shift a larger share onto another, nor reduce its own, so it introduces no new griefing or discrimination vector. Because each deduction is computed from the idealised duty reward rather than the reward actually earned, it is independent of the validator’s behaviour within the epoch, leaving every marginal performance incentive intact; during the transition the elevated base reward factor scales the reward and penalty schedule up together, preserving the balance between them, and once the transition completes the schedule is exactly as it is today. And because <span class="math inline">\(b(f) \le 1\)</span> for all <span class="math inline">\(f\)</span> (clamped via <code>sqrt_active = min(..., sqrt_sat)</code>), no deduction ever exceeds the idealised reward it is derived from: a validator performing its duties correctly retains a non-negative net reward for the epoch, and the burn cannot by itself drive aggregate net issuance negative.</p>
 <p><strong>Effect on economic security.</strong> This EIP deliberately results in a lower equilibrium quantity of stake than the current curve. In proof-of-stake with slashing, the cost of attack is set by the stock of slashable stake an attacker must acquire and forfeit, and at any staking ratio in the tens of percent that stock remains vast relative to any plausible attack reward. Nor does economic security increase monotonically with stake: as set out in the Motivation, beyond a certain level the accompanying concentration of stake and supply makes the network less secure, not more. To the extent the proposal protects ETH’s monetary premium, it also supports the real value of the stake securing the chain.</p>
 <p><strong>Computational cost.</strong> The additional per-epoch cost is one O(1) deduction per active validator (foldable into the existing rewards/penalties pass) plus two fixed-size passes over the 32 proposers and 512 sync committee members, so this EIP does not introduce a new DoS surface. <code>get_validator_index_by_pubkey</code>, used for the sync committee burn, should reuse the same pubkey→index cache clients already maintain for sync committee processing, rather than a linear scan.</p>
 <p><strong>Constant drift.</strong> As noted in <a href="#why-the-saturation-point-is-expressed-as-a-fixed-balance">Rationale</a>, <code>SATURATION_BALANCE</code> is fixed at the fork and does not track live supply, so the effective saturation ratio will drift slowly over time. This drift changes only the location of the equilibrium point, not any safety property of the mechanism, and is not expected to be security-relevant on the timescale of a single fork’s lifetime.</p>

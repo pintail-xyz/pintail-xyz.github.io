@@ -2,11 +2,11 @@
   function init() {
   // ── Ethereum protocol constants ──────────────────────────────────────────
   var TOTAL_ETH_SUPPLY   = 120500000;
-  var BASE_REWARD_FACTOR = 64;
+  var BASE_REWARD_FACTOR = 64;      // the permanent (post-transition) value
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
   var F_TODAY = 1 / 3;
-  var FSTAR   = Math.pow(2, -7/3);  // ≈ 19.8% — peak of post-burn issuance
+  var FSTAR   = Math.pow(2, -7/3);  // ≈ 19.8% — peak of tapered issuance
   var F_SAT   = 0.5;
 
   var N_POINTS = 500;
@@ -27,25 +27,21 @@
     if (f <= 0) return 0;
     return clApr(f) * f * 100;
   }
+  // Permanent tapered issuance, once the transition is complete, B = 64.
   function annualInflationPctBurn(f) {
     if (f <= 0) return 0;
     var net = (1 - b(f)) * clApr(f);
     if (net <= 0) return 0;
     return net * f * 100;
   }
-  // This proposal (compensated): B = 128 (factor of 2).
-  function annualInflationPctComp(f) {
-    return 2 * annualInflationPctBurn(f);
-  }
 
-  var fs = [], yCurrent = [], yBurn = [], yComp = [];
+  var fs = [], yCurrent = [], yBurn = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
     yCurrent.push(+annualInflationPct(f).toFixed(4));
     yBurn.push(+annualInflationPctBurn(f).toFixed(4));
-    yComp.push(+annualInflationPctComp(f).toFixed(4));
   }
 
   var layout = {
@@ -129,24 +125,17 @@
   var traces = [
     {
       x: fs, y: yCurrent,
-      name: 'Current (B=64)',
+      name: 'Current curve (no burn)',
       type: 'scatter', mode: 'lines',
       line: { color: '#1565c0', width: 2.5 },
-      hovertemplate: 'Current (B=64): %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Current (no burn): %{y:.3f}%<extra></extra>',
     },
     {
       x: fs, y: yBurn,
-      name: 'Burn only (B=64)',
+      name: 'Tapered issuance burn',
       type: 'scatter', mode: 'lines',
       line: { color: '#6a1b9a', width: 2.5 },
-      hovertemplate: 'Burn only (B=64): %{y:.3f}%<extra></extra>',
-    },
-    {
-      x: fs, y: yComp,
-      name: 'This proposal (B=128)',
-      type: 'scatter', mode: 'lines',
-      line: { color: '#2e7d32', width: 2.5 },
-      hovertemplate: 'This proposal (B=128): %{y:.3f}%<extra></extra>',
+      hovertemplate: 'Tapered burn: %{y:.3f}%<extra></extra>',
     },
   ];
 

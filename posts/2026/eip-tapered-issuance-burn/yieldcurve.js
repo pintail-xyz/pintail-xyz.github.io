@@ -2,7 +2,7 @@
   function init() {
   // ── Ethereum protocol constants ──────────────────────────────────────────
   var TOTAL_ETH_SUPPLY   = 120500000;
-  var BASE_REWARD_FACTOR = 64;
+  var BASE_REWARD_FACTOR = 64;      // the permanent (post-transition) value
   var EPOCHS_PER_YEAR    = (365.25 * 24 * 3600) / (32 * 12); // ≈ 82,181.25
 
   var F_TODAY = 1 / 3;
@@ -12,7 +12,7 @@
   var F_MIN    = 0.005;
   var F_MAX    = 1.0;
 
-  // ── Base micro-incentive curve (per-increment reward = penalty) ──────────
+  // ── Base micro-incentive curve (per-increment reward = penalty), B = 64 ──
   function clApr(f) {
     return BASE_REWARD_FACTOR * EPOCHS_PER_YEAR / Math.sqrt(f * TOTAL_ETH_SUPPLY * 1e9);
   }
@@ -23,25 +23,20 @@
     return Math.pow(f / F_SAT, 1.5);
   }
 
-  // Net yield = (1 - b) * base.
-  // Uncompensated: B = 64.  This proposal (compensated): B = 128 (factor of 2).
+  // Permanent net yield, once the transition is complete: (1 - b) * base, B = 64.
   function clAprBurn(f) {
     var net = (1 - b(f)) * clApr(f);
     return net > 0 ? net : 0;
   }
-  function clAprComp(f) {
-    return 2 * clAprBurn(f);
-  }
 
   // ── Build series ─────────────────────────────────────────────────────────
-  var fs = [], yCurrent = [], yBurn = [], yComp = [];
+  var fs = [], yCurrent = [], yBurn = [];
   var step = (F_MAX - F_MIN) / (N_POINTS - 1);
   for (var i = 0; i < N_POINTS; i++) {
     var f = F_MIN + i * step;
     fs.push(+(f * 100).toFixed(3));
     yCurrent.push(+(clApr(f) * 100).toFixed(4));
     yBurn.push(+(clAprBurn(f) * 100).toFixed(4));
-    yComp.push(+(clAprComp(f) * 100).toFixed(4));
   }
 
   // ── Layout ───────────────────────────────────────────────────────────────
@@ -112,24 +107,17 @@
   var traces = [
     {
       x: fs, y: yCurrent,
-      name: 'Current (B=64)',
+      name: 'Current curve (no burn)',
       type: 'scatter', mode: 'lines',
       line: { color: '#1565c0', width: 2.5 },
-      hovertemplate: 'Current (B=64): %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Current (no burn): %{y:.2f}%<extra></extra>',
     },
     {
       x: fs, y: yBurn,
-      name: 'Burn only (B=64)',
+      name: 'Tapered issuance burn',
       type: 'scatter', mode: 'lines',
       line: { color: '#6a1b9a', width: 2.5 },
-      hovertemplate: 'Burn only (B=64): %{y:.2f}%<extra></extra>',
-    },
-    {
-      x: fs, y: yComp,
-      name: 'This proposal (B=128)',
-      type: 'scatter', mode: 'lines',
-      line: { color: '#2e7d32', width: 2.5 },
-      hovertemplate: 'This proposal (B=128): %{y:.2f}%<extra></extra>',
+      hovertemplate: 'Tapered burn: %{y:.2f}%<extra></extra>',
     },
   ];
 
