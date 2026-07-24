@@ -11,7 +11,7 @@
 
   var N_POINTS = 500;
 
-  var N_MONTHS = 24;        // two-year transition, for the month readout
+  var N_MONTHS = 18;        // 18-month transition, for the month readout
   var SWEEP_MS = 5000;      // wall-clock duration of a full sweep
 
   function clApr(f) {
