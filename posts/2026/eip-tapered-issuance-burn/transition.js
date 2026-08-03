@@ -84,7 +84,7 @@
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.02, yanchor: 'bottom', font: { size: 11 } },
     dragmode: false,
     title: { text: 'CL net yield', font: { size: 13 }, x: 0.5, xanchor: 'center' },
-    margin: { t: 54, r: 10, b: 48, l: 60 },
+    margin: { t: 50, r: 8, b: 46, l: 54 },
     hovermode: 'x unified', hoverdistance: -1,
     plot_bgcolor: '#fafafa', paper_bgcolor: '#ffffff',
   });
@@ -98,7 +98,7 @@
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.02, yanchor: 'bottom', font: { size: 11 } },
     dragmode: false,
     title: { text: 'Annual issuance', font: { size: 13 }, x: 0.5, xanchor: 'center' },
-    margin: { t: 54, r: 10, b: 48, l: 64 },
+    margin: { t: 50, r: 8, b: 46, l: 58 },
     hovermode: 'x unified', hoverdistance: -1,
     plot_bgcolor: '#fafafa', paper_bgcolor: '#ffffff',
   });
